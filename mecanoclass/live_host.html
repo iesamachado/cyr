@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Competición - Host</title>
+    
+    <!-- CSS Changes -->
+    <link rel="stylesheet" href="../../css/common/design-system.css">
+    <link rel="stylesheet" href="../../css/common/reset.css">
+    <link rel="stylesheet" href="../../css/common/layout.css">
+    <link rel="stylesheet" href="../../css/common/components.css">
+    <link rel="stylesheet" href="./css/mecanoclass.css">
+    
+    <style>
+        .racer-lane {
+            position: absolute;
+            height: 60px;
+            width: 100%;
+            left: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            transition: all 0.5s ease;
+        }
+
+        .racer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid white;
+            position: absolute;
+            left: 0;
+            transition: left 0.5s linear;
+            z-index: 2;
+        }
+
+        .racer-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .racer-name {
+            position: absolute;
+            left: 10px;
+            top: -20px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            transition: left 0.5s linear;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app-header"></div>
+
+    <div class="container-fluid vh-100 d-flex flex-column">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center p-4">
+            <h2 class="title-gradient fw-bold"><i></i>EN VIVO</h2>
+            <div class="glass-panel px-4 py-2">
+                <span class="text-dim small text-uppercase">PIN DE PARTIDA</span>
+                <h1 class="text-white fw-bold m-0" id="gamePin">...</h1>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light" id="btnJoinAsPlayer"
+                    title="Unirte como jugador en otra pestaña">
+                    <i></i>Participar
+                </button>
+                <button class="btn btn-outline-danger" id="btnExitGame">Salir</button>
+            </div>
+        </div>
+
+        <!-- Lobby View -->
+        <div id="lobbyView" class="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+            <h3 class="text-light mb-4">Esperando jugadores...</h3>
+            <div id="playersGrid" class="d-flex flex-wrap gap-4 justify-content-center mb-5" style="max-width: 800px;">
+                <!-- Players joined avatars -->
+            </div>
+            <button id="startGameBtn" class="btn btn-premium btn-lg px-5 py-3 fs-3">Comenzar Carrera</button>
+        </div>
+
+        <!-- Race View -->
+        <div id="raceView" class="flex-grow-1 p-5 d-none overflow-auto">
+            <div id="raceTracks" style="position: relative; min-height: 500px;">
+                <!-- Tracks will be generated here -->
+            </div>
+        </div>
+
+        <!-- Podium View -->
+        <div id="podiumView"
+            class="flex-grow-1 d-none d-flex flex-column align-items-center justify-content-center text-center">
+            <h1 class="display-1 text-warning fw-bold mb-5">🏆 Ganadores 🏆</h1>
+            <div class="d-flex align-items-end gap-4">
+                <div class="text-center order-2">
+                    <img id="silverAvatar" src="" class="rounded-circle mb-3 border border-4 border-secondary"
+                        style="width: 100px; height: 100px;">
+                    <div class="bg-secondary text-white p-3 rounded-top" style="height: 150px; width: 100px;">
+                        <h2>2</h2>
+                    </div>
+                </div>
+                <div class="text-center order-1">
+                    <img id="goldAvatar" src="" class="rounded-circle mb-3 border border-4 border-warning"
+                        style="width: 120px; height: 120px;">
+                    <div class="bg-warning text-dark p-3 rounded-top" style="height: 200px; width: 120px;">
+                        <h1>1</h1>
+                    </div>
+                </div>
+                <div class="text-center order-3">
+                    <img id="bronzeAvatar" src="" class="rounded-circle mb-3 border border-4 border-dark"
+                        style="width: 80px; height: 80px;">
+                    <div class="bg-dark text-white p-3 rounded-top" style="height: 120px; width: 100px;">
+                        <h3>3</h3>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-outline-light mt-5" onclick="location.reload()">Nueva Partida</button>
+        </div>
+    </div>
+
+    <script src="./js/initial_texts.js"></script>
+    <script type="module" src="./js/live_host.js"></script>
+</body>
+
+</html>

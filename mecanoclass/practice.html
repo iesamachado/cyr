@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practicar - MecanoClass</title>
+    
+    <!-- CSS Changes -->
+    <link rel="stylesheet" href="../../css/common/design-system.css">
+    <link rel="stylesheet" href="../../css/common/reset.css">
+    <link rel="stylesheet" href="../../css/common/layout.css">
+    <link rel="stylesheet" href="../../css/common/components.css">
+    <link rel="stylesheet" href="./css/mecanoclass.css">
+    
+    <style>
+        .typing-area {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            user-select: none;
+            position: relative;
+        }
+
+        .char-correct {
+            color: #4ade80;
+        }
+
+        .char-incorrect {
+            color: #f87171;
+            text-decoration: underline;
+        }
+
+        .char-current {
+            background-color: rgba(99, 102, 241, 0.4);
+            border-bottom: 2px solid var(--primary-color);
+            color: white;
+            animation: pulse-caret 1s infinite;
+        }
+
+        @keyframes pulse-caret {
+            50% {
+                border-bottom-color: transparent;
+            }
+        }
+
+        #hiddenInput {
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            left: 0;
+            height: 0;
+            width: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app-header"></div>
+
+    <div class="container py-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <div class="d-flex justify-content-between mb-4">
+                    <div class="glass-panel px-4 py-2 text-center flex-fill mx-2">
+                        <span class="text-dim text-uppercase small">PPM</span>
+                        <h2 class="text-light fw-bold mb-0" id="wpmDisplay">0</h2>
+                    </div>
+                    <div class="glass-panel px-4 py-2 text-center flex-fill mx-2">
+                        <span class="text-dim text-uppercase small">Precisión</span>
+                        <h2 class="text-light fw-bold mb-0" id="accuracyDisplay">100%</h2>
+                    </div>
+                </div>
+
+                <div id="gameContainer" class="glass-panel p-5 position-relative">
+                    <canvas id="platformGameCanvas" class="w-100 mb-3" style="border-radius: 8px;"></canvas>
+
+                    <div id="textDisplay" class="typing-area text-secondary">Cargando texto...</div>
+                    <input type="text" id="hiddenInput" autocomplete="off" spellcheck="false">
+
+                    <div id="overlayStart" class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 rounded-3" style="z-index: 10;">
+                        <button type="button" class="btn btn-premium btn-lg" id="btnStartPractice">
+                            <i></i>Comenzar
+                        </button>
+                    </div>
+
+                    <div id="overlayEnd" class="position-absolute top-0 start-0 w-100 h-100 align-items-center justify-content-center bg-dark bg-opacity-95 rounded-3" style="z-index: 11; display: none;">
+                        <div class="text-center">
+                            <h2 class="text-success mb-3">¡Completado!</h2>
+                            <h1 class="display-3 text-light fw-bold mb-4" id="finalWpm">0 PPM</h1>
+                            <div class="d-flex gap-3 justify-content-center">
+                                <button class="btn btn-outline-light" onclick="location.reload()">Repetir</button>
+                                <button class="btn btn-premium" id="btnSaveResult">Guardar Resultado</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="overlayFailed" class="position-absolute top-0 start-0 w-100 h-100 align-items-center justify-content-center bg-dark bg-opacity-95 rounded-3" style="z-index: 11; display: none;">
+                        <div class="text-center">
+                            <h2 class="text-danger mb-3">❌ Precisión Insuficiente</h2>
+                            <p class="text-light mb-2">Necesitas al menos <span class="text-warning fw-bold">90% de precisión</span> para guardar</p>
+                            <h3 class="text-light mb-1">Tu precisión: <span id="failedAccuracy" class="text-danger">0%</span></h3>
+                            <p class="text-dim mb-4">Velocidad: <span id="failedWpm">0 PPM</span></p>
+                            <button class="btn btn-premium" onclick="location.reload()">🔄 Vuelve a Intentarlo</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center text-dim">
+                    <small>Haz clic en el recuadro para enfocar • Pulsa ESC para reiniciar</small>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="app-footer"></div>
+
+    <!-- Need to include these so they are accessible to practice.js -->
+    <script src="./js/initial_texts.js"></script>
+    <script src="./js/platform-game.js"></script>
+    <script src="./js/typing-engine.js"></script>
+    <script type="module" src="./js/practice.js"></script>
+</body>
+
+</html>

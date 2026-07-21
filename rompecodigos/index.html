@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RompeCódigos - ClassHub</title>
+    <!-- Common styles -->
+    <link rel="stylesheet" href="../../css/common/reset.css">
+    <link rel="stylesheet" href="../../css/common/design-system.css">
+    <link rel="stylesheet" href="../../css/common/layout.css">
+    <link rel="stylesheet" href="../../css/common/components.css">
+    <!-- Game specific styles -->
+    <link rel="stylesheet" href="css/rompecodigos.css">
+</head>
+<body>
+    <div id="app-header"></div>
+    <main class="container">
+        <div class="hacker-panel">
+            <h1 class="glitch-text" data-text="ROMPECÓDIGOS">ROMPECÓDIGOS</h1>
+            <p class="subtitle">Decodifica la verdad</p>
+            
+            <div class="options-container">
+                <!-- Teacher section -->
+                <div class="option-card" id="teacher-section" style="display: none;">
+                    <h2>Modo Profesor</h2>
+                    <p>Inicia una sesión para tu clase y monitoriza el progreso en tiempo real.</p>
+                    <button id="btn-crear-sala" class="btn btn-primary cyber-btn">Crear Sala</button>
+                </div>
+                
+                <!-- Student section -->
+                <div class="option-card" id="student-section">
+                    <h2>Unirse a Sala</h2>
+                    <p>Introduce el código proporcionado por tu profesor para unirte a una partida.</p>
+                    <form id="form-unirse" class="join-form">
+                        <input type="text" id="input-codigo" placeholder="CÓDIGO DE SALA" required maxlength="6" autocomplete="off" class="cyber-input">
+                        <button type="submit" class="btn btn-primary cyber-btn">Conectar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script type="module" src="js/index.js"></script>
+</body>
+</html>

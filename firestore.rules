@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Funciones helper ──────────────────────────────────────────────
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isTeacher() {
+      return isAuthed() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function isOwner(uid) {
+      return isAuthed() && request.auth.uid == uid;
+    }
+
+    function isClassTeacher(classId) {
+      return isAuthed() &&
+        get(/databases/$(database)/documents/classes/$(classId)).data.teacherId == request.auth.uid;
+    }
+
+    function isClassMember(classId) {
+      return isAuthed() && (
+        request.auth.uid in get(/databases/$(database)/documents/classes/$(classId)).data.members ||
+        exists(/databases/$(database)/documents/class_members/$(classId + '_' + request.auth.uid))
+      );
+    }
+
+    function isClassParticipant(classId) {
+      return isClassTeacher(classId) || isClassMember(classId);
+    }
+
+    // ── Usuarios ──────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Cualquier usuario autenticado puede leer perfiles (para mostrar nombres en rankings)
+      allow read: if isAuthed();
+      // Cada usuario solo puede escribir su propio perfil
+      allow write: if isOwner(uid);
+
+      // Subcolección de partidas del usuario
+      match /games/{gameId} {
+        allow read: if isAuthed();
+        allow create: if isOwner(uid);
+        allow update, delete: if false; // Inmutable una vez creado
+      }
+    }
+
+    // ── Clases ────────────────────────────────────────────────────────
+    match /classes/{classId} {
+      // Leer: el profesor dueño o un alumno miembro
+      allow read: if isAuthed() && (
+        resource.data.teacherId == request.auth.uid ||
+        request.auth.uid in resource.data.members ||
+        exists(/databases/$(database)/documents/class_members/$(classId + '_' + request.auth.uid))
+      );
+      // Crear: cualquier usuario autenticado (para el profe que crea su clase)
+      allow create: if isAuthed();
+      // Actualizar: solo el profesor dueño
+      allow update: if isAuthed() && resource.data.teacherId == request.auth.uid;
+      // Eliminar: solo el profesor dueño
+      allow delete: if isAuthed() && resource.data.teacherId == request.auth.uid;
+
+      // Tareas de la clase
+      match /assignments/{assignmentId} {
+        // Todos los miembros pueden leer las tareas
+        allow read: if isAuthed() && isClassParticipant(classId);
+        // Solo el profesor puede crear/modificar/eliminar
+        allow write: if isAuthed() && isClassTeacher(classId);
+      }
+    }
+
+    // ── Membresías (unión por PIN) ────────────────────────────────────
+    match /class_members/{membershipId} {
+      // Leer: el alumno propio o el profesor de la clase
+      allow read: if isAuthed() && (
+        membershipId.matches(request.auth.uid + '$') ||
+        isTeacher()
+      );
+      // Crear: el propio alumno al unirse
+      allow create: if isAuthed() && 
+        request.resource.data.studentId == request.auth.uid;
+      allow update, delete: if false; // Inmutable
+    }
+
+    // ── Resultados de juego ───────────────────────────────────────────
+    match /game_results/{resultId} {
+      // Crear: el propio alumno (o profesor jugando)
+      allow create: if isAuthed() && 
+        request.resource.data.studentId == request.auth.uid;
+      // Leer: el propio alumno o cualquier profesor autenticado
+      // (los profesores necesitan ver resultados de su clase)
+      allow read: if isAuthed();
+      // No se pueden modificar ni eliminar resultados
+      allow update, delete: if false;
+    }
+
+    // ── Sesiones en vivo (MecanoClass + RompeCodigos) ─────────────────
+    match /live_sessions/{pin} {
+      allow read: if isAuthed();
+      // Crear: cualquier usuario autenticado (profesor o alumno crea sala)
+      allow create: if isAuthed() && request.resource.data.hostId == request.auth.uid;
+      // Actualizar: solo el host de la sesión
+      allow update: if isAuthed() && resource.data.hostId == request.auth.uid;
+      allow delete: if isAuthed() && resource.data.hostId == request.auth.uid;
+
+      // Subcolecci ones de RompeCodigos (rondas, equipos, intentos)
+      match /{subcollection}/{docId} {
+        allow read: if isAuthed();
+        allow write: if isAuthed();
+
+        match /{subsubcollection}/{subDocId} {
+          allow read: if isAuthed();
+          allow write: if isAuthed();
+        }
+      }
+    }
+
+    // ── Participantes en sesiones en vivo ─────────────────────────────
+    match /live_participants/{participantId} {
+      allow read: if isAuthed();
+      // Crear/actualizar: el propio participante
+      allow create: if isAuthed() && 
+        request.resource.data.studentId == request.auth.uid;
+      allow update: if isAuthed() && 
+        resource.data.studentId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ── Textos de mecanografía (MecanoClass) ──────────────────────────
+    match /mecanoclass_texts/{textId} {
+      allow read: if isAuthed();
+      // Solo profesores pueden añadir/modificar textos globales
+      allow write: if isAuthed() && isTeacher();
+    }
+
+    // ── Configuración global ──────────────────────────────────────────
+    match /settings/{doc} {
+      allow read: if isAuthed();
+      // Solo profesores verificados pueden cambiar la configuración
+      allow write: if isAuthed() && isTeacher();
+    }
+  }
+}
