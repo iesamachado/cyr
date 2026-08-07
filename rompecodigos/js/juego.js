@@ -43,7 +43,7 @@ async function initJuego(user) {
 
   if (!sesionId || !equipoId) {
     showToast('Sin sesión', 'Vuelve al lobby para unirte', 'error');
-    setTimeout(() => window.location.href = 'alumno.html', 2000);
+    setTimeout(() => window.location.href = 'sala_alumno.html', 2000);
     return;
   }
 

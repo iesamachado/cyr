@@ -114,8 +114,11 @@
   --navbar-height: 64px;
 
   /* ── Z-index ─────────────────────────────────────────────── */
-  --z-dropdown: 100;
-  --z-modal:    200;
-  --z-toast:    300;
-  --z-loading:  400;
+  --z-base:     1;
+  --z-overlay:  500;
+  --z-header:   1000;
+  --z-dropdown: 1100;
+  --z-modal:    2000;
+  --z-toast:    3000;
+  --z-loading:  4000;
 }

@@ -458,22 +458,28 @@ export async function deleteAssignment(classId, assignmentId) {
  * @param {object} metadata     - Datos específicos del juego (wpm, accuracy, etc.)
  */
 export async function saveGameResult(gameId, studentId, classId, score, metadata = {}) {
-  const ref = await addDoc(collection(db, 'game_results'), {
+  const resultData = {
     gameId,
     studentId,
     classId:   classId || null,
-    score,
-    metadata,
+    score:     Number(score) || 0,
+    metadata:  metadata || {},
     timestamp: serverTimestamp()
-  });
+  };
 
-  // También guardar en users/{uid}/games/ para historial rápido del perfil
-  await addDoc(collection(db, 'users', studentId, 'games'), {
-    gameId,
-    classId: classId || null,
-    score,
-    timestamp: serverTimestamp()
-  });
+  const ref = await addDoc(collection(db, 'game_results'), resultData);
+
+  // También guardar en users/{uid}/games/ para historial rápido del perfil (con manejo seguro de fallos)
+  try {
+    await addDoc(collection(db, 'users', studentId, 'games'), {
+      gameId,
+      classId: classId || null,
+      score: Number(score) || 0,
+      timestamp: serverTimestamp()
+    });
+  } catch (subErr) {
+    console.warn('No se pudo guardar en users/{uid}/games (no crítico):', subErr);
+  }
 
   return ref.id;
 }

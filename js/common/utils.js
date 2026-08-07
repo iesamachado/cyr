@@ -105,6 +105,16 @@ export function escapeHtml(str) {
 /** Espera N milisegundos */
 export const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+/**
+ * Devuelve la URL absoluta correcta dentro de la aplicación para una ruta relativa dada.
+ * Funciona de forma precisa en localhost, GitHub Pages (ej: /cyr/) o cualquier subdirectorio.
+ * @param {string} relativePath - Ruta relativa a la raíz del proyecto (ej: 'index.html', 'dashboard_student.html')
+ */
+export function getAppUrl(relativePath = '') {
+  const cleanPath = relativePath.startsWith('/') ? relativePath.slice(1) : relativePath;
+  return new URL(`../../${cleanPath}`, import.meta.url).href;
+}
+
 /** Metadatos de los juegos disponibles */
 export const GAMES = {
   mecanoclass: {

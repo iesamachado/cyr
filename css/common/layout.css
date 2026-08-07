@@ -37,17 +37,20 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-dropdown);
+  width: 100%;
+  z-index: var(--z-header, 1000);
 }
 
 .navbar {
-  height: var(--navbar-height);
+  width: 100%;
+  height: var(--navbar-height, 64px);
   display: flex;
   align-items: center;
   gap: var(--space-4);
   padding: 0 var(--space-6);
   background: var(--bg-surface);
   border-bottom: var(--border-width) solid var(--border);
+  box-sizing: border-box;
 }
 
 .navbar-brand {

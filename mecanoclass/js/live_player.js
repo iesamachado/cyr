@@ -110,11 +110,14 @@ function startGame(text) {
                 overlay.classList.add('d-flex');
 
                 overlay.innerHTML = `
-                    <div class="text-center">
-                        <h1 class="text-danger fw-bold mb-3">❌ Descalificado</h1>
-                        <h3 class="text-light mb-2">Precisión Insuficiente: ${stats.accuracy}%</h3>
-                        <p class="text-dim mb-4">Necesitas al menos 90% para clasificar.</p>
-                        <button class="btn btn-outline-light" onclick="window.history.back()">Salir</button>
+                    <div class="overlay-card overlay-card--danger">
+                        <div class="overlay-icon">❌</div>
+                        <h2 class="overlay-title-danger">Descalificado</h2>
+                        <p style="color: #f1f5f9; margin: 0; font-size: 0.95rem;">Precisión Insuficiente: <strong style="color:#f87171;">${stats.accuracy}%</strong></p>
+                        <p style="color: var(--text-dim); margin: 0; font-size: 0.85rem;">Necesitas al menos 90% para clasificar.</p>
+                        <div class="overlay-actions mt-3">
+                            <button class="btn-secondary-glow" onclick="window.history.back()">⬅️ Salir</button>
+                        </div>
                     </div>
                 `;
             } else {

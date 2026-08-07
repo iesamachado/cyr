@@ -125,6 +125,8 @@ function showResults(stats) {
     } else {
         document.getElementById('overlayEnd').style.display = 'flex';
         document.getElementById('finalWpm').innerText = stats.wpm + ' PPM';
+        const finalAcc = document.getElementById('finalAccuracy');
+        if (finalAcc) finalAcc.innerText = stats.accuracy + '%';
         engine.finalStats = stats;
     }
 }

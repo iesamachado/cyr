@@ -1,21 +1,25 @@
-import { requireAuth, currentUser, currentProfile } from '../../js/common/auth.js';
-import { renderHeader, showToast } from '../../js/common/ui.js';
+import { requireAuth, currentUser, currentProfile, isAdmin } from '../../js/common/auth.js';
+import { renderHeader, showToast, initParticles } from '../../js/common/ui.js';
 import { $ } from '../../js/common/utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    initParticles('particles-canvas', '#00e5ff', '#ff3366');
+
     requireAuth({
-        allowedRoles: ['teacher', 'student'],
+        allowedRoles: ['teacher', 'student', 'admin'],
         onAuthorized: (user, profile) => {
-            renderHeader('app-header', profile);
-            setupUI(profile);
+            renderHeader(user, profile);
+            setupUI(user, profile);
         }
     });
 });
 
-function setupUI(profile) {
-    if (profile.role === 'teacher') {
+function setupUI(user, profile) {
+    const isTeacherOrAdmin = profile.role === 'teacher' || profile.role === 'admin' || isAdmin(user, profile);
+    
+    if (isTeacherOrAdmin) {
         const teacherSection = $('#teacher-section');
-        if (teacherSection) teacherSection.style.display = 'block';
+        if (teacherSection) teacherSection.style.display = 'flex';
         
         const btnCrear = $('#btn-crear-sala');
         if (btnCrear) {
@@ -31,7 +35,7 @@ function setupUI(profile) {
             e.preventDefault();
             const code = $('#input-codigo').value.trim().toUpperCase();
             if (code.length > 0) {
-                window.location.href = `sala_alumno.html?code=${code}`;
+                window.location.href = `sala_alumno.html?code=${encodeURIComponent(code)}`;
             } else {
                 showToast('Por favor, introduce un código de sala.', 'error');
             }

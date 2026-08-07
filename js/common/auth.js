@@ -15,7 +15,7 @@ import { auth, db, googleProvider, GoogleAuthProvider,
   createUserWithEmailAndPassword, signOut, onAuthStateChanged,
   sendPasswordResetEmail, updateProfile, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from './firebase-config.js';
-import { generateAvatar, generateTeacherAvatar, anonymizeName, getUrlParams } from './utils.js';
+import { generateAvatar, generateTeacherAvatar, anonymizeName, getUrlParams, getAppUrl } from './utils.js';
 import { isStudentInAnyClass, isTeacherAuthorized, SUPERADMIN_EMAIL } from './db.js';
 
 export { SUPERADMIN_EMAIL };
@@ -146,12 +146,7 @@ export async function registerWithEmail(email, password, displayName, role = 'st
 export async function logout() {
   classroomToken = null;
   await signOut(auth);
-  // Calcular la ruta raíz relativa al directorio actual
-  const depth = window.location.pathname.split('/').filter(Boolean).length;
-  // Si estamos en /classhub/moon/index.html → depth=3, necesitamos ../../index.html
-  // La raíz es siempre el index.html del proyecto
-  const root = Array(depth - 1).fill('..').join('/') || '.';
-  window.location.href = `${root}/index.html`;
+  window.location.href = getAppUrl('index.html');
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -279,9 +274,7 @@ export function setupAuthListener(callback) {
 //    redirectTo: URL a la que redirigir si no autenticado (por defecto raíz)
 // ──────────────────────────────────────────────────────────────────────
 export function requireAuth({ allowedRoles = ['teacher', 'student'], onAuthorized, redirectTo } = {}) {
-  const depth = window.location.pathname.split('/').filter(Boolean).length;
-  const root  = depth > 1 ? Array(depth - 1).fill('..').join('/') : '.';
-  const loginPage = redirectTo || `${root}/index.html`;
+  const loginPage = redirectTo || getAppUrl('index.html');
 
   return setupAuthListener((user, profile) => {
     if (!user || !profile) {
@@ -299,9 +292,9 @@ export function requireAuth({ allowedRoles = ['teacher', 'student'], onAuthorize
     if (!hasRole) {
       // Redirigir al dashboard correspondiente
       if (profile.role === 'teacher' || userIsAdmin) {
-        window.location.href = `${root}/dashboard_teacher.html`;
+        window.location.href = getAppUrl('dashboard_teacher.html');
       } else {
-        window.location.href = `${root}/dashboard_student.html`;
+        window.location.href = getAppUrl('dashboard_student.html');
       }
       return;
     }
@@ -317,9 +310,6 @@ export function requireAuth({ allowedRoles = ['teacher', 'student'], onAuthorize
 //  onGranted(user, profile, classId): se llama con el classId de la sesión
 // ──────────────────────────────────────────────────────────────────────
 export function requireGameAccess(gameId, { onGranted } = {}) {
-  const depth = window.location.pathname.split('/').filter(Boolean).length;
-  const root  = depth > 1 ? Array(depth - 1).fill('..').join('/') : '.';
-
   return requireAuth({
     allowedRoles: ['teacher', 'student', 'admin'],
     onAuthorized: async (user, profile) => {
@@ -341,7 +331,7 @@ export function requireGameAccess(gameId, { onGranted } = {}) {
       if (eligible.length === 0) {
         // Sin acceso → al dashboard con mensaje
         sessionStorage.setItem('classhub_no_access_game', gameId);
-        window.location.href = `${root}/dashboard_student.html?noAccess=${gameId}`;
+        window.location.href = `${getAppUrl('dashboard_student.html')}?noAccess=${gameId}`;
         return;
       }
 

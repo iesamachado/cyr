@@ -444,64 +444,7 @@ select.form-input option {
   pointer-events: none;
 }
 
-/* ─── Navbar ─────────────────────────────────────── */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 2rem;
-  background: rgba(3, 11, 24, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
 
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-family: var(--font-head);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--primary);
-  letter-spacing: 0.05em;
-}
-
-.navbar-brand img {
-  height: 32px;
-  width: auto;
-}
-
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.navbar-user {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: 0.4rem 0.8rem;
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.navbar-user:hover {
-  border-color: var(--border-bright);
-  background: var(--bg-surface2);
-}
-
-.navbar-user-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
 
 /* ─── Utility Classes ────────────────────────────── */
 .flex { display: flex; }
@@ -706,7 +649,6 @@ select.form-input option {
 @media (max-width: 768px) {
   .container { padding: 0 var(--space-md); }
   .container-sm { padding: 0 var(--space-md); }
-  .navbar { padding: 0.8rem var(--space-md); }
   .card { padding: var(--space-lg); }
   .hidden-mobile { display: none !important; }
 }

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modo Práctica — RompeCódigos</title>
+  <meta name="description" content="Aprende a descifrar mensajes encriptados, usa análisis de frecuencias y domina el cifrado César y Vigenère.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Common styles -->
+  <link rel="stylesheet" href="../css/common/reset.css">
+  <link rel="stylesheet" href="../css/common/design-system.css">
+  <link rel="stylesheet" href="../css/common/layout.css">
+  <link rel="stylesheet" href="../css/common/components.css">
+  <!-- Game specific styles -->
+  <link rel="stylesheet" href="css/rompecodigos-base.css">
+  <link rel="stylesheet" href="css/juego.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .mission-badge-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .mission-pill {
+      font-family: var(--font-head);
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .mission-pill:hover {
+      border-color: var(--primary);
+      color: var(--text-bright);
+    }
+    .mission-pill.active {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+    .mission-pill.completed {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .vigenere-box {
+      background: var(--bg-surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .tutorial-callout {
+      background: rgba(0, 229, 255, 0.06);
+      border-left: 3px solid var(--primary);
+      padding: 0.6rem 0.8rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.82rem;
+      color: var(--text-bright);
+      line-height: 1.45;
+    }
+    .btn-quick-fill {
+      background: transparent;
+      border: 1px dashed var(--border-bright);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .btn-quick-fill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body class="theme-rompecodigos">
+  <canvas id="particles-canvas" class="particles-bg"></canvas>
+  <div id="app-header"></div>
+
+  <!-- TOP HUD -->
+  <div class="hud-bar" id="hud-bar" style="margin-top: var(--navbar-height, 64px);">
+    <div class="hud-brand">
+      <span>🔐</span>
+      <span>MODO PRÁCTICA</span>
+    </div>
+    <div class="hud-center">
+      <div class="hud-ronda">
+        <span class="hud-label">MISIÓN</span>
+        <span class="hud-val text-primary" id="hud-mision">1 / 5</span>
+      </div>
+      <div class="hud-timer-wrap">
+        <div id="hud-timer" class="hud-timer">00:00</div>
+        <div class="hud-timer-label">tiempo</div>
+      </div>
+      <div class="hud-puntos">
+        <span class="hud-label">PUNTOS</span>
+        <span class="hud-val text-accent" id="hud-puntos">0</span>
+      </div>
+    </div>
+    <div class="hud-right">
+      <button id="btn-pedir-pista" class="btn btn-ghost btn-sm" style="display:flex; align-items:center; gap:6px;">
+        💡 <span>Pista (<span id="hud-pistas-left">3</span>)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN GAME LAYOUT -->
+  <main class="game-layout">
+
+    <!-- ── COLUMNA IZQUIERDA: Misión y Textos ── -->
+    <aside class="panel panel-texto">
+
+      <!-- Misión info -->
+      <div class="panel-section">
+        <div class="section-title-row">
+          <div class="section-title" id="mision-title">🎯 Misión 1: Cifrado César Básico</div>
+          <span class="badge badge-primary" id="mision-tipo">César</span>
+        </div>
+        <div class="tutorial-callout" id="mision-desc">
+          El mensaje ha sido desplazado un número fijo de posiciones en el alfabeto. Utiliza el slider César para descubrir el mensaje original.
+        </div>
+      </div>
+
+      <!-- Texto Cifrado -->
+      <div class="panel-section">
+        <div class="section-title">📦 Texto Cifrado Interceptado</div>
+        <div class="texto-cifrado-display" id="texto-cifrado-display">
+          <div class="texto-cifrado-inner" id="texto-cifrado">
+            <!-- Letras generadas por JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Descifrado -->
+      <div class="panel-section">
+        <div class="section-title-row">
+          <div class="section-title">🔓 Descifrado (Vista Previa)</div>
+          <button id="btn-copiar-preview" class="btn-quick-fill" title="Copiar al campo de solución">
+            📋 Usar como Solución
+          </button>
+        </div>
+        <div class="texto-descifrado-display" id="texto-descifrado-display">
+          <div id="texto-descifrado" class="texto-descifrado-inner">
+            — ajusta las herramientas para ver el resultado
+          </div>
+        </div>
+      </div>
+
+      <!-- Pistas recibidas -->
+      <div class="panel-section" id="pistas-section">
+        <div class="section-title">💡 Pistas Desbloqueadas</div>
+        <div id="pistas-list" class="pistas-list">
+          <div class="text-muted" style="font-size:0.8rem">Pulsa en "Pista" si necesitas ayuda.</div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── COLUMNA CENTRAL: Herramientas Criptográficas ── -->
+    <section class="panel panel-analisis">
+
+      <!-- Herramienta César -->
+      <div class="panel-section" id="section-cesar">
+        <div class="section-title-row">
+          <div class="section-title">🔢 Desplazamiento César</div>
+          <button id="btn-reset-cesar" class="btn btn-ghost btn-sm">Reiniciar</button>
+        </div>
+        <div class="cesar-tester">
+          <input type="range" id="cesar-slider" min="0" max="25" value="0" class="cesar-slider">
+          <div class="cesar-info">
+            <span class="text-muted">Desplazamiento: <strong id="cesar-val" class="text-primary font-bold">0</strong> posiciones</span>
+            <span class="text-dim" style="font-size:0.75rem;">A → <span id="cesar-char-map" class="text-accent">A</span></span>
+          </div>
+          <div id="cesar-preview" class="cesar-preview"></div>
+        </div>
+      </div>
+
+      <!-- Herramienta Vigenère -->
+      <div class="panel-section hidden" id="section-vigenere">
+        <div class="section-title">🛡️ Descifrador Vigenère</div>
+        <div class="vigenere-box">
+          <label class="form-label" style="margin-bottom:2px;">Clave de descifrado:</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="vigenere-key-input" class="form-input" placeholder="PALABRA CLAVE" style="text-transform:uppercase; font-family:var(--font-mono); letter-spacing:0.1em;" maxlength="15">
+            <button id="btn-aplicar-vigenere" class="btn btn-primary btn-sm">Aplicar</button>
+          </div>
+          <p class="text-muted" style="font-size:0.75rem;">Cada letra de la clave desplaza la letra correspondiente según su posición en el abecedario.</p>
+        </div>
+      </div>
+
+      <!-- Gráfico de Frecuencias -->
+      <div class="panel-section">
+        <div class="section-title-row">
+          <div class="section-title">📊 Análisis de Frecuencias</div>
+          <button id="btn-sugerir" class="btn btn-ghost btn-sm">
+            ✨ Sugerir Sustitución
+          </button>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="freq-chart"></canvas>
+        </div>
+        <p class="chart-hint">Barras azules: frecuencias en tu texto cifrado. Línea verde: frecuencias típicas del español (E, A, O, S, R...).</p>
+      </div>
+
+      <!-- Teclado de Sustitución -->
+      <div class="panel-section">
+        <div class="section-title-row">
+          <div class="section-title">⌨️ Teclado de Sustitución Manual</div>
+          <button id="btn-reset-sust" class="btn btn-ghost btn-sm">⟳ Limpiar</button>
+        </div>
+        <div id="sust-keyboard" class="sust-keyboard">
+          <!-- Generado por JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── COLUMNA DERECHA: Envío y Progreso ── -->
+    <aside class="panel panel-accion">
+
+      <!-- Enviar Solución -->
+      <div class="panel-section">
+        <div class="section-title">🎯 Validar Solución</div>
+        <div class="submit-area">
+          <textarea id="input-solucion" class="form-input solucion-input" placeholder="Escribe aquí el texto descifrado en mayúsculas..." rows="4" spellcheck="false"></textarea>
+          <button id="btn-enviar-solucion" class="btn btn-accent btn-lg w-full">
+            🚀 Enviar Solución
+          </button>
+          <p id="submit-feedback" class="submit-feedback hidden"></p>
+        </div>
+      </div>
+
+      <!-- Selector de Misiones -->
+      <div class="panel-section">
+        <div class="section-title">🗺️ Misiones de Entrenamiento</div>
+        <div class="mission-badge-group" id="misiones-nav">
+          <!-- Generado por JS -->
+        </div>
+      </div>
+
+      <!-- Historial de Intentos -->
+      <div class="panel-section">
+        <div class="section-title">📋 Historial de Intentos</div>
+        <div id="historial-list" class="historial-list">
+          <div class="text-muted" style="font-size:0.78rem; text-align:center">Sin intentos todavía</div>
+        </div>
+      </div>
+
+      <!-- Volver al Menú -->
+      <div class="panel-section" style="margin-top:auto;">
+        <a href="index.html" class="btn btn-ghost btn-sm w-full" style="text-align:center;">
+          ← Volver al Menú de RompeCódigos
+        </a>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- MODAL DE MISIÓN COMPLETADA -->
+  <div id="modal-victoria" class="ronda-overlay hidden">
+    <div class="ronda-overlay-inner card-glass">
+      <div class="overlay-icon">🏆</div>
+      <h2 id="modal-title" class="text-primary font-bold" style="font-family:var(--font-head); font-size:1.8rem;">¡Misión Completada!</h2>
+      <p id="modal-desc" class="text-muted">Has descifrado correctamente la comunicación interceptada.</p>
+      
+      <div class="solucion-box">
+        <div class="solucion-label">Mensaje Original Revelado</div>
+        <div id="modal-solucion" class="solucion-text"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-around; width:100%; padding:0.5rem 0; font-family:var(--font-head);">
+        <div>
+          <div class="text-muted" style="font-size:0.7rem;">PUNTOS OBTENIDOS</div>
+          <div id="modal-puntos-ronda" class="text-accent" style="font-size:1.4rem; font-weight:700;">+500</div>
+        </div>
+        <div>
+          <div class="text-muted" style="font-size:0.7rem;">TIEMPO EMPLEADO</div>
+          <div id="modal-tiempo-ronda" class="text-primary" style="font-size:1.4rem; font-weight:700;">01:25</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; width:100%; margin-top:0.5rem;">
+        <button id="btn-siguiente-mision" class="btn btn-primary btn-lg w-full">
+          ▶ Siguiente Misión
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE FINALIZACIÓN DE PRÁCTICA -->
+  <div id="modal-resumen-final" class="ronda-overlay hidden">
+    <div class="ronda-overlay-inner card-glass">
+      <div class="overlay-icon">🎖️</div>
+      <h2 class="text-accent font-bold" style="font-family:var(--font-head); font-size:2rem;">¡Entrenamiento Completado!</h2>
+      <p class="text-muted">Has superado todas las misiones de criptografía monojugador.</p>
+      
+      <div style="background:var(--bg-surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; width:100%;">
+        <div class="text-muted" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em;">Puntuación Total Guardada</div>
+        <div id="final-total-pts" class="text-accent" style="font-family:var(--font-head); font-size:2.4rem; font-weight:900;">0 PTS</div>
+      </div>
+
+      <div style="display:flex; gap:1rem; width:100%; margin-top:1rem;">
+        <a href="index.html" class="btn btn-primary btn-lg w-full" style="text-align:center;">
+          🚀 Ir a Modos de Juego
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/cifrado.js"></script>
+  <script type="module" src="js/practica.js"></script>
+</body>
+</html>

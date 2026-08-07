@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { logout, isAdmin } from './auth.js';
-import { GAMES, escapeHtml, formatDate, timeAgo, $ } from './utils.js';
+import { GAMES, escapeHtml, formatDate, timeAgo, $, getAppUrl } from './utils.js';
 
 // ══════════════════════════════════════════════════════════════════
 //  HEADER / NAVBAR
@@ -30,11 +30,11 @@ export function renderHeader(user, profile) {
 
   const userIsAdmin = isAdmin(user, profile);
   const isTeacher   = profile.role === 'teacher' || userIsAdmin;
-  const depth       = window.location.pathname.split('/').filter(Boolean).length;
-  const root        = depth > 1 ? Array(depth - 1).fill('..').join('/') : '.';
   const dashUrl     = isTeacher
-    ? `${root}/dashboard_teacher.html`
-    : `${root}/dashboard_student.html`;
+    ? getAppUrl('dashboard_teacher.html')
+    : getAppUrl('dashboard_student.html');
+  const adminUrl    = getAppUrl('admin.html');
+  const profileUrl  = getAppUrl('profile.html');
 
   const badgeIcon = userIsAdmin ? '👑' : isTeacher ? '👨‍🏫' : '👨‍🎓';
   const badgeText = userIsAdmin ? 'Admin' : isTeacher ? 'Docente' : 'Alumno';
@@ -51,7 +51,7 @@ export function renderHeader(user, profile) {
 
       <div class="navbar-user">
         ${userIsAdmin ? `
-          <a href="${root}/admin.html" class="user-badge ${badgeClass}" title="Ir al Panel de Administración" style="text-decoration:none; cursor:pointer; transition:transform 0.15s ease;">
+          <a href="${adminUrl}" class="user-badge ${badgeClass}" title="Ir al Panel de Administración" style="text-decoration:none; cursor:pointer; transition:transform 0.15s ease;">
             ${badgeIcon}
             <span>${badgeText}</span>
           </a>
@@ -81,8 +81,8 @@ export function renderHeader(user, profile) {
           </div>
           <hr class="dropdown-divider">
           <a class="dropdown-item" href="${dashUrl}">🏠 Mi Dashboard</a>
-          ${userIsAdmin ? `<a class="dropdown-item" href="${root}/admin.html">⚙️ Panel de Administración</a>` : ''}
-          <a class="dropdown-item" href="${root}/profile.html">👤 Mi Perfil</a>
+          ${userIsAdmin ? `<a class="dropdown-item" href="${adminUrl}">⚙️ Panel de Administración</a>` : ''}
+          <a class="dropdown-item" href="${profileUrl}">👤 Mi Perfil</a>
           <button class="dropdown-item dropdown-item--danger" id="btn-logout">🚪 Cerrar sesión</button>
         </div>
       </div>

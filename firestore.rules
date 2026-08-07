@@ -28,12 +28,18 @@ service cloud.firestore {
               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher');
     }
 
-    // ── Colección de Usuarios ──
+    // ── Colección de Usuarios y sus subcolecciones ──
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       allow delete: if isAdmin();
+
+      // Subcolecciones del usuario (ej: /users/{userId}/games/{gameId})
+      match /{allChildren=**} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      }
     }
 
     // ── Colección de Docentes Autorizados ──
@@ -60,22 +66,58 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isTeacher() || (isAuthenticated() && request.auth.uid == memberId);
       }
+
+      // Subcolección de tareas
+      match /assignments/{assignmentId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
     }
 
-    // ── Colección de Tareas ──
-    match /assignments/{assignmentId} {
+    // ── Membresías de clases por PIN ──
+    match /class_members/{memberDocId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isTeacher();
+      allow write: if isAuthenticated();
     }
 
     // ── Colección de Resultados de Juegos ──
     match /game_results/{resultId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.studentId == request.auth.uid;
+      allow create: if isAuthenticated() && (request.resource.data.studentId == request.auth.uid || isTeacher());
       allow update, delete: if isAdmin();
     }
 
+    // ── Sesiones en vivo (MecanoClass & RompeCódigos) ──
+    match /live_sessions/{sessionId} {
+      allow read, write: if isAuthenticated();
+
+      match /{allSubcollections=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    match /live_participants/{participantId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ── Textos de MecanoClass ──
+    match /mecanoclass_texts/{textId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+
+    // ── Bots públicos de ArenaBots ──
+    match /public_bots/{botId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isAdmin());
+      allow update, delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
+    }
+
     // ── Configuración global del sitio ──
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
     match /site_settings/{settingId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
