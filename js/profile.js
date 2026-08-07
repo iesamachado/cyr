@@ -1,4 +1,4 @@
-import { requireAuth, currentUser, currentProfile, updateUserProfileData } from './common/auth.js';
+import { requireAuth, currentUser, currentProfile, updateUserProfileData, isAdmin } from './common/auth.js';
 import { renderHeader, showToast, showLoading, hideLoading } from './common/ui.js';
 import { $ } from './common/utils.js';
 
@@ -15,7 +15,7 @@ let currentStyle = 'bottts';
 let selectedUrl = '';
 
 requireAuth({
-  allowedRoles: ['teacher', 'student'],
+  allowedRoles: ['teacher', 'student', 'admin'],
   onAuthorized: async (user, profile) => {
     renderHeader(user, profile);
     initProfile(user, profile);
@@ -23,7 +23,7 @@ requireAuth({
 });
 
 function initProfile(user, profile) {
-  const isTeacher = profile.role === 'teacher';
+  const isTeacher = profile.role === 'teacher' || isAdmin(user, profile);
   const nameInput = $('display-name-input');
   const urlInput = $('photo-url-input');
   const preview = $('avatar-preview');

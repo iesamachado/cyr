@@ -63,9 +63,12 @@
         <div class="card">
           <div class="card-header">
             <h2 class="card-title">Alumnos de la clase</h2>
-            <div class="card-header-actions">
+            <div class="card-header-actions" style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
               <button class="btn btn-ghost btn--sm" id="btn-sync-students">
                 🔄 Sincronizar Classroom
+              </button>
+              <button class="btn btn-primary btn--sm" id="btn-add-students">
+                + Añadir alumnos
               </button>
             </div>
           </div>
@@ -77,7 +80,7 @@
           </div>
 
           <p class="empty-state" id="no-students" style="display:none">
-            No hay alumnos en esta clase todavía. Comparte el PIN o importa desde Classroom.
+            No hay alumnos en esta clase todavía. Usa el botón "+ Añadir alumnos", comparte el PIN o sincroniza desde Classroom.
           </p>
         </div>
       </section>
@@ -164,6 +167,33 @@
           <div class="modal-footer" style="padding:0; margin-top:var(--space-5); border:none">
             <button type="button" class="btn btn-ghost" id="cancel-new-assignment">Cancelar</button>
             <button type="submit" class="btn btn-primary">Crear tarea</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Añadir alumnos manualmente -->
+  <div id="modal-add-students" class="modal-backdrop" aria-hidden="true" role="dialog"
+       aria-modal="true" aria-labelledby="add-students-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="add-students-title">➕ Añadir alumnos a la clase</h3>
+        <button class="modal-close" id="close-add-students" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-students" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="manual-students-input">Correos electrónicos de los alumnos</label>
+            <textarea id="manual-students-input" rows="6" style="font-family:var(--font-mono); font-size:var(--text-xs);"
+                      placeholder="Pega los correos (uno por línea o separados por comas):&#10;alumno1@g.educaand.es&#10;alumno2@iesamachado.org" required></textarea>
+            <p class="form-hint" style="margin-top: var(--space-2);">
+              Se admiten correos corporativos <strong>@g.educaand.es</strong>, <strong>@iesamachado.org</strong> o cualquier otro dominio. Quedarán autorizados para iniciar sesión inmediatamente con Google.
+            </p>
+          </div>
+          <div class="modal-footer" style="padding:0; margin-top:var(--space-5); border:none">
+            <button type="button" class="btn btn-ghost" id="cancel-add-students">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Añadir a la clase</button>
           </div>
         </form>
       </div>

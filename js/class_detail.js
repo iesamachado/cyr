@@ -1,12 +1,8 @@
-// ═══════════════════════════════════════════════════════════════════════
-//  CLASSHUB — class_detail.js (Gestión de clase - Docente)
-// ═══════════════════════════════════════════════════════════════════════
-
-import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken } from './common/auth.js';
+import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken, isAdmin } from './common/auth.js';
 import {
   getClass, updateClass, getClassMembers, getClassAssignments,
   toggleGameInClass, createAssignment, deleteAssignment,
-  getClassRanking
+  getClassRanking, addStudentsToClass, removeStudentFromClass
 } from './common/db.js';
 import { createClassroomAssignment, syncClassroomGrades } from './common/classroom.js';
 import { renderHeader, showToast, showLoading, hideLoading, renderPodium, renderRankingTable } from './common/ui.js';
@@ -19,7 +15,7 @@ let activeGameFilter = '';
 
 // ── Guard ───────────────────────────────────────────────────────
 requireAuth({
-  allowedRoles: ['teacher'],
+  allowedRoles: ['teacher', 'admin'],
   onAuthorized: async (user, profile) => {
     renderHeader(user, profile);
     const { classId } = getUrlParams();
@@ -27,7 +23,10 @@ requireAuth({
 
     try {
       classData = await getClass(classId);
-      if (!classData || classData.teacherId !== user.uid) {
+      const isOwner = classData && classData.teacherId === user.uid;
+      const userIsAdmin = isAdmin(user, profile);
+
+      if (!classData || (!isOwner && !userIsAdmin)) {
         showToast('Acceso denegado', 'No tienes acceso a esta clase.', 'error');
         setTimeout(() => window.location.href = 'dashboard_teacher.html', 2000);
         return;
@@ -160,34 +159,72 @@ async function loadStudentsTab() {
       <div class="students-list-body">
         ${members.map(m => renderStudentRow(m)).join('')}
       </div>`;
+
+    // Eventos de eliminación
+    list.querySelectorAll('[data-action="remove-student"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const studentId = btn.dataset.studentId;
+        const studentName = btn.dataset.studentName || 'este alumno';
+        if (!confirm(`¿Eliminar a ${studentName} de la clase?`)) return;
+
+        try {
+          showLoading('Eliminando alumno...');
+          await removeStudentFromClass(classData.id, studentId);
+          showToast('Alumno eliminado', `${studentName} ya no pertenece a la clase.`, 'info');
+          await loadStudentsTab();
+        } catch (err) {
+          showToast('Error', err.message, 'error');
+        } finally {
+          hideLoading();
+        }
+      });
+    });
   } catch (err) {
     showToast('Error', err.message, 'error');
   }
 }
 
 function renderStudentRow(m) {
+  const displayName = m.displayNameAnonymized || m.displayName || m.name || m.email || 'Alumno';
+  const identifier = m.uid || m.email;
+
   if (m.pending) {
-    return `<div class="student-row student-row--pending">
-      <div class="student-row-avatar student-row-avatar--pending">⏳</div>
-      <div class="student-row-info">
-        <strong>${escapeHtml(m.name || m.email)}</strong>
-        <small>${escapeHtml(m.email)} — <em>Pendiente de registro</em></small>
+    return `<div class="student-row student-row--pending" style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-3); border-bottom:1px solid var(--border);">
+      <div style="display:flex; align-items:center; gap:var(--space-3);">
+        <div class="student-row-avatar student-row-avatar--pending">⏳</div>
+        <div class="student-row-info">
+          <strong>${escapeHtml(m.name || m.email)}</strong>
+          <small style="display:block; color:var(--text-muted);">${escapeHtml(m.email)} — <em>Pendiente de registro</em></small>
+        </div>
       </div>
-      <span class="badge badge--warning">Pendiente</span>
+      <div style="display:flex; align-items:center; gap:var(--space-2);">
+        <span class="badge badge--warning">Pendiente</span>
+        <button class="btn btn-ghost btn--sm" data-action="remove-student" data-student-id="${escapeHtml(identifier)}" data-student-name="${escapeHtml(m.email)}" title="Eliminar de la clase" style="color:var(--error); padding:4px 8px;">
+          🗑️
+        </button>
+      </div>
     </div>`;
   }
-  return `<div class="student-row">
-    <img class="student-row-avatar"
-         src="${escapeHtml(m.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.uid}`)}"
-         alt="${escapeHtml(m.displayNameAnonymized || m.displayName || 'Alumno')}"
-         onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${m.uid}'">
-    <div class="student-row-info">
-      <strong>${escapeHtml(m.displayNameAnonymized || m.displayName || 'Alumno')}</strong>
-      <small>${escapeHtml(m.email || '')}</small>
+
+  return `<div class="student-row" style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-3); border-bottom:1px solid var(--border);">
+    <div style="display:flex; align-items:center; gap:var(--space-3);">
+      <img class="student-row-avatar"
+           src="${escapeHtml(m.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.uid}`)}"
+           alt="${escapeHtml(displayName)}"
+           onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=${m.uid}'">
+      <div class="student-row-info">
+        <strong>${escapeHtml(displayName)}</strong>
+        <small style="display:block; color:var(--text-muted);">${escapeHtml(m.email || '')}</small>
+      </div>
     </div>
-    <span class="badge ${m.source === 'classroom' ? 'badge--accent' : 'badge--muted'}">
-      ${m.source === 'classroom' ? 'Classroom' : 'PIN'}
-    </span>
+    <div style="display:flex; align-items:center; gap:var(--space-2);">
+      <span class="badge ${m.source === 'classroom' ? 'badge--accent' : 'badge--muted'}">
+        ${m.source === 'classroom' ? 'Classroom' : 'Directo / PIN'}
+      </span>
+      <button class="btn btn-ghost btn--sm" data-action="remove-student" data-student-id="${escapeHtml(identifier)}" data-student-name="${escapeHtml(displayName)}" title="Eliminar de la clase" style="color:var(--error); padding:4px 8px;">
+        🗑️
+      </button>
+    </div>
   </div>`;
 }
 
@@ -414,6 +451,54 @@ function setupModals(user) {
       const { importClassroomStudents } = await import('./common/classroom.js');
       const { matched, pending } = await importClassroomStudents(token, classData.classroomCourseId, classData.id);
       showToast('Alumnos sincronizados', `${matched} vinculados, ${pending} pendientes de registro.`, 'success');
+      await loadStudentsTab();
+    } catch (err) {
+      showToast('Error', err.message, 'error');
+    } finally {
+      hideLoading();
+    }
+  });
+
+  // Modal añadir alumnos manualmente
+  const modalAddStudents  = $('modal-add-students');
+  const formAddStudents   = $('form-add-students');
+  const btnAddStudents    = $('btn-add-students');
+  const closeAddStudents  = $('close-add-students');
+  const cancelAddStudents = $('cancel-add-students');
+
+  const openAddStudents = () => {
+    formAddStudents?.reset();
+    modalAddStudents?.classList.add('modal-backdrop--visible');
+    modalAddStudents?.setAttribute('aria-hidden', 'false');
+  };
+  const closeAddModal = () => {
+    modalAddStudents?.classList.remove('modal-backdrop--visible');
+    modalAddStudents?.setAttribute('aria-hidden', 'true');
+  };
+
+  btnAddStudents?.addEventListener('click', openAddStudents);
+  closeAddStudents?.addEventListener('click', closeAddModal);
+  cancelAddStudents?.addEventListener('click', closeAddModal);
+  modalAddStudents?.addEventListener('click', e => { if (e.target === modalAddStudents) closeAddModal(); });
+
+  formAddStudents?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const rawEmails = $('manual-students-input')?.value || '';
+    if (!rawEmails.trim()) {
+      showToast('Atención', 'Introduce al menos un correo electrónico.', 'warning');
+      return;
+    }
+
+    try {
+      showLoading('Añadiendo alumnos...');
+      const result = await addStudentsToClass(classData.id, rawEmails);
+      closeAddModal();
+
+      let msg = `${result.added} alumno(s) añadido(s).`;
+      if (result.alreadyInClass > 0) msg += ` (${result.alreadyInClass} ya estaban en la clase).`;
+      if (result.invalidEmails > 0) msg += ` (${result.invalidEmails} correos con formato inválido).`;
+
+      showToast('Alumnos procesados', msg, 'success', 5000);
       await loadStudentsTab();
     } catch (err) {
       showToast('Error', err.message, 'error');

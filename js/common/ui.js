@@ -2,7 +2,7 @@
 //  CLASSHUB — UI (Componentes de interfaz reutilizables)
 // ═══════════════════════════════════════════════════════════════════════
 
-import { logout } from './auth.js';
+import { logout, isAdmin } from './auth.js';
 import { GAMES, escapeHtml, formatDate, timeAgo, $ } from './utils.js';
 
 // ══════════════════════════════════════════════════════════════════
@@ -28,12 +28,17 @@ export function renderHeader(user, profile) {
     return;
   }
 
-  const isTeacher = profile.role === 'teacher';
-  const depth     = window.location.pathname.split('/').filter(Boolean).length;
-  const root      = depth > 1 ? Array(depth - 1).fill('..').join('/') : '.';
-  const dashUrl   = isTeacher
+  const userIsAdmin = isAdmin(user, profile);
+  const isTeacher   = profile.role === 'teacher' || userIsAdmin;
+  const depth       = window.location.pathname.split('/').filter(Boolean).length;
+  const root        = depth > 1 ? Array(depth - 1).fill('..').join('/') : '.';
+  const dashUrl     = isTeacher
     ? `${root}/dashboard_teacher.html`
     : `${root}/dashboard_student.html`;
+
+  const badgeIcon = userIsAdmin ? '👑' : isTeacher ? '👨‍🏫' : '👨‍🎓';
+  const badgeText = userIsAdmin ? 'Admin' : isTeacher ? 'Docente' : 'Alumno';
+  const badgeClass = userIsAdmin ? 'user-badge--admin' : isTeacher ? 'user-badge--teacher' : 'user-badge--student';
 
   header.innerHTML = `
     <nav class="navbar">
@@ -45,10 +50,17 @@ export function renderHeader(user, profile) {
       <div class="navbar-center" id="navbar-breadcrumb"></div>
 
       <div class="navbar-user">
-        <div class="user-badge ${isTeacher ? 'user-badge--teacher' : 'user-badge--student'}">
-          ${isTeacher ? '👨‍🏫' : '👨‍🎓'}
-          <span>${isTeacher ? 'Docente' : 'Alumno'}</span>
-        </div>
+        ${userIsAdmin ? `
+          <a href="${root}/admin.html" class="user-badge ${badgeClass}" title="Ir al Panel de Administración" style="text-decoration:none; cursor:pointer; transition:transform 0.15s ease;">
+            ${badgeIcon}
+            <span>${badgeText}</span>
+          </a>
+        ` : `
+          <div class="user-badge ${badgeClass}">
+            ${badgeIcon}
+            <span>${badgeText}</span>
+          </div>
+        `}
         <div class="navbar-avatar-wrapper" id="user-menu-trigger">
           <img class="navbar-avatar" 
                src="${escapeHtml(profile.photoURL || '')}" 
@@ -69,6 +81,7 @@ export function renderHeader(user, profile) {
           </div>
           <hr class="dropdown-divider">
           <a class="dropdown-item" href="${dashUrl}">🏠 Mi Dashboard</a>
+          ${userIsAdmin ? `<a class="dropdown-item" href="${root}/admin.html">⚙️ Panel de Administración</a>` : ''}
           <a class="dropdown-item" href="${root}/profile.html">👤 Mi Perfil</a>
           <button class="dropdown-item dropdown-item--danger" id="btn-logout">🚪 Cerrar sesión</button>
         </div>

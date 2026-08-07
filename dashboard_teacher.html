@@ -127,11 +127,17 @@
       <div class="modal-body">
         <form id="form-new-class" novalidate>
           <div class="form-group">
-            <label class="form-label" for="class-name-input">Nombre de la clase</label>
-            <input type="text" id="class-name-input" placeholder="Ej: DAW 1º Grupo A"
+            <label class="form-label" for="class-name-input">Nombre de la clase *</label>
+            <input type="text" id="class-name-input" placeholder="Ej: 1º ESO Tecnología Grupo A"
                    maxlength="60" required>
           </div>
-          <p class="form-hint">Se generará automáticamente un PIN de 6 dígitos para que los alumnos puedan unirse.</p>
+          <div class="form-group" style="margin-top: var(--space-4);">
+            <label class="form-label" for="class-students-input">Correos de alumnos (opcional)</label>
+            <textarea id="class-students-input" rows="4" style="font-family:var(--font-mono); font-size:var(--text-xs);"
+                      placeholder="Pega aquí los correos (uno por línea, o separados por comas):&#10;alumno1@g.educaand.es&#10;alumno2@iesamachado.org"></textarea>
+            <p class="form-hint">Los alumnos añadidos quedarán automáticamente autorizados para acceder a ClassHub con su cuenta de Google.</p>
+          </div>
+          <p class="form-hint" style="margin-top: var(--space-2);">Se generará además un PIN de 6 dígitos con el que también podrán unirse.</p>
           <div class="modal-footer" style="padding:0; margin-top:var(--space-6); border:none">
             <button type="button" class="btn btn-ghost" id="cancel-new-class">Cancelar</button>
             <button type="submit" class="btn btn-primary">Crear Clase</button>

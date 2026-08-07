@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken, updateUserProfileData } from './common/auth.js';
-import { getTeacherClasses, createClass, getClassMembers, getClassResults, getStudentResults } from './common/db.js';
+import { getTeacherClasses, createClass, getClassMembers, getClassResults, getStudentResults, addStudentsToClass } from './common/db.js';
 import { fetchClassroomCourses, importClassroomStudents } from './common/classroom.js';
 import { renderHeader, showToast, showModal, showLoading, hideLoading } from './common/ui.js';
 import { GAMES, copyToClipboard, $, escapeHtml, formatDate, getUrlParams } from './common/utils.js';
@@ -12,7 +12,7 @@ let myClasses = [];
 
 // ── Guard de autenticación ──────────────────────────────────────
 requireAuth({
-  allowedRoles: ['teacher'],
+  allowedRoles: ['teacher', 'admin'],
   onAuthorized: async (user, profile) => {
     renderHeader(user, profile);
     $('teacher-welcome').textContent = `Hola, ${profile.displayName || 'Docente'} 👋`;
@@ -167,6 +167,8 @@ function setupModals() {
 
   openNewClass?.addEventListener('click', () => {
     $('class-name-input').value = '';
+    const stInput = $('class-students-input');
+    if (stInput) stInput.value = '';
     modalNewClass.classList.add('modal-backdrop--visible');
     modalNewClass.setAttribute('aria-hidden', 'false');
   });
@@ -182,13 +184,24 @@ function setupModals() {
     e.preventDefault();
     const name = $('class-name-input').value.trim();
     if (!name) return;
+    const studentsRaw = $('class-students-input')?.value || '';
 
     try {
       showLoading('Creando clase...');
       const cls = await createClass(currentUser.uid, name);
+      
+      let addedInfo = '';
+      if (studentsRaw.trim()) {
+        const studentResult = await addStudentsToClass(cls.id, studentsRaw);
+        if (studentResult.added > 0) {
+          addedInfo = ` (${studentResult.added} alumnos añadidos)`;
+        }
+      }
+
       closeModalNew();
-      showToast('Clase creada', `PIN: ${cls.pin} — ya puedes compartirlo con tus alumnos.`, 'success', 5000);
-      myClasses.unshift({ ...cls, enabledGames: [], members: [] });
+      showToast('Clase creada', `PIN: ${cls.pin}${addedInfo} — ya puedes compartirlo con tus alumnos.`, 'success', 5000);
+      
+      myClasses = await getTeacherClasses(currentUser.uid);
       renderClasses(myClasses);
       updateStats(myClasses);
     } catch (err) {

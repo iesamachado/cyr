@@ -16,7 +16,9 @@ import { auth, db, googleProvider, GoogleAuthProvider,
   sendPasswordResetEmail, updateProfile, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from './firebase-config.js';
 import { generateAvatar, generateTeacherAvatar, anonymizeName, getUrlParams } from './utils.js';
-import { isStudentInAnyClass } from './db.js';
+import { isStudentInAnyClass, isTeacherAuthorized, SUPERADMIN_EMAIL } from './db.js';
+
+export { SUPERADMIN_EMAIL };
 
 // ──────────────────────────────────────────────────────────────────────
 //  Estado global exportado
@@ -33,30 +35,40 @@ const CLASSROOM_SCOPES = [
   'https://www.googleapis.com/auth/classroom.profile.emails'
 ];
 
+/**
+ * Comprueba si un usuario es administrador del sistema
+ */
+export function isAdmin(user = currentUser, profile = currentProfile) {
+  if (!user) return false;
+  const email = (user.email || '').toLowerCase().trim();
+  if (email === SUPERADMIN_EMAIL.toLowerCase()) return true;
+  return profile?.role === 'admin';
+}
+
 // ──────────────────────────────────────────────────────────────────────
 //  LOGIN — Google (Alumno)
 // ──────────────────────────────────────────────────────────────────────
 export async function loginWithGoogle() {
   const result = await signInWithPopup(auth, googleProvider);
-  const email = result.user.email;
+  const email = (result.user.email || '').toLowerCase().trim();
   
   if (!email) {
     await signOut(auth);
     throw new Error('No se pudo obtener el correo de Google.');
   }
 
-  // Verificar si está en alguna clase (IES Machado)
+  // Verificar si está matriculado en alguna clase activa (allowed_students)
   const isAllowed = await isStudentInAnyClass(email);
   if (!isAllowed) {
     await signOut(auth);
-    throw new Error('Acceso denegado. No perteneces a ninguna clase activa.');
+    throw new Error(`Acceso denegado. El correo (${email}) no está registrado en ninguna clase activa. Pide a tu docente que te añada.`);
   }
 
   return result.user;
 }
 
 // ──────────────────────────────────────────────────────────────────────
-//  LOGIN — Google con Classroom (Profesor)
+//  LOGIN — Google con Classroom (Profesor / Admin)
 // ──────────────────────────────────────────────────────────────────────
 export async function loginAsTeacher() {
   const provider = new GoogleAuthProvider();
@@ -64,34 +76,36 @@ export async function loginAsTeacher() {
   provider.setCustomParameters({ prompt: 'select_account' });
 
   const result = await signInWithPopup(auth, provider);
-  const email = result.user.email;
+  const email = (result.user.email || '').toLowerCase().trim();
 
   if (!email) {
     await signOut(auth);
     throw new Error('No se pudo obtener el correo de Google.');
   }
 
-  // Restricciones IES Machado para docentes
-  if (!email.endsWith('@iesamachado.org')) {
+  // Verificar si el docente está expresamente autorizado o es Superadmin
+  const teacherAuth = await isTeacherAuthorized(email);
+  if (!teacherAuth) {
     await signOut(auth);
-    throw new Error('Acceso denegado. Se requiere un correo corporativo del IES Antonio Machado.');
-  }
-  const username = email.split('@')[0];
-  if (/\d$/.test(username)) {
-    await signOut(auth);
-    throw new Error('Acceso denegado. El correo pertenece a un alumno, usa la entrada de Alumnado.');
+    throw new Error(`Acceso denegado. El correo docente (${email}) no está autorizado en la plataforma. Contacta con el administrador (${SUPERADMIN_EMAIL}) para solicitar acceso.`);
   }
 
   const credential = GoogleAuthProvider.credentialFromResult(result);
   classroomToken = credential?.accessToken || null;
 
-  // Marcar como profesor en Firestore
+  const assignedRole = (email === SUPERADMIN_EMAIL.toLowerCase() || teacherAuth.role === 'admin') ? 'admin' : 'teacher';
+
+  // Guardar/actualizar perfil en Firestore
   await setDoc(doc(db, 'users', result.user.uid), {
-    role: 'teacher'
+    email: email,
+    role: assignedRole,
+    displayName: result.user.displayName || email.split('@')[0],
+    lastLogin: serverTimestamp()
   }, { merge: true });
 
   return result.user;
 }
+
 
 // ──────────────────────────────────────────────────────────────────────
 //  Refresco manual del token Classroom (el profesor lo reautoriza)
@@ -154,8 +168,16 @@ async function _createOrUpdateProfile(user, role = null, providedName = null) {
   const ref  = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
 
-  const rawName = providedName || user.displayName || user.email.split('@')[0];
-  const isTeacher = role === 'teacher';
+  const cleanEmail = (user.email || '').toLowerCase().trim();
+  const isSuperAdmin = cleanEmail === SUPERADMIN_EMAIL.toLowerCase();
+
+  let assignedRole = role || 'student';
+  if (isSuperAdmin) {
+    assignedRole = 'admin';
+  }
+
+  const rawName = providedName || user.displayName || user.email?.split('@')[0] || 'Usuario';
+  const isTeacher = assignedRole === 'teacher' || assignedRole === 'admin';
   const finalDisplayName = isTeacher ? rawName : anonymizeName(rawName);
 
   if (!snap.exists()) {
@@ -168,7 +190,7 @@ async function _createOrUpdateProfile(user, role = null, providedName = null) {
       photoURL:     isTeacher
                       ? generateTeacherAvatar(user.uid)
                       : generateAvatar(user.uid),
-      role:         role || 'student',
+      role:         assignedRole,
       createdAt:    serverTimestamp(),
       lastLogin:    serverTimestamp()
     });
@@ -177,11 +199,15 @@ async function _createOrUpdateProfile(user, role = null, providedName = null) {
       await updateProfile(user, { displayName: finalDisplayName });
     }
 
-    return { role: role || 'student' };
+    return { role: assignedRole, email: user.email, displayName: finalDisplayName };
   } else {
-    // Actualizar lastLogin
-    await setDoc(ref, { lastLogin: serverTimestamp() }, { merge: true });
-    return snap.data();
+    // Actualizar lastLogin y rol si es superadmin
+    const updates = { lastLogin: serverTimestamp() };
+    if (isSuperAdmin && snap.data()?.role !== 'admin') {
+      updates.role = 'admin';
+    }
+    await setDoc(ref, updates, { merge: true });
+    return { ...snap.data(), ...updates };
   }
 }
 
@@ -224,6 +250,10 @@ export function setupAuthListener(callback) {
 
         if (snap.exists()) {
           currentProfile = snap.data();
+          // Asegurar superadmin
+          if (user.email?.toLowerCase().trim() === SUPERADMIN_EMAIL.toLowerCase() && currentProfile.role !== 'admin') {
+            currentProfile.role = 'admin';
+          }
         } else {
           // Usuario nuevo sin rol definido (login Google alumno por primera vez)
           currentProfile = await _createOrUpdateProfile(user, 'student');
@@ -231,7 +261,6 @@ export function setupAuthListener(callback) {
         callback(user, currentProfile);
       } catch (error) {
         console.warn("No se pudo obtener el perfil de usuario (puede que la sesión se haya cerrado):", error);
-        // Si hay error de permisos (porque se forzó el logout), abortar
       }
     } else {
       currentUser    = null;
@@ -245,7 +274,7 @@ export function setupAuthListener(callback) {
 // ──────────────────────────────────────────────────────────────────────
 //  GUARD — Requiere autenticación
 //  Opciones:
-//    allowedRoles: ['teacher'] | ['student'] | ['teacher','student'] (por defecto ambos)
+//    allowedRoles: ['teacher'] | ['student'] | ['admin'] | ['teacher','student'] (por defecto teacher y student)
 //    onAuthorized(user, profile): callback si autorizado
 //    redirectTo: URL a la que redirigir si no autenticado (por defecto raíz)
 // ──────────────────────────────────────────────────────────────────────
@@ -262,9 +291,14 @@ export function requireAuth({ allowedRoles = ['teacher', 'student'], onAuthorize
       return;
     }
 
-    if (!allowedRoles.includes(profile.role)) {
-      // Redirigir al dashboard correcto
-      if (profile.role === 'teacher') {
+    const userIsAdmin = isAdmin(user, profile);
+    const hasRole = allowedRoles.includes(profile.role) ||
+                    (allowedRoles.includes('teacher') && userIsAdmin) ||
+                    (allowedRoles.includes('admin') && userIsAdmin);
+
+    if (!hasRole) {
+      // Redirigir al dashboard correspondiente
+      if (profile.role === 'teacher' || userIsAdmin) {
         window.location.href = `${root}/dashboard_teacher.html`;
       } else {
         window.location.href = `${root}/dashboard_student.html`;
@@ -279,7 +313,7 @@ export function requireAuth({ allowedRoles = ['teacher', 'student'], onAuthorize
 // ──────────────────────────────────────────────────────────────────────
 //  GUARD — Requiere acceso al juego
 //  Verifica que el usuario tenga una clase con el juego habilitado.
-//  Los profesores siempre tienen acceso.
+//  Los profesores y administradores siempre tienen acceso.
 //  onGranted(user, profile, classId): se llama con el classId de la sesión
 // ──────────────────────────────────────────────────────────────────────
 export function requireGameAccess(gameId, { onGranted } = {}) {
@@ -287,12 +321,12 @@ export function requireGameAccess(gameId, { onGranted } = {}) {
   const root  = depth > 1 ? Array(depth - 1).fill('..').join('/') : '.';
 
   return requireAuth({
-    allowedRoles: ['teacher', 'student'],
+    allowedRoles: ['teacher', 'student', 'admin'],
     onAuthorized: async (user, profile) => {
       const { classId } = getUrlParams();
 
-      // Los profesores siempre tienen acceso
-      if (profile.role === 'teacher') {
+      // Los profesores y administradores siempre tienen acceso
+      if (profile.role === 'teacher' || isAdmin(user, profile)) {
         if (onGranted) onGranted(user, profile, classId || null);
         return;
       }

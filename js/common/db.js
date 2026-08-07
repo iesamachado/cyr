@@ -88,7 +88,7 @@ export async function getTeacherClasses(teacherId) {
  */
 export async function isStudentInAnyClass(email) {
   if (!email) return false;
-  email = email.toLowerCase();
+  email = email.toLowerCase().trim();
   
   try {
     const snap = await getDoc(doc(db, 'allowed_students', email));
@@ -98,6 +98,209 @@ export async function isStudentInAnyClass(email) {
     return false;
   }
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  DOCENTES Y ADMINISTRADORES AUTORIZADOS
+// ══════════════════════════════════════════════════════════════════
+
+export const SUPERADMIN_EMAIL = 'bernatcosta@iesamachado.org';
+
+/**
+ * Comprueba si un docente está autorizado en el sistema
+ */
+export async function isTeacherAuthorized(email) {
+  if (!email) return null;
+  const cleanEmail = email.toLowerCase().trim();
+
+  if (cleanEmail === SUPERADMIN_EMAIL.toLowerCase()) {
+    return { email: cleanEmail, role: 'admin', name: 'Superadmin', isSuperAdmin: true };
+  }
+
+  try {
+    const snap = await getDoc(doc(db, 'allowed_teachers', cleanEmail));
+    if (snap.exists()) {
+      return { email: cleanEmail, ...snap.data() };
+    }
+    return null;
+  } catch (err) {
+    console.error('Error comprobando autorización docente:', err);
+    return null;
+  }
+}
+
+/**
+ * Obtiene todos los docentes y administradores autorizados
+ */
+export async function getAllowedTeachers() {
+  try {
+    const snap = await getDocs(collection(db, 'allowed_teachers'));
+    const list = snap.docs.map(d => ({ email: d.id, ...d.data() }));
+
+    // Asegurar que el superadmin siempre aparezca en la lista
+    const hasSuperAdmin = list.some(t => t.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase());
+    if (!hasSuperAdmin) {
+      list.unshift({
+        email: SUPERADMIN_EMAIL,
+        name: 'Bernat Costa (Superadmin)',
+        role: 'admin',
+        isSuperAdmin: true,
+        createdAt: null
+      });
+    } else {
+      list.forEach(t => {
+        if (t.email.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase()) {
+          t.isSuperAdmin = true;
+        }
+      });
+    }
+
+    return list.sort((a, b) => (a.isSuperAdmin ? -1 : b.isSuperAdmin ? 1 : a.email.localeCompare(b.email)));
+  } catch (err) {
+    console.error('Error obteniendo docentes autorizados:', err);
+    return [{
+      email: SUPERADMIN_EMAIL,
+      name: 'Bernat Costa (Superadmin)',
+      role: 'admin',
+      isSuperAdmin: true
+    }];
+  }
+}
+
+/**
+ * Autoriza un nuevo docente o administrador
+ */
+export async function addAllowedTeacher(email, { name = '', role = 'teacher', addedBy = '' } = {}) {
+  const cleanEmail = email.toLowerCase().trim();
+  if (!cleanEmail) throw new Error('El correo es obligatorio.');
+
+  await setDoc(doc(db, 'allowed_teachers', cleanEmail), {
+    email: cleanEmail,
+    name: name.trim() || cleanEmail.split('@')[0],
+    role: role === 'admin' ? 'admin' : 'teacher',
+    addedBy: addedBy || 'admin',
+    createdAt: serverTimestamp()
+  }, { merge: true });
+
+  return { email: cleanEmail, name, role };
+}
+
+export const authorizeTeacher = addAllowedTeacher;
+
+/**
+ * Elimina la autorización de un docente
+ */
+export async function removeAllowedTeacher(email) {
+  const cleanEmail = email.toLowerCase().trim();
+  if (cleanEmail === SUPERADMIN_EMAIL.toLowerCase()) {
+    throw new Error('No se puede eliminar al superadministrador del sistema.');
+  }
+  await deleteDoc(doc(db, 'allowed_teachers', cleanEmail));
+}
+
+/**
+ * Actualiza el rol de un docente (teacher <-> admin)
+ */
+export async function updateTeacherRole(email, role) {
+  const cleanEmail = email.toLowerCase().trim();
+  if (cleanEmail === SUPERADMIN_EMAIL.toLowerCase()) {
+    throw new Error('El superadministrador siempre mantiene el rol de admin.');
+  }
+  await updateDoc(doc(db, 'allowed_teachers', cleanEmail), {
+    role: role === 'admin' ? 'admin' : 'teacher',
+    updatedAt: serverTimestamp()
+  });
+}
+
+/**
+ * Añade una lista de emails de alumnos a una clase y los autoriza en allowed_students
+ */
+export async function addStudentsToClass(classId, emailList) {
+  if (!classId) throw new Error('ID de clase no proporcionado.');
+  
+  // Normalizar y separar emails (por saltos de línea, comas o punto y coma)
+  const emails = (Array.isArray(emailList) ? emailList : emailList.split(/[\n,;\s]+/))
+    .map(e => e.toLowerCase().trim())
+    .filter(e => e.includes('@') && e.includes('.'));
+
+  if (emails.length === 0) return { added: 0, existing: 0 };
+
+  const classDoc = await getDoc(doc(db, 'classes', classId));
+  if (!classDoc.exists()) throw new Error('La clase no existe.');
+
+  const currentMembers = classDoc.data().members || [];
+  const existingEmailSet = new Set(
+    currentMembers.map(m => (typeof m === 'string' ? m : m?.email?.toLowerCase())).filter(Boolean)
+  );
+
+  let added = 0;
+  let existing = 0;
+
+  for (const email of emails) {
+    if (existingEmailSet.has(email)) {
+      existing++;
+      continue;
+    }
+
+    // Buscar si ya tiene cuenta en users
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      if (!existingEmailSet.has(existingUser.uid)) {
+        await addMemberToClass(classId, existingUser.uid);
+        existingEmailSet.add(existingUser.uid);
+        added++;
+      }
+    } else {
+      const displayName = email.split('@')[0];
+      await addPendingMember(classId, email, displayName);
+      existingEmailSet.add(email);
+      added++;
+    }
+
+    // Dar de alta en allowed_students para permitir acceso inmediato con Google
+    await setDoc(doc(db, 'allowed_students', email), {
+      allowed: true,
+      lastClassId: classId,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }
+
+  return { added, existing, total: emails.length };
+}
+
+/**
+ * Elimina un alumno de una clase (tanto por UID como por email pendiente)
+ */
+export async function removeStudentFromClass(classId, studentIdOrEmail) {
+  if (!classId || !studentIdOrEmail) return;
+
+  const classRef = doc(db, 'classes', classId);
+  const classSnap = await getDoc(classRef);
+  if (!classSnap.exists()) return;
+
+  const members = classSnap.data().members || [];
+  const updatedMembers = members.filter(m => {
+    if (typeof m === 'string') {
+      return m !== studentIdOrEmail;
+    } else if (m && typeof m === 'object') {
+      return m.email?.toLowerCase() !== studentIdOrEmail.toLowerCase();
+    }
+    return true;
+  });
+
+  await updateDoc(classRef, {
+    members: updatedMembers,
+    updatedAt: serverTimestamp()
+  });
+
+  // También eliminar membresía por PIN si existe
+  try {
+    const memberDocId = `${classId}_${studentIdOrEmail}`;
+    await deleteDoc(doc(db, 'class_members', memberDocId));
+  } catch (e) {
+    // Si no existe, ignorar
+  }
+}
+
 
 /**
  * Clases donde el alumno aparece en 'members' (importados desde Classroom)

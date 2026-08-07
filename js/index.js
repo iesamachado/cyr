@@ -7,7 +7,7 @@ import {
   loginWithEmail, registerWithEmail,
   resetPassword, setupAuthListener
 } from './common/auth.js';
-import { initParticles } from './common/ui.js';
+import { initParticles, showToast } from './common/ui.js';
 import { $ } from './common/utils.js';
 
 // Inicializar partículas de fondo
@@ -27,7 +27,7 @@ setupAuthListener((user, profile) => {
   }
 
   // Redirigir al dashboard según rol
-  if (profile.role === 'teacher') {
+  if (profile.role === 'teacher' || profile.role === 'admin') {
     window.location.href = './dashboard_teacher.html';
   } else {
     window.location.href = './dashboard_student.html';
@@ -38,10 +38,12 @@ setupAuthListener((user, profile) => {
 $('btn-teacher-google')?.addEventListener('click', async () => {
   try {
     setLoading(true);
+    showError('');
     await loginAsTeacher();
     // El listener de arriba hará el redirect
   } catch (err) {
     showError(`Error al iniciar como docente: ${err.message}`);
+    showToast('Acceso Denegado', err.message, 'error', 6000);
     setLoading(false);
   }
 });

@@ -101,6 +101,19 @@
   border: var(--border-width) solid var(--border);
   box-shadow: 2px 2px 0px 0px var(--border);
 }
+.user-badge--admin {
+  background: #ffc300;
+  color: #000;
+  border: var(--border-width) solid var(--border);
+  box-shadow: 2px 2px 0px 0px var(--border);
+  font-weight: 800;
+  transition: all var(--transition-fast);
+}
+a.user-badge--admin:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px 0px var(--border);
+  filter: brightness(1.06);
+}
 .user-badge--student {
   background: var(--student-color);
   color: #000;
