@@ -1,4 +1,4 @@
-import { requireGameAccess } from '../../js/common/auth.js';
+import { requireGameAccess, currentUser } from '../../js/common/auth.js';
 import { saveGameResult, getRandomMecanoText } from '../../js/common/db.js';
 import { renderHeader, showToast } from '../../js/common/ui.js';
 import { getUrlParams } from '../../js/common/utils.js';
@@ -141,7 +141,7 @@ async function saveAndExit() {
                 ? Math.round((engine.endTime - engine.startTime) / 1000)
                 : null;
 
-            await saveGameResult('mecanoclass', window.currentUser?.uid || 'temp', currentClassId, engine.finalStats.wpm, {
+            await saveGameResult('mecanoclass', currentUser.uid, currentClassId, engine.finalStats.wpm, {
                 wpm: engine.finalStats.wpm,
                 accuracy: engine.finalStats.accuracy,
                 duration: duration,

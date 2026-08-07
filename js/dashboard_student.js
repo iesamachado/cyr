@@ -2,10 +2,10 @@
 //  CLASSHUB — dashboard_student.js
 // ═══════════════════════════════════════════════════════════════════════
 
-import { requireAuth, currentUser, currentProfile } from './js/common/auth.js';
-import { getStudentClasses, joinClassByPin, getStudentResults } from './js/common/db.js';
-import { renderHeader, showToast, showLoading, hideLoading } from './js/common/ui.js';
-import { GAMES, $, escapeHtml, formatDate, getUrlParams } from './js/common/utils.js';
+import { requireAuth, currentUser, currentProfile } from './common/auth.js';
+import { getStudentClasses, joinClassByPin, getStudentResults } from './common/db.js';
+import { renderHeader, showToast, showLoading, hideLoading } from './common/ui.js';
+import { GAMES, $, escapeHtml, formatDate, getUrlParams } from './common/utils.js';
 
 let myClasses = [];
 

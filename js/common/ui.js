@@ -69,6 +69,7 @@ export function renderHeader(user, profile) {
           </div>
           <hr class="dropdown-divider">
           <a class="dropdown-item" href="${dashUrl}">🏠 Mi Dashboard</a>
+          <a class="dropdown-item" href="${root}/profile.html">👤 Mi Perfil</a>
           <button class="dropdown-item dropdown-item--danger" id="btn-logout">🚪 Cerrar sesión</button>
         </div>
       </div>

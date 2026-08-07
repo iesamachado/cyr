@@ -2,15 +2,15 @@
 //  CLASSHUB — class_detail.js (Gestión de clase - Docente)
 // ═══════════════════════════════════════════════════════════════════════
 
-import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken } from './js/common/auth.js';
+import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken } from './common/auth.js';
 import {
   getClass, updateClass, getClassMembers, getClassAssignments,
   toggleGameInClass, createAssignment, deleteAssignment,
   getClassRanking
-} from './js/common/db.js';
-import { createClassroomAssignment, syncClassroomGrades } from './js/common/classroom.js';
-import { renderHeader, showToast, showLoading, hideLoading, renderPodium, renderRankingTable } from './js/common/ui.js';
-import { GAMES, $, $$, escapeHtml, formatDate, getUrlParams, copyToClipboard } from './js/common/utils.js';
+} from './common/db.js';
+import { createClassroomAssignment, syncClassroomGrades } from './common/classroom.js';
+import { renderHeader, showToast, showLoading, hideLoading, renderPodium, renderRankingTable } from './common/ui.js';
+import { GAMES, $, $$, escapeHtml, formatDate, getUrlParams, copyToClipboard } from './common/utils.js';
 
 let classData = null;
 let members   = [];
@@ -372,7 +372,7 @@ function setupModals(user) {
 
       // Si tiene Classroom y hay token, publicar la tarea
       if (classData.classroomCourseId && classroomToken) {
-        const settings = await import('./js/common/db.js').then(m => m.getSiteSettings());
+        const settings = await import('./common/db.js').then(m => m.getSiteSettings());
         const result = await createClassroomAssignment(classroomToken, classData.classroomCourseId, classData.id, {
           gameId, title, targetScore: target,
           dueDate: due || null,
@@ -411,7 +411,7 @@ function setupModals(user) {
     }
     try {
       showLoading('Sincronizando alumnos...');
-      const { importClassroomStudents } = await import('./js/common/classroom.js');
+      const { importClassroomStudents } = await import('./common/classroom.js');
       const { matched, pending } = await importClassroomStudents(token, classData.classroomCourseId, classData.id);
       showToast('Alumnos sincronizados', `${matched} vinculados, ${pending} pendientes de registro.`, 'success');
       await loadStudentsTab();

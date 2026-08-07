@@ -10,13 +10,13 @@
 //   - Estado global: currentUser, currentProfile, classroomToken
 // ═══════════════════════════════════════════════════════════════════════
 
-import {
-  auth, db, googleProvider, GoogleAuthProvider,
+import { auth, db, googleProvider, GoogleAuthProvider,
   signInWithPopup, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut, onAuthStateChanged,
-  sendPasswordResetEmail, doc, getDoc, setDoc, serverTimestamp
+  sendPasswordResetEmail, updateProfile, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from './firebase-config.js';
 import { generateAvatar, generateTeacherAvatar, anonymizeName, getUrlParams } from './utils.js';
+import { isStudentInAnyClass } from './db.js';
 
 // ──────────────────────────────────────────────────────────────────────
 //  Estado global exportado
@@ -38,6 +38,20 @@ const CLASSROOM_SCOPES = [
 // ──────────────────────────────────────────────────────────────────────
 export async function loginWithGoogle() {
   const result = await signInWithPopup(auth, googleProvider);
+  const email = result.user.email;
+  
+  if (!email) {
+    await signOut(auth);
+    throw new Error('No se pudo obtener el correo de Google.');
+  }
+
+  // Verificar si está en alguna clase (IES Machado)
+  const isAllowed = await isStudentInAnyClass(email);
+  if (!isAllowed) {
+    await signOut(auth);
+    throw new Error('Acceso denegado. No perteneces a ninguna clase activa.');
+  }
+
   return result.user;
 }
 
@@ -50,6 +64,24 @@ export async function loginAsTeacher() {
   provider.setCustomParameters({ prompt: 'select_account' });
 
   const result = await signInWithPopup(auth, provider);
+  const email = result.user.email;
+
+  if (!email) {
+    await signOut(auth);
+    throw new Error('No se pudo obtener el correo de Google.');
+  }
+
+  // Restricciones IES Machado para docentes
+  if (!email.endsWith('@iesamachado.org')) {
+    await signOut(auth);
+    throw new Error('Acceso denegado. Se requiere un correo corporativo del IES Antonio Machado.');
+  }
+  const username = email.split('@')[0];
+  if (/\d$/.test(username)) {
+    await signOut(auth);
+    throw new Error('Acceso denegado. El correo pertenece a un alumno, usa la entrada de Alumnado.');
+  }
+
   const credential = GoogleAuthProvider.credentialFromResult(result);
   classroomToken = credential?.accessToken || null;
 
@@ -90,7 +122,7 @@ export async function loginWithEmail(email, password) {
 export async function registerWithEmail(email, password, displayName, role = 'student') {
   const result = await createUserWithEmailAndPassword(auth, email, password);
   const user = result.user;
-  await _createOrUpdateProfile(user, role);
+  await _createOrUpdateProfile(user, role, displayName);
   return user;
 }
 
@@ -118,18 +150,21 @@ export async function resetPassword(email) {
 // ──────────────────────────────────────────────────────────────────────
 //  Crear / actualizar perfil en Firestore
 // ──────────────────────────────────────────────────────────────────────
-async function _createOrUpdateProfile(user, role = null) {
+async function _createOrUpdateProfile(user, role = null, providedName = null) {
   const ref  = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
 
+  const rawName = providedName || user.displayName || user.email.split('@')[0];
+  const isTeacher = role === 'teacher';
+  const finalDisplayName = isTeacher ? rawName : anonymizeName(rawName);
+
   if (!snap.exists()) {
     // Primer registro → crear perfil completo
-    const isTeacher = role === 'teacher';
     await setDoc(ref, {
       uid:          user.uid,
       email:        user.email,
-      displayName:  user.displayName || user.email.split('@')[0],
-      displayNameAnonymized: anonymizeName(user.displayName),
+      displayName:  finalDisplayName,
+      displayNameAnonymized: anonymizeName(rawName),
       photoURL:     isTeacher
                       ? generateTeacherAvatar(user.uid)
                       : generateAvatar(user.uid),
@@ -137,12 +172,42 @@ async function _createOrUpdateProfile(user, role = null) {
       createdAt:    serverTimestamp(),
       lastLogin:    serverTimestamp()
     });
+
+    if (user.displayName !== finalDisplayName) {
+      await updateProfile(user, { displayName: finalDisplayName });
+    }
+
     return { role: role || 'student' };
   } else {
     // Actualizar lastLogin
     await setDoc(ref, { lastLogin: serverTimestamp() }, { merge: true });
     return snap.data();
   }
+}
+
+// ──────────────────────────────────────────────────────────────────────
+//  Actualizar datos del perfil
+// ──────────────────────────────────────────────────────────────────────
+/** Actualiza datos del perfil (nombre, avatar) en Auth y Firestore */
+export async function updateUserProfileData(data) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("No hay usuario activo.");
+
+  const authData = {};
+  if (data.displayName !== undefined) authData.displayName = data.displayName;
+  if (data.photoURL !== undefined) authData.photoURL = data.photoURL;
+
+  if (Object.keys(authData).length > 0) {
+    await updateProfile(user, authData);
+  }
+
+  await updateDoc(doc(db, 'users', user.uid), {
+    ...authData,
+    updatedAt: serverTimestamp()
+  });
+
+  if (authData.displayName) currentProfile.displayName = authData.displayName;
+  if (authData.photoURL) currentProfile.photoURL = authData.photoURL;
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -154,15 +219,20 @@ export function setupAuthListener(callback) {
     if (user) {
       currentUser = user;
       const ref  = doc(db, 'users', user.uid);
-      const snap = await getDoc(ref);
+      try {
+        const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        currentProfile = snap.data();
-      } else {
-        // Usuario nuevo sin rol definido (login Google alumno por primera vez)
-        currentProfile = await _createOrUpdateProfile(user, 'student');
+        if (snap.exists()) {
+          currentProfile = snap.data();
+        } else {
+          // Usuario nuevo sin rol definido (login Google alumno por primera vez)
+          currentProfile = await _createOrUpdateProfile(user, 'student');
+        }
+        callback(user, currentProfile);
+      } catch (error) {
+        console.warn("No se pudo obtener el perfil de usuario (puede que la sesión se haya cerrado):", error);
+        // Si hay error de permisos (porque se forzó el logout), abortar
       }
-      callback(user, currentProfile);
     } else {
       currentUser    = null;
       currentProfile = null;

@@ -112,7 +112,7 @@ function endGame() {
     finalScore.innerText = score;
     gameOverScreen.classList.remove('hidden');
     
-    if (currentUser && currentClassId) {
+    if (currentUser) {
         saveGameResult('helados', currentUser.uid, currentClassId, score, { level: currentLevelIndex, itemsServed: totalItemsServed });
     }
 }
@@ -259,13 +259,7 @@ function parseOperation(op, A) {
     return A;
 }
 
-flavorBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        if (!isPlaying) return;
-        const flavor = parseInt(btn.getAttribute('data-flavor'));
-        addScoop(flavor);
-    });
-});
+
 
 function addScoop(flavor) {
     const currentIndex = playerStack.length;

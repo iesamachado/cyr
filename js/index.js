@@ -6,9 +6,9 @@ import {
   loginWithGoogle, loginAsTeacher,
   loginWithEmail, registerWithEmail,
   resetPassword, setupAuthListener
-} from './js/common/auth.js';
-import { initParticles } from './js/common/ui.js';
-import { $ } from './js/common/utils.js';
+} from './common/auth.js';
+import { initParticles } from './common/ui.js';
+import { $ } from './common/utils.js';
 
 // Inicializar partículas de fondo
 initParticles('particles-canvas');
@@ -55,89 +55,6 @@ $('btn-student-google')?.addEventListener('click', async () => {
   } catch (err) {
     showError(`Error al iniciar sesión: ${err.message}`);
     setLoading(false);
-  }
-});
-
-// ── Formulario EMAIL/CONTRASEÑA ─────────────────────────────────
-$('form-email-login')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = $('email-input').value.trim();
-  const pass  = $('pass-input').value;
-  if (!email || !pass) return showError('Completa todos los campos.');
-
-  try {
-    setLoading(true);
-    $('login-error').textContent = '';
-    await loginWithEmail(email, pass);
-    // El listener hará el redirect
-  } catch (err) {
-    let msg = 'Error al iniciar sesión.';
-    if (err.code === 'auth/user-not-found')  msg = 'No existe ninguna cuenta con ese correo.';
-    if (err.code === 'auth/wrong-password')  msg = 'Contraseña incorrecta.';
-    if (err.code === 'auth/invalid-email')   msg = 'El formato del correo no es válido.';
-    if (err.code === 'auth/too-many-requests') msg = 'Demasiados intentos. Espera un momento.';
-    showError(msg);
-    setLoading(false);
-  }
-});
-
-// ── Mostrar/ocultar contraseña ──────────────────────────────────
-$('btn-toggle-pass')?.addEventListener('click', () => {
-  const input = $('pass-input');
-  const isPass = input.type === 'password';
-  input.type = isPass ? 'text' : 'password';
-  $('btn-toggle-pass').textContent = isPass ? '🙈' : '👁';
-});
-
-// ── Cambiar a panel de registro ─────────────────────────────────
-$('btn-show-register')?.addEventListener('click', () => {
-  $('panel-role-select').classList.add('login-card--hidden');
-  $('panel-register').classList.remove('login-card--hidden');
-});
-
-$('btn-back-login')?.addEventListener('click', () => {
-  $('panel-register').classList.add('login-card--hidden');
-  $('panel-role-select').classList.remove('login-card--hidden');
-});
-
-// ── Formulario REGISTRO ─────────────────────────────────────────
-$('form-register')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name  = $('reg-name').value.trim();
-  const email = $('reg-email').value.trim();
-  const pass  = $('reg-pass').value;
-  const role  = $('reg-role').value;
-
-  if (!name || !email || !pass) return showRegError('Completa todos los campos.');
-  if (pass.length < 6) return showRegError('La contraseña debe tener al menos 6 caracteres.');
-
-  try {
-    setLoading(true);
-    $('register-error').textContent = '';
-    await registerWithEmail(email, pass, name, role);
-    // El listener hará el redirect
-  } catch (err) {
-    let msg = 'Error al crear la cuenta.';
-    if (err.code === 'auth/email-already-in-use') msg = 'Ya existe una cuenta con ese correo.';
-    if (err.code === 'auth/weak-password') msg = 'La contraseña es demasiado débil.';
-    if (err.code === 'auth/invalid-email')  msg = 'El formato del correo no es válido.';
-    showRegError(msg);
-    setLoading(false);
-  }
-});
-
-// ── Recuperar contraseña ─────────────────────────────────────────
-$('btn-forgot')?.addEventListener('click', async () => {
-  const email = $('email-input').value.trim();
-  if (!email) {
-    showError('Introduce tu correo primero.');
-    return;
-  }
-  try {
-    await resetPassword(email);
-    showError('✅ Correo de recuperación enviado. Revisa tu bandeja.', false);
-  } catch {
-    showError('No se pudo enviar el correo. Verifica el email.');
   }
 });
 

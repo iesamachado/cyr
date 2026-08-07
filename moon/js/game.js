@@ -140,9 +140,11 @@ function executeOperation() {
     
     checkLevelUp();
     
-    let newTarget;
-    do { newTarget = rnd(); } while (newTarget === 0 || state.targets.includes(newTarget));
-    state.targets.unshift(newTarget);
+    if (state.targets.length === 0) {
+      let newTarget;
+      do { newTarget = rnd(); } while (newTarget === 0 || state.targets.includes(newTarget));
+      state.targets.unshift(newTarget);
+    }
     
     renderTargetsQueue();
     
@@ -227,7 +229,7 @@ function triggerGameOver() {
     msg.textContent = "¡IMPRESIONANTE! Eres un Hacker de Nivel Dios 🚀🔥";
   }
 
-  if (currentUser && currentClassId) {
+  if (currentUser) {
     saveGameResult('moon', currentUser.uid, currentClassId, state.score, { level: state.numBits, highScore: state.score });
   }
 

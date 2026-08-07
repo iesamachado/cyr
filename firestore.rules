@@ -64,11 +64,15 @@ service cloud.firestore {
 
       // Tareas de la clase
       match /assignments/{assignmentId} {
-        // Todos los miembros pueden leer las tareas
-        allow read: if isAuthed() && isClassParticipant(classId);
-        // Solo el profesor puede crear/modificar/eliminar
-        allow write: if isAuthed() && isClassTeacher(classId);
+        allow read: if isClassParticipant(classId);
+        allow create, update, delete: if isClassTeacher(classId);
       }
+    }
+
+    // ── Estudiantes permitidos ────────────────────────────────────────
+    match /allowed_students/{email} {
+      allow read: if isAuthed();
+      allow write: if isTeacher();
     }
 
     // ── Membresías (unión por PIN) ────────────────────────────────────

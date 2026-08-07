@@ -193,6 +193,7 @@ html, body {
     radial-gradient(ellipse at 80% 10%, rgba(0,229,255,0.04) 0%, transparent 50%),
     radial-gradient(ellipse at 20% 90%, rgba(180,125,255,0.04) 0%, transparent 50%);
   min-height: 100vh;
+  padding-top: var(--navbar-height, 72px);
 }
 
 /* ── Topbar ─────────────────────────────────────────────── */
@@ -206,7 +207,7 @@ html, body {
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px);
   position: sticky;
-  top: 0;
+  top: var(--navbar-height, 72px);
   z-index: 100;
   gap: 16px;
 }

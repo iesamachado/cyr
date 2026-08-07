@@ -146,5 +146,15 @@ export const GAMES = {
     colorDark: '#5a9bb5',
     path: './moon/index.html',
     gamePath: './moon/game.html'
+  },
+  arenabots: {
+    id: 'arenabots',
+    name: 'ArenaBots',
+    description: 'Programa tu robot para la batalla',
+    icon: '🤖',
+    color: '#00e5ff',
+    colorDark: '#0099aa',
+    path: './arenabots/index.html',
+    gamePath: './arenabots/index.html'
   }
 };

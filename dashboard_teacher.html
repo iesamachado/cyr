@@ -23,8 +23,10 @@
 
       <!-- Cabecera del dashboard -->
       <header class="dashboard-header animate-fade-up">
-        <h1 class="dashboard-title" id="teacher-welcome">Bienvenido/a 👋</h1>
-        <p class="dashboard-subtitle">Gestiona tus clases y controla el acceso a los juegos educativos.</p>
+        <div style="display: flex; align-items: center; gap: var(--space-3);">
+          <h1 class="dashboard-title" id="teacher-welcome" style="margin: 0;">Bienvenido/a 👋</h1>
+        </div>
+        <p class="dashboard-subtitle" style="margin-top: var(--space-2);">Gestiona tus clases y controla el acceso a los juegos educativos.</p>
       </header>
 
       <!-- Stats rápidas -->
@@ -89,6 +91,28 @@
         </div>
       </section>
 
+      <!-- Sección: Mi Historial de Partidas -->
+      <section class="animate-fade-up delay-4" aria-labelledby="section-history-title">
+        <div class="section-header">
+          <h2 class="section-title" id="section-history-title">⏱️ Mi Historial de Partidas</h2>
+        </div>
+        <p class="section-desc">Tus últimas 10 partidas jugadas.</p>
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <table class="ranking-table" id="teacher-history-table">
+            <thead>
+              <tr>
+                <th>Juego</th>
+                <th>Puntuación</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="teacher-history-list">
+              <tr><td colspan="3" class="text-center text-muted" style="padding: var(--space-6);">Cargando historial...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </div>
   </main>
 
@@ -131,7 +155,6 @@
     </div>
   </div>
 
-  <!-- Toast container -->
   <div id="toast-container" aria-live="polite"></div>
 
   <script type="module" src="js/dashboard_teacher.js"></script>

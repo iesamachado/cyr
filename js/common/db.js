@@ -84,6 +84,22 @@ export async function getTeacherClasses(teacherId) {
 }
 
 /**
+ * Comprueba si el alumno está registrado en alguna clase
+ */
+export async function isStudentInAnyClass(email) {
+  if (!email) return false;
+  email = email.toLowerCase();
+  
+  try {
+    const snap = await getDoc(doc(db, 'allowed_students', email));
+    return snap.exists();
+  } catch (err) {
+    console.error('Error comprobando si el alumno está en una clase:', err);
+    return false;
+  }
+}
+
+/**
  * Clases donde el alumno aparece en 'members' (importados desde Classroom)
  * o en la colección 'class_members' (unión por PIN).
  */

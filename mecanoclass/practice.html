@@ -60,18 +60,18 @@
 
     <div id="app-header"></div>
 
-    <div class="container py-5 flex-grow-1">
+    <div class="container flex-grow-1" style="margin-top: calc(var(--navbar-height, 72px) + var(--space-4));">
         <div class="row justify-content-center">
             <div class="col-lg-10">
 
-                <div class="d-flex justify-content-between mb-4">
-                    <div class="glass-panel px-4 py-2 text-center flex-fill mx-2">
-                        <span class="text-dim text-uppercase small">PPM</span>
-                        <h2 class="text-light fw-bold mb-0" id="wpmDisplay">0</h2>
+                <div style="display: flex; gap: var(--space-4); margin-bottom: var(--space-6);">
+                    <div class="stat-card" style="flex: 1; text-align: center; align-items: center; justify-content: center;">
+                        <span class="stat-label">PPM</span>
+                        <h2 class="stat-value" id="wpmDisplay" style="margin: 0; color: var(--accent-light);">0</h2>
                     </div>
-                    <div class="glass-panel px-4 py-2 text-center flex-fill mx-2">
-                        <span class="text-dim text-uppercase small">Precisión</span>
-                        <h2 class="text-light fw-bold mb-0" id="accuracyDisplay">100%</h2>
+                    <div class="stat-card" style="flex: 1; text-align: center; align-items: center; justify-content: center;">
+                        <span class="stat-label">Precisión</span>
+                        <h2 class="stat-value" id="accuracyDisplay" style="margin: 0; color: var(--accent-light);">100%</h2>
                     </div>
                 </div>
 

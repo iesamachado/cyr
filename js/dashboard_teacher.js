@@ -2,15 +2,11 @@
 //  CLASSHUB — dashboard_teacher.js
 // ═══════════════════════════════════════════════════════════════════════
 
-import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken } from './js/common/auth.js';
-import {
-  getTeacherClasses, createClass, getClassMembers, getClassResults
-} from './js/common/db.js';
-import {
-  fetchClassroomCourses, importClassroomStudents
-} from './js/common/classroom.js';
-import { renderHeader, showToast, showModal, showLoading, hideLoading } from './js/common/ui.js';
-import { GAMES, copyToClipboard, $, escapeHtml, formatDate } from './js/common/utils.js';
+import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken, updateUserProfileData } from './common/auth.js';
+import { getTeacherClasses, createClass, getClassMembers, getClassResults, getStudentResults } from './common/db.js';
+import { fetchClassroomCourses, importClassroomStudents } from './common/classroom.js';
+import { renderHeader, showToast, showModal, showLoading, hideLoading } from './common/ui.js';
+import { GAMES, copyToClipboard, $, escapeHtml, formatDate, getUrlParams } from './common/utils.js';
 
 let myClasses = [];
 
@@ -19,10 +15,11 @@ requireAuth({
   allowedRoles: ['teacher'],
   onAuthorized: async (user, profile) => {
     renderHeader(user, profile);
-    $('teacher-welcome').textContent = `Hola, ${profile.displayName?.split(' ')[0] || 'Docente'} 👋`;
+    $('teacher-welcome').textContent = `Hola, ${profile.displayName || 'Docente'} 👋`;
     await loadAll(user, profile);
     setupModals();
     renderTeacherGameCards();
+    await loadTeacherHistory(user.uid);
   }
 });
 
@@ -69,14 +66,7 @@ function renderClasses(classes) {
 
 function renderClassCard(cls) {
   const enabledGames = cls.enabledGames || [];
-  const gamePills = Object.values(GAMES).map(g => {
-    const on = enabledGames.includes(g.id);
-    return `<span class="game-pill ${on ? 'game-pill--enabled' : ''}"
-                   style="${on ? `color:${g.color}; border-color:${g.color}44; background:${g.color}18` : ''}">
-              ${g.icon} ${escapeHtml(g.name)}
-            </span>`;
-  }).join('');
-
+  
   return `
     <div class="class-card">
       <div class="class-card-header">
@@ -90,7 +80,6 @@ function renderClassCard(cls) {
         <span>👨‍🎓 ${(cls.members || []).length} alumnos</span>
         <span>🎮 ${enabledGames.length} juegos activos</span>
       </div>
-      <div class="class-card-games">${gamePills}</div>
       <div class="class-card-actions">
         <button class="btn btn-primary btn--sm" data-action="manage" data-class-id="${cls.id}">
           ⚙️ Gestionar clase
@@ -129,6 +118,43 @@ function renderTeacherGameCards() {
     </div>`).join('');
 }
 
+// ── Historial de partidas del Docente ──────────────────────────
+async function loadTeacherHistory(uid) {
+  try {
+    const results = await getStudentResults(uid, 10);
+    const tbody = $('teacher-history-list');
+    if (!tbody) return;
+    
+    if (results.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted" style="padding: var(--space-6);">Aún no has jugado ninguna partida.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = results.map(r => {
+      const gameInfo = Object.values(GAMES).find(g => g.id === r.gameId) || { name: r.gameId, icon: '🎮' };
+      const dateStr = formatDate(r.timestamp);
+      return `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:var(--space-2);">
+              <span>${gameInfo.icon}</span>
+              <strong>${escapeHtml(gameInfo.name)}</strong>
+            </div>
+          </td>
+          <td style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-light);">
+            ${r.score} pts
+          </td>
+          <td style="color: var(--text-muted); font-size: var(--text-xs);">
+            ${dateStr}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Error cargando historial del docente:', err);
+  }
+}
+
 // ── Modales ─────────────────────────────────────────────────────
 function setupModals() {
 
@@ -141,9 +167,13 @@ function setupModals() {
 
   openNewClass?.addEventListener('click', () => {
     $('class-name-input').value = '';
+    modalNewClass.classList.add('modal-backdrop--visible');
     modalNewClass.setAttribute('aria-hidden', 'false');
   });
-  const closeModalNew = () => modalNewClass.setAttribute('aria-hidden', 'true');
+  const closeModalNew = () => {
+    modalNewClass.classList.remove('modal-backdrop--visible');
+    modalNewClass.setAttribute('aria-hidden', 'true');
+  };
   closeNewClass?.addEventListener('click', closeModalNew);
   cancelNewClass?.addEventListener('click', closeModalNew);
   modalNewClass?.addEventListener('click', e => { if (e.target === modalNewClass) closeModalNew(); });
@@ -174,12 +204,19 @@ function setupModals() {
   const closeImport  = $('close-import-classroom');
 
   btnImport?.addEventListener('click', async () => {
+    modalImport.classList.add('modal-backdrop--visible');
     modalImport.setAttribute('aria-hidden', 'false');
     await loadClassroomCourses();
   });
-  const closeModalImport = () => modalImport.setAttribute('aria-hidden', 'true');
+  const closeModalImport = () => {
+    modalImport.classList.remove('modal-backdrop--visible');
+    modalImport.setAttribute('aria-hidden', 'true');
+  };
   closeImport?.addEventListener('click', closeModalImport);
   modalImport?.addEventListener('click', e => { if (e.target === modalImport) closeModalImport(); });
+
+  // ─ Modal editar nombre ─
+
 }
 
 // ── Importación desde Classroom ─────────────────────────────────

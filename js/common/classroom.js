@@ -5,7 +5,7 @@
 //  Obtenerlo con loginAsTeacher() o refreshClassroomToken() de auth.js
 // ═══════════════════════════════════════════════════════════════════════
 
-import { db, doc, updateDoc, addDoc, collection, getDocs, getDoc, arrayUnion } from './firebase-config.js';
+import { db, doc, updateDoc, addDoc, collection, getDocs, getDoc, setDoc, arrayUnion } from './firebase-config.js';
 import { findUserByEmail, addMemberToClass, addPendingMember, createAssignment, getClassMembers } from './db.js';
 import { scoreToGrade } from './utils.js';
 
@@ -79,6 +79,9 @@ export async function importClassroomStudents(token, courseId, classId) {
       existingMembers.add(email);
       pending++;
     }
+    
+    // Permitir el acceso al alumno
+    await setDoc(doc(db, 'allowed_students', email.toLowerCase()), { allowed: true });
   }
 
   return { matched, pending };

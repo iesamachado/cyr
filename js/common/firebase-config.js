@@ -21,7 +21,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore,
@@ -38,12 +39,12 @@ import {
 //  🔧 REEMPLAZA ESTOS VALORES CON LOS DE TU PROYECTO FIREBASE
 // ──────────────────────────────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey:            "TU_API_KEY",
-  authDomain:        "TU_PROJECT_ID.firebaseapp.com",
-  projectId:         "TU_PROJECT_ID",
-  storageBucket:     "TU_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "TU_SENDER_ID",
-  appId:             "TU_APP_ID"
+  apiKey: "AIzaSyA6qFCupTVLJQ5yVm7vXx8NFrjv3u3WWGM",
+  authDomain: "cyrgames-6e3ff.firebaseapp.com",
+  projectId: "cyrgames-6e3ff",
+  storageBucket: "cyrgames-6e3ff.firebasestorage.app",
+  messagingSenderId: "605004746621",
+  appId: "1:605004746621:web:c02d397c3921565b6cc614"
 };
 // ──────────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,7 @@ export {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  updateProfile,
   doc, collection,
   getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, limit,
