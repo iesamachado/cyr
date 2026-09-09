@@ -16,7 +16,7 @@ import { auth, db, googleProvider, GoogleAuthProvider,
   sendPasswordResetEmail, updateProfile, doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from './firebase-config.js';
 import { generateAvatar, generateTeacherAvatar, anonymizeName, getUrlParams, getAppUrl } from './utils.js';
-import { isStudentInAnyClass, isTeacherAuthorized, SUPERADMIN_EMAIL } from './db.js';
+import { isStudentInAnyClass, isTeacherAuthorized, SUPERADMIN_EMAIL, resolvePendingStudent } from './db.js';
 
 export { SUPERADMIN_EMAIL };
 
@@ -63,6 +63,9 @@ export async function loginWithGoogle() {
     await signOut(auth);
     throw new Error(`Acceso denegado. El correo (${email}) no está registrado en ninguna clase activa. Pide a tu docente que te añada.`);
   }
+
+  // Resolver clases en las que está pendiente de registro
+  await resolvePendingStudent(result.user.uid, email);
 
   return result.user;
 }

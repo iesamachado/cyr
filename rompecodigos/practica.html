@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Modo Práctica — RompeCódigos</title>
-  <meta name="description" content="Aprende a descifrar mensajes encriptados, usa análisis de frecuencias y domina el cifrado César y Vigenère.">
+  <title>Laboratorio Criptográfico y Modo Práctica — RompeCódigos</title>
+  <meta name="description" content="Aprende criptografía con demos interactivas paso a paso, resuelve misiones guiadas o descifra cualquier código en el laboratorio libre.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -21,12 +21,166 @@
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
-    .mission-badge-group {
+    /* ─── Mode Switch Tabs ─── */
+    .mode-switch-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mode-switch-btn {
+      font-family: var(--font-head);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .mode-switch-btn:hover {
+      border-color: var(--primary);
+      color: var(--text-bright);
+    }
+    .mode-switch-btn.active {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    /* ─── Demo Modal & Tabs ─── */
+    .demo-modal-body {
+      max-width: 880px;
+      width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+    }
+    .demo-nav-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+    }
+    .demo-tab-btn {
+      background: var(--bg-surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-head);
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+    }
+    .demo-tab-btn:hover {
+      color: var(--text-bright);
+      border-color: var(--primary);
+    }
+    .demo-tab-btn.active {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+    .demo-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .demo-card {
+      background: var(--bg-surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+    }
+    .alphabet-ribbon {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 8px 4px;
+      letter-spacing: 0.08em;
+    }
+    .alphabet-token {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 6px;
+      min-width: 24px;
+    }
+    .alphabet-token .sub {
+      font-size: 0.68rem;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+    .vigenere-table-preview {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
     }
+    .vigenere-pair {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--bg-surface3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+    }
+    .vigenere-pair .orig { color: var(--primary); font-weight: bold; }
+    .vigenere-pair .key { color: var(--warning); font-size: 0.72rem; }
+    .vigenere-pair .ciph { color: var(--accent); font-weight: bold; }
+
+    /* ─── Scanner & Sandbox ─── */
+    .bruteforce-table {
+      max-height: 220px;
+      overflow-y: auto;
+      background: var(--bg-surface3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+    .bruteforce-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .bruteforce-row:hover {
+      background: var(--primary-dim);
+      color: var(--primary);
+    }
+    .bruteforce-shift {
+      color: var(--text-dim);
+      font-weight: 700;
+      min-width: 60px;
+    }
+    .bruteforce-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+
     .mission-pill {
       font-family: var(--font-head);
       font-size: 0.75rem;
@@ -52,24 +206,6 @@
       border-color: var(--accent);
       color: var(--accent);
     }
-    .vigenere-box {
-      background: var(--bg-surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .tutorial-callout {
-      background: rgba(0, 229, 255, 0.06);
-      border-left: 3px solid var(--primary);
-      padding: 0.6rem 0.8rem;
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      font-size: 0.82rem;
-      color: var(--text-bright);
-      line-height: 1.45;
-    }
     .btn-quick-fill {
       background: transparent;
       border: 1px dashed var(--border-bright);
@@ -84,6 +220,15 @@
       border-color: var(--accent);
       color: var(--accent);
     }
+    .tutorial-callout {
+      background: rgba(0, 229, 255, 0.06);
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.84rem;
+      color: var(--text-bright);
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body class="theme-rompecodigos">
@@ -93,11 +238,13 @@
   <!-- TOP HUD -->
   <div class="hud-bar" id="hud-bar" style="margin-top: var(--navbar-height, 64px);">
     <div class="hud-brand">
-      <span>🔐</span>
-      <span>MODO PRÁCTICA</span>
+      <div class="mode-switch-bar">
+        <button id="btn-mode-misiones" class="mode-switch-btn active">🎯 MISIONES</button>
+        <button id="btn-mode-sandbox" class="mode-switch-btn">🧪 LABORATORIO LIBRE</button>
+      </div>
     </div>
     <div class="hud-center">
-      <div class="hud-ronda">
+      <div class="hud-ronda" id="hud-mision-wrap">
         <span class="hud-label">MISIÓN</span>
         <span class="hud-val text-primary" id="hud-mision">1 / 5</span>
       </div>
@@ -110,21 +257,24 @@
         <span class="hud-val text-accent" id="hud-puntos">0</span>
       </div>
     </div>
-    <div class="hud-right">
+    <div class="hud-right" style="display:flex; gap:8px;">
+      <button id="btn-open-demos" class="btn btn-secondary btn-sm" style="display:flex; align-items:center; gap:6px;">
+        📖 <span>Demos & Teoría</span>
+      </button>
       <button id="btn-pedir-pista" class="btn btn-ghost btn-sm" style="display:flex; align-items:center; gap:6px;">
         💡 <span>Pista (<span id="hud-pistas-left">3</span>)</span>
       </button>
     </div>
   </div>
 
-  <!-- MAIN GAME LAYOUT -->
+  <!-- MAIN GAME & LAB LAYOUT -->
   <main class="game-layout">
 
-    <!-- ── COLUMNA IZQUIERDA: Misión y Textos ── -->
+    <!-- ── COLUMNA IZQUIERDA: Misión / Input de Texto ── -->
     <aside class="panel panel-texto">
 
-      <!-- Misión info -->
-      <div class="panel-section">
+      <!-- Panel Misión Info (Modo Misiones) -->
+      <div class="panel-section" id="section-mision-info">
         <div class="section-title-row">
           <div class="section-title" id="mision-title">🎯 Misión 1: Cifrado César Básico</div>
           <span class="badge badge-primary" id="mision-tipo">César</span>
@@ -132,9 +282,35 @@
         <div class="tutorial-callout" id="mision-desc">
           El mensaje ha sido desplazado un número fijo de posiciones en el alfabeto. Utiliza el slider César para descubrir el mensaje original.
         </div>
+        <div style="margin-top: 6px;">
+          <button id="btn-ver-demo-mision" class="btn btn-ghost btn-sm w-full" style="font-size:0.75rem;">
+            🔍 ¿Cómo funciona este cifrado? Ver Demo
+          </button>
+        </div>
       </div>
 
-      <!-- Texto Cifrado -->
+      <!-- Panel Sandbox Input (Modo Laboratorio Libre) -->
+      <div class="panel-section hidden" id="section-sandbox-input">
+        <div class="section-title-row">
+          <div class="section-title">🧪 Cripto-Laboratorio Libre</div>
+          <span class="badge badge-secondary">Sandbox</span>
+        </div>
+        <p class="text-muted" style="font-size:0.8rem; margin:0;">
+          Pega cualquier mensaje cifrado para probar herramientas o introduce un texto para cifrarlo.
+        </p>
+        <textarea id="sandbox-input-text" class="form-input" rows="3" placeholder="Pega aquí el texto cifrado..." style="font-family:var(--font-mono); font-size:0.85rem; text-transform:uppercase;"></textarea>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button id="btn-detectar-cifrado" class="btn btn-primary btn-sm" style="flex:1;">
+            🔍 Detectar Cifrado
+          </button>
+          <button id="btn-ejemplo-sandbox" class="btn btn-ghost btn-sm">
+            🎲 Cargar Ejemplo
+          </button>
+        </div>
+        <div id="sandbox-detection-result" class="tutorial-callout hidden" style="font-size:0.78rem;"></div>
+      </div>
+
+      <!-- Texto Cifrado Interceptado -->
       <div class="panel-section">
         <div class="section-title">📦 Texto Cifrado Interceptado</div>
         <div class="texto-cifrado-display" id="texto-cifrado-display">
@@ -147,7 +323,7 @@
       <!-- Preview Descifrado -->
       <div class="panel-section">
         <div class="section-title-row">
-          <div class="section-title">🔓 Descifrado (Vista Previa)</div>
+          <div class="section-title">🔓 Vista Previa de Descifrado</div>
           <button id="btn-copiar-preview" class="btn-quick-fill" title="Copiar al campo de solución">
             📋 Usar como Solución
           </button>
@@ -159,7 +335,7 @@
         </div>
       </div>
 
-      <!-- Pistas recibidas -->
+      <!-- Pistas recibidas (Solo en misiones) -->
       <div class="panel-section" id="pistas-section">
         <div class="section-title">💡 Pistas Desbloqueadas</div>
         <div id="pistas-list" class="pistas-list">
@@ -176,28 +352,39 @@
       <div class="panel-section" id="section-cesar">
         <div class="section-title-row">
           <div class="section-title">🔢 Desplazamiento César</div>
-          <button id="btn-reset-cesar" class="btn btn-ghost btn-sm">Reiniciar</button>
+          <div style="display:flex; gap:6px;">
+            <button id="btn-toggle-bruteforce" class="btn btn-ghost btn-sm">⚡ Fuerza Bruta (25)</button>
+            <button id="btn-reset-cesar" class="btn btn-ghost btn-sm">Reiniciar</button>
+          </div>
         </div>
         <div class="cesar-tester">
           <input type="range" id="cesar-slider" min="0" max="25" value="0" class="cesar-slider">
           <div class="cesar-info">
             <span class="text-muted">Desplazamiento: <strong id="cesar-val" class="text-primary font-bold">0</strong> posiciones</span>
-            <span class="text-dim" style="font-size:0.75rem;">A → <span id="cesar-char-map" class="text-accent">A</span></span>
+            <span class="text-dim" style="font-size:0.75rem;">A → <span id="cesar-char-map" class="text-accent font-bold">A</span></span>
           </div>
           <div id="cesar-preview" class="cesar-preview"></div>
+        </div>
+
+        <!-- Tabla de Fuerza Bruta César (Desplegable) -->
+        <div id="cesar-bruteforce-wrap" class="hidden" style="margin-top:8px;">
+          <div class="text-dim" style="font-size:0.75rem; margin-bottom:4px;">Haz clic en cualquier fila para aplicar el desplazamiento:</div>
+          <div id="cesar-bruteforce-list" class="bruteforce-table"></div>
         </div>
       </div>
 
       <!-- Herramienta Vigenère -->
-      <div class="panel-section hidden" id="section-vigenere">
-        <div class="section-title">🛡️ Descifrador Vigenère</div>
-        <div class="vigenere-box">
-          <label class="form-label" style="margin-bottom:2px;">Clave de descifrado:</label>
+      <div class="panel-section" id="section-vigenere">
+        <div class="section-title">🛡️ Descifrador Vigenère (Polialfabético)</div>
+        <div style="background:var(--bg-surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:0.75rem; display:flex; flex-direction:column; gap:0.5rem;">
+          <label class="form-label" style="margin-bottom:2px;">Clave secreta de descifrado:</label>
           <div style="display:flex; gap:8px;">
             <input type="text" id="vigenere-key-input" class="form-input" placeholder="PALABRA CLAVE" style="text-transform:uppercase; font-family:var(--font-mono); letter-spacing:0.1em;" maxlength="15">
-            <button id="btn-aplicar-vigenere" class="btn btn-primary btn-sm">Aplicar</button>
+            <button id="btn-aplicar-vigenere" class="btn btn-primary btn-sm">Aplicar Clave</button>
           </div>
-          <p class="text-muted" style="font-size:0.75rem;">Cada letra de la clave desplaza la letra correspondiente según su posición en el abecedario.</p>
+          <p class="text-muted" style="font-size:0.75rem; margin:0;">
+            Cada letra de la clave desplaza la letra correspondiente según su posición (A=0, B=1, C=2...).
+          </p>
         </div>
       </div>
 
@@ -244,7 +431,7 @@
       </div>
 
       <!-- Selector de Misiones -->
-      <div class="panel-section">
+      <div class="panel-section" id="section-misiones-nav">
         <div class="section-title">🗺️ Misiones de Entrenamiento</div>
         <div class="mission-badge-group" id="misiones-nav">
           <!-- Generado por JS -->
@@ -268,6 +455,179 @@
 
     </aside>
   </main>
+
+  <!-- ── MODAL DE DEMOS INTERACTIVAS & TEORÍA CRIPTOGRÁFICA ── -->
+  <div id="modal-demos" class="ronda-overlay hidden">
+    <div class="ronda-overlay-inner card-glass demo-modal-body" style="text-align:left; align-items:stretch;">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.8rem;">🎓</span>
+          <div>
+            <h2 class="text-primary font-bold" style="font-family:var(--font-head); font-size:1.4rem; margin:0;">Academia Criptográfica: Demos Interactivas</h2>
+            <div class="text-muted" style="font-size:0.8rem;">Experimenta con cada técnica de cifrado antes de lanzarte a resolver misiones.</div>
+          </div>
+        </div>
+        <button id="btn-close-demos" class="btn btn-ghost btn-sm" style="font-size:1.2rem;">✕</button>
+      </div>
+
+      <!-- Demo Tabs -->
+      <div class="demo-nav-tabs">
+        <button class="demo-tab-btn active" data-tab="demo-cesar">🏛️ 1. Cifrado César</button>
+        <button class="demo-tab-btn" data-tab="demo-frecuencias">📊 2. Análisis Frecuencias</button>
+        <button class="demo-tab-btn" data-tab="demo-vigenere">🛡️ 3. Cifrado Vigenère</button>
+        <button class="demo-tab-btn" data-tab="demo-transposicion">🔀 4. Transposición</button>
+      </div>
+
+      <!-- ── PESTAÑA 1: DEMO CÉSAR ── -->
+      <div id="demo-cesar" class="demo-tab-content demo-section">
+        <div class="demo-card">
+          <h3 class="text-accent" style="font-family:var(--font-head); font-size:1.1rem; margin-bottom:0.5rem;">¿Qué es el Cifrado César?</h3>
+          <p class="text-muted" style="font-size:0.88rem; line-height:1.5;">
+            Es un método de cifrado por sustitución monoalfabética donde cada letra del texto se sustituye por otra que se encuentra un número fijo de posiciones más adelante en el alfabeto.
+          </p>
+          
+          <div style="margin:1rem 0;">
+            <label class="form-label">Texto de prueba interactivo:</label>
+            <input type="text" id="demo-cesar-input" class="form-input" value="MENSAJE SECRETO" style="text-transform:uppercase; font-family:var(--font-mono);">
+          </div>
+
+          <div style="margin:1rem 0;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <label class="form-label" style="margin:0;">Desplazamiento (+<span id="demo-cesar-shift-val" class="text-primary font-bold">3</span> posiciones):</label>
+              <span class="text-dim" style="font-size:0.75rem;">A → <strong id="demo-cesar-map" class="text-accent">D</strong></span>
+            </div>
+            <input type="range" id="demo-cesar-slider" min="0" max="25" value="3" class="cesar-slider">
+          </div>
+
+          <div class="alphabet-ribbon" id="demo-cesar-ribbon">
+            <!-- Renderizado con JS -->
+          </div>
+
+          <div style="background:var(--bg-surface3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1rem; margin-top:1rem;">
+            <div class="text-dim" style="font-size:0.75rem; text-transform:uppercase;">Resultado Cifrado en Vivo:</div>
+            <div id="demo-cesar-output" class="text-accent font-bold" style="font-family:var(--font-mono); font-size:1.2rem; margin-top:4px; letter-spacing:0.1em;">
+              PHQVAMH VHFUHWR
+            </div>
+          </div>
+
+          <div class="tutorial-callout" style="margin-top:1rem;">
+            💡 <strong>Vulnerabilidad:</strong> El alfabeto solo tiene 26 letras. Un atacante puede probar los 25 posibles desplazamientos en segundos (fuerza bruta) o deducir el desplazamiento analizando la letra más repetida.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PESTAÑA 2: DEMO FRECUENCIAS (SUSTITUCIÓN) ── -->
+      <div id="demo-frecuencias" class="demo-tab-content demo-section hidden">
+        <div class="demo-card">
+          <h3 class="text-accent" style="font-family:var(--font-head); font-size:1.1rem; margin-bottom:0.5rem;">Criptoanálisis por Frecuencias</h3>
+          <p class="text-muted" style="font-size:0.88rem; line-height:1.5;">
+            Si cambiamos cada letra por otra aleatoria (sustitución monoalfabética), el mensaje parece caótico. Sin embargo, en el idioma español ciertas letras aparecen con muchísima más frecuencia que otras:
+          </p>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; margin:1rem 0;">
+            <div style="background:var(--bg-surface3); padding:8px; border-radius:6px; text-align:center;">
+              <span class="text-accent font-bold" style="font-size:1.1rem;">E (13.7%)</span>
+              <div class="text-dim" style="font-size:0.7rem;">Más frecuente</div>
+            </div>
+            <div style="background:var(--bg-surface3); padding:8px; border-radius:6px; text-align:center;">
+              <span class="text-primary font-bold" style="font-size:1.1rem;">A (12.5%)</span>
+              <div class="text-dim" style="font-size:0.7rem;">2ª más frecuente</div>
+            </div>
+            <div style="background:var(--bg-surface3); padding:8px; border-radius:6px; text-align:center;">
+              <span class="text-white font-bold" style="font-size:1.1rem;">O (8.7%)</span>
+              <div class="text-dim" style="font-size:0.7rem;">3ª más frecuente</div>
+            </div>
+            <div style="background:var(--bg-surface3); padding:8px; border-radius:6px; text-align:center;">
+              <span class="text-muted font-bold" style="font-size:1.1rem;">W / K (&lt;0.01%)</span>
+              <div class="text-dim" style="font-size:0.7rem;">Casi inexistentes</div>
+            </div>
+          </div>
+
+          <div style="margin:1rem 0;">
+            <label class="form-label">Calculador de frecuencias interactivo (escribe un texto):</label>
+            <input type="text" id="demo-freq-input" class="form-input" value="EN UN LUGAR DE LA MANCHA DE CUYO NOMBRE NO QUIERO ACORDARME" style="text-transform:uppercase; font-family:var(--font-mono);">
+          </div>
+          <div id="demo-freq-stats" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:1rem;">
+            <!-- Generado por JS -->
+          </div>
+
+          <div style="background:var(--bg-surface3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1rem;">
+            <div class="text-dim" style="font-size:0.75rem; text-transform:uppercase; margin-bottom:6px;">Estrategia paso a paso para resolverlo:</div>
+            <ol style="font-size:0.85rem; color:var(--text-bright); line-height:1.6; margin-left:1.2rem; padding:0;">
+              <li><strong>Contar frecuencias:</strong> La letra cifrada que más se repite suele ser la <strong>E</strong> o la <strong>A</strong>.</li>
+              <li><strong>Analizar palabras cortas:</strong> Las palabras de 2 letras en español casi siempre son <code>LA, EL, EN, DE, ES, UN, AL</code>.</li>
+              <li><strong>Rellenar el contexto:</strong> Si ves <code>_NF_RMACION</code>, puedes deducir inmediatamente que es <code>INFORMACION</code> y obtener las letras <strong>I</strong> y <strong>O</strong>.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PESTAÑA 3: DEMO VIGENÈRE (POLIALFABÉTICO) ── -->
+      <div id="demo-vigenere" class="demo-tab-content demo-section hidden">
+        <div class="demo-card">
+          <h3 class="text-accent" style="font-family:var(--font-head); font-size:1.1rem; margin-bottom:0.5rem;">Cifrado Polialfabético Vigenère</h3>
+          <p class="text-muted" style="font-size:0.88rem; line-height:1.5;">
+            Para neutralizar el análisis de frecuencias, el cifrado Vigenère utiliza una <strong>palabra clave</strong>. Cada letra de la clave define un desplazamiento César diferente para cada letra del texto:
+          </p>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:1rem 0;">
+            <div>
+              <label class="form-label">Mensaje original:</label>
+              <input type="text" id="demo-vig-msg" class="form-input" value="ATAQUE AL AMANECER" style="text-transform:uppercase; font-family:var(--font-mono);">
+            </div>
+            <div>
+              <label class="form-label">Palabra clave:</label>
+              <input type="text" id="demo-vig-key" class="form-input" value="SOL" style="text-transform:uppercase; font-family:var(--font-mono);">
+            </div>
+          </div>
+
+          <div class="text-dim" style="font-size:0.75rem; text-transform:uppercase; margin-bottom:6px;">Alineación de la clave y desplazamientos:</div>
+          <div id="demo-vig-pairs" class="vigenere-table-preview">
+            <!-- Generado por JS -->
+          </div>
+
+          <div style="background:var(--bg-surface3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1rem; margin-top:1rem;">
+            <div class="text-dim" style="font-size:0.75rem; text-transform:uppercase;">Texto Cifrado Resultante:</div>
+            <div id="demo-vig-output" class="text-accent font-bold" style="font-family:var(--font-mono); font-size:1.2rem; margin-top:4px; letter-spacing:0.1em;">
+              SHLIVS SX SQOESWSK
+            </div>
+          </div>
+
+          <div class="tutorial-callout" style="margin-top:1rem;">
+            💡 <strong>¿Por qué es más seguro?</strong> Observa cómo la letra <strong>'A'</strong> se cifra como <strong>'S'</strong> la primera vez y como <strong>'L'</strong> la segunda. ¡Una misma letra produce distintos caracteres según su posición!
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PESTAÑA 4: DEMO TRANSPOSICIÓN ── -->
+      <div id="demo-transposicion" class="demo-tab-content demo-section hidden">
+        <div class="demo-card">
+          <h3 class="text-accent" style="font-family:var(--font-head); font-size:1.1rem; margin-bottom:0.5rem;">Cifrado por Transposición</h3>
+          <p class="text-muted" style="font-size:0.88rem; line-height:1.5;">
+            A diferencia de la sustitución, en la transposición las letras <strong>no cambian de identidad</strong>, sino que <strong>cambian de posición</strong> (por ejemplo invirtiendo el orden, agrupando en columnas o mediante rejillas).
+          </p>
+
+          <div style="margin:1rem 0;">
+            <label class="form-label">Texto original:</label>
+            <input type="text" id="demo-trans-input" class="form-input" value="CODIGO SECRETO ENVIADO" style="text-transform:uppercase; font-family:var(--font-mono);">
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="background:var(--bg-surface3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.75rem;">
+              <div class="text-dim" style="font-size:0.72rem; text-transform:uppercase;">Transposición Inversa (Reverso):</div>
+              <div id="demo-trans-rev" class="text-primary font-bold" style="font-family:var(--font-mono); font-size:1rem; margin-top:4px; word-break:break-all;"></div>
+            </div>
+            <div style="background:var(--bg-surface3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.75rem;">
+              <div class="text-dim" style="font-size:0.72rem; text-transform:uppercase;">Columnar (Pares e Impares):</div>
+              <div id="demo-trans-col" class="text-accent font-bold" style="font-family:var(--font-mono); font-size:1rem; margin-top:4px; word-break:break-all;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- MODAL DE MISIÓN COMPLETADA -->
   <div id="modal-victoria" class="ronda-overlay hidden">

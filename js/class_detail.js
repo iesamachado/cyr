@@ -96,7 +96,7 @@ async function loadGamesTab() {
         </div>
       </div>
       <div class="game-toggle-actions">
-        <a class="btn btn-ghost btn--sm" href="${g.gamePath}" target="_blank">🎮 Probar</a>
+        <a class="btn btn-ghost btn--sm" href="${g.gamePath}?classId=${classData.id}" target="_blank">🎮 Probar</a>
         <label class="toggle-switch" title="${enabled.includes(g.id) ? 'Desactivar' : 'Activar'}">
           <input type="checkbox" 
                  id="toggle-${g.id}"

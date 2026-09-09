@@ -18,10 +18,10 @@ function setupUI(user, profile) {
     const isTeacherOrAdmin = profile.role === 'teacher' || profile.role === 'admin' || isAdmin(user, profile);
     
     if (isTeacherOrAdmin) {
-        const teacherSection = $('#teacher-section');
+        const teacherSection = $('teacher-section');
         if (teacherSection) teacherSection.style.display = 'flex';
         
-        const btnCrear = $('#btn-crear-sala');
+        const btnCrear = $('btn-crear-sala');
         if (btnCrear) {
             btnCrear.addEventListener('click', () => {
                 window.location.href = 'sala_profesor.html';
@@ -29,11 +29,11 @@ function setupUI(user, profile) {
         }
     }
     
-    const formUnirse = $('#form-unirse');
+    const formUnirse = $('form-unirse');
     if (formUnirse) {
         formUnirse.addEventListener('submit', (e) => {
             e.preventDefault();
-            const code = $('#input-codigo').value.trim().toUpperCase();
+            const code = $('input-codigo').value.trim().toUpperCase();
             if (code.length > 0) {
                 window.location.href = `sala_alumno.html?code=${encodeURIComponent(code)}`;
             } else {

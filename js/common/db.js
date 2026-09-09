@@ -683,3 +683,32 @@ export async function getSiteSettings() {
 export async function updateSiteSettings(data) {
   await setDoc(doc(db, 'settings', 'site'), data, { merge: true });
 }
+
+/** Resuelve el estado pendiente de un alumno en las clases */
+export async function resolvePendingStudent(uid, email) {
+  if (!uid || !email) return;
+  email = email.toLowerCase().trim();
+
+  try {
+    const q = query(collection(db, 'classes'));
+    const snap = await getDocs(q);
+    
+    for (const d of snap.docs) {
+      const cls = d.data();
+      if (!cls.members) continue;
+
+      const pendingObj = cls.members.find(m => m?.pending && m.email?.toLowerCase() === email);
+      if (pendingObj) {
+        // Encontramos una clase donde está pendiente. Lo reemplazamos por su UID.
+        await updateDoc(doc(db, 'classes', d.id), {
+          members: arrayRemove(pendingObj)
+        });
+        await updateDoc(doc(db, 'classes', d.id), {
+          members: arrayUnion(uid)
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Error resolviendo estado pendiente:', err);
+  }
+}

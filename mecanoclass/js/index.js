@@ -21,10 +21,10 @@ function setupUI(user, profile) {
 
     // Mostrar panel docente
     if (isTeacherOrAdmin) {
-        const teacherSection = $('#teacher-section');
+        const teacherSection = $('teacher-section');
         if (teacherSection) teacherSection.style.display = 'flex';
 
-        const btnCrear = $('#btn-crear-carrera');
+        const btnCrear = $('btn-crear-carrera');
         if (btnCrear) {
             btnCrear.addEventListener('click', () => {
                 window.location.href = 'live_host.html';
@@ -33,11 +33,11 @@ function setupUI(user, profile) {
     }
 
     // Formulario unirse a carrera alumno
-    const formUnirse = $('#form-unirse-carrera');
+    const formUnirse = $('form-unirse-carrera');
     if (formUnirse) {
         formUnirse.addEventListener('submit', (e) => {
             e.preventDefault();
-            const pinInput = $('#input-pin-carrera');
+            const pinInput = $('input-pin-carrera');
             const pin = pinInput ? pinInput.value.trim().toUpperCase() : '';
 
             if (pin.length > 0) {

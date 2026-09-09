@@ -1,5 +1,5 @@
 // ============================================================
-// practica.js — Modo Práctica (Monojugador) RompeCódigos
+// practica.js — Laboratorio Criptográfico y Modo Práctica RompeCódigos
 // ============================================================
 
 import { requireAuth, currentProfile } from '../../js/common/auth.js';
@@ -12,21 +12,23 @@ const MISIONES = [
     id: 1,
     titulo: 'Misión 1: Cifrado César Básico',
     tipo: 'caesar',
-    tipoBadge: 'César',
-    descripcion: 'El mensaje ha sido desplazado un número fijo de posiciones en el alfabeto. Utiliza el slider César para descubrir el mensaje original.',
+    tipoBadge: 'César (+3)',
+    demoTab: 'demo-cesar',
+    descripcion: 'El mensaje ha sido desplazado un número fijo de posiciones en el alfabeto. Utiliza el slider César o el escáner de fuerza bruta para descubrir el mensaje original.',
     textoOriginal: 'EL CODIGO SECRETO HA SIDO DESCIFRADO CON EXITO',
     shift: 3,
     pistas: [
       'El cifrado César mueve cada letra un número constante de posiciones en el alfabeto.',
       'La letra original "A" se ha transformado en "D" (un avance de 3 letras).',
-      'Desplaza el control deslizante a la posición 3 para ver el texto claro.'
+      'Desplaza el control deslizante a la posición 3 o usa la herramienta "Fuerza Bruta".'
     ]
   },
   {
     id: 2,
     titulo: 'Misión 2: Interceptación Espacial',
     tipo: 'caesar',
-    tipoBadge: 'César',
+    tipoBadge: 'César (+7)',
+    demoTab: 'demo-cesar',
     descripcion: 'Un mensaje interceptado de la base lunar. Utiliza la gráfica de frecuencias para deducir qué letra cifrada corresponde a la "E" o la "A".',
     textoOriginal: 'LA BASE LUNAR NECESITA SUMINISTROS DE ENERGIA DE INMEDIATO',
     shift: 7,
@@ -41,9 +43,9 @@ const MISIONES = [
     titulo: 'Misión 3: Criptoanálisis de Sustitución',
     tipo: 'substitution',
     tipoBadge: 'Sustitución',
-    descripcion: 'Cifrado por sustitución monoalfabética. Cada letra ha sido cambiada por otra. Usa el botón "Sugerir Sustitución" y afina con el teclado.',
+    demoTab: 'demo-frecuencias',
+    descripcion: 'Cifrado por sustitución monoalfabética. Cada letra ha sido cambiada por otra. Pulsa "Sugerir Sustitución" y ajusta letra por letra con el teclado.',
     textoOriginal: 'LA CRIPTOGRAFIA PROTEGE LA INFORMACION MEDIANTE ALGORITMOS MATEMATICOS',
-    // Mapeo fijo para consistencia educativa
     substMap: {
       'A': 'X', 'B': 'Y', 'C': 'Z', 'D': 'A', 'E': 'B', 'F': 'C', 'G': 'D', 'H': 'E',
       'I': 'F', 'J': 'G', 'K': 'H', 'L': 'I', 'M': 'J', 'N': 'K', 'O': 'L', 'P': 'M',
@@ -61,13 +63,14 @@ const MISIONES = [
     titulo: 'Misión 4: Cifrado Polialfabético Vigenère',
     tipo: 'vigenere',
     tipoBadge: 'Vigenère',
+    demoTab: 'demo-vigenere',
     descripcion: 'Cifrado polialfabético usando una palabra clave. La clave modifica el desplazamiento de cada letra secuencialmente.',
     textoOriginal: 'LA CLAVE SECRETA ABRE TODAS LAS PUERTAS DEL SISTEMA CENTRAL',
     key: 'ROBOT',
     pistas: [
       'Vigenère utiliza una palabra clave para cifrar cada letra con un desplazamiento distinto.',
       'La clave interceptada tiene 5 letras y se relaciona con autómatas y programación...',
-      'Escribe la palabra "ROBOT" en el campo de clave Vigenère y pulsa "Aplicar".'
+      'Escribe la palabra "ROBOT" en el campo de clave Vigenère y pulsa "Aplicar Clave".'
     ]
   },
   {
@@ -75,6 +78,7 @@ const MISIONES = [
     titulo: 'Misión 5: Reto Ciberpunk ROT13',
     tipo: 'caesar',
     tipoBadge: 'ROT13',
+    demoTab: 'demo-cesar',
     descripcion: 'Misión final a contrarreloj. Aplica el histórico algoritmo ROT13 (desplazamiento simétrico de 13 posiciones) para completar el entrenamiento.',
     textoOriginal: 'FELICIDADES AGENTE HAS DEMOSTRADO UN GRAN DOMINIO DE LA CRIPTOGRAFIA',
     shift: 13,
@@ -88,16 +92,16 @@ const MISIONES = [
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-// ─── Estado del Modo Práctica ────────────────────────────────
+// ─── Estado del Juego / Lab ──────────────────────────────────
 const state = {
   user: null,
   profile: null,
+  mode: 'misiones', // 'misiones' | 'sandbox'
   misionIndex: 0,
   textoCifrado: '',
   textoOriginal: '',
   tablaSustitucion: {}, // { cifrado -> descifrado }
   puntuacionTotal: 0,
-  puntuacionMision: 0,
   tiempoInicio: null,
   timerInterval: null,
   pistasUsadas: 0,
@@ -116,18 +120,347 @@ document.addEventListener('DOMContentLoaded', () => {
       state.user = user;
       state.profile = profile;
       renderHeader(user, profile);
-      initPractica();
+      initApp();
     }
   });
 });
 
-function initPractica() {
+function initApp() {
   buildSustKeyboard();
   initCesarSlider();
   initVigenereHandler();
   initSubmitHandler();
+  initDemosModal();
+  initModeSwitcher();
+  initSandboxHandlers();
   renderMisionesNav();
   cargarMision(0);
+}
+
+// ─── Selector de Modo (Misiones vs Sandbox) ───────────────────
+function initModeSwitcher() {
+  const btnMisiones = document.getElementById('btn-mode-misiones');
+  const btnSandbox = document.getElementById('btn-mode-sandbox');
+  const secMisionInfo = document.getElementById('section-mision-info');
+  const secSandboxInput = document.getElementById('section-sandbox-input');
+  const secPistas = document.getElementById('pistas-section');
+  const secMisionesNav = document.getElementById('section-misiones-nav');
+  const hudMisionWrap = document.getElementById('hud-mision-wrap');
+
+  btnMisiones?.addEventListener('click', () => {
+    state.mode = 'misiones';
+    btnMisiones.classList.add('active');
+    btnSandbox.classList.remove('active');
+    secMisionInfo.classList.remove('hidden');
+    secSandboxInput.classList.add('hidden');
+    secPistas.classList.remove('hidden');
+    secMisionesNav.classList.remove('hidden');
+    hudMisionWrap.classList.remove('hidden');
+    cargarMision(state.misionIndex);
+  });
+
+  btnSandbox?.addEventListener('click', () => {
+    state.mode = 'sandbox';
+    btnSandbox.classList.add('active');
+    btnMisiones.classList.remove('active');
+    secMisionInfo.classList.add('hidden');
+    secSandboxInput.classList.remove('hidden');
+    secPistas.classList.add('hidden');
+    secMisionesNav.classList.add('hidden');
+    hudMisionWrap.classList.add('hidden');
+
+    const sandboxInput = document.getElementById('sandbox-input-text');
+    if (!sandboxInput.value) {
+      sandboxInput.value = Caesar.encrypt('ESTE ES UN MENSAJE DE PRUEBA EN EL LABORATORIO CRIPTOGRAFICO', 4);
+    }
+    aplicarTextoCifradoCustom(sandboxInput.value);
+  });
+}
+
+// ─── Handlers del Sandbox ─────────────────────────────────────
+function initSandboxHandlers() {
+  const input = document.getElementById('sandbox-input-text');
+  const btnDetectar = document.getElementById('btn-detectar-cifrado');
+  const btnEjemplo = document.getElementById('btn-ejemplo-sandbox');
+  const detectionResult = document.getElementById('sandbox-detection-result');
+
+  input?.addEventListener('input', e => {
+    aplicarTextoCifradoCustom(e.target.value);
+  });
+
+  btnEjemplo?.addEventListener('click', () => {
+    const ejemplos = [
+      { text: Caesar.encrypt('LA COMUNICACION CUANTICA ES EL FUTURO DE LA CIBERSEGURIDAD', 5), tipo: 'César' },
+      { text: Vigenere.encrypt('DEFENSA CIBERNETICA ACTIVA CONTRA AMENAZAS DIGITALES', 'ESCUDO'), tipo: 'Vigenère' },
+      { text: Caesar.encrypt('EL PROTOCOLO DE SEGURIDAD HA SIDO VALIDADO', 13), tipo: 'ROT13' }
+    ];
+    const elegido = ejemplos[Math.floor(Math.random() * ejemplos.length)];
+    if (input) {
+      input.value = elegido.text;
+      aplicarTextoCifradoCustom(elegido.text);
+      showToast(`Ejemplo cargado: Cifrado ${elegido.tipo}`, 'info');
+    }
+  });
+
+  btnDetectar?.addEventListener('click', () => {
+    const text = input ? input.value.trim() : '';
+    if (!text) {
+      showToast('Escribe o pega un texto para analizar', 'warning');
+      return;
+    }
+
+    const ioc = calculateIndexOfCoincidence(text);
+    let dictamen = '';
+
+    if (ioc >= 0.065) {
+      dictamen = `🔍 <strong>Alta probabilidad de Cifrado Monoalfabético (César o Sustitución simple)</strong>.<br>
+                  • Índice de Coincidencia (IoC): <code>${ioc.toFixed(3)}</code> (similar al español ~0.074).<br>
+                  • Recomendación: Prueba el slider César o haz clic en "⚡ Fuerza Bruta".`;
+    } else if (ioc >= 0.048) {
+      dictamen = `🔍 <strong>Probable Sustitución con baja redundancia o clave Vigenère corta</strong>.<br>
+                  • Índice de Coincidencia (IoC): <code>${ioc.toFixed(3)}</code>.<br>
+                  • Recomendación: Utiliza el análisis de frecuencias y sugiere sustituciones.`;
+    } else {
+      dictamen = `🛡️ <strong>Alta probabilidad de Cifrado Polialfabético (Vigenère) o Transposición</strong>.<br>
+                  • Índice de Coincidencia (IoC): <code>${ioc.toFixed(3)}</code> (letras distribuidas uniformemente).<br>
+                  • Recomendación: Introduce posibles claves en la herramienta Vigenère.`;
+    }
+
+    if (detectionResult) {
+      detectionResult.innerHTML = dictamen;
+      detectionResult.classList.remove('hidden');
+    }
+  });
+}
+
+function calculateIndexOfCoincidence(text) {
+  const clean = text.toUpperCase().replace(/[^A-Z]/g, '');
+  const N = clean.length;
+  if (N <= 1) return 0;
+
+  const counts = {};
+  for (const ch of clean) {
+    counts[ch] = (counts[ch] || 0) + 1;
+  }
+
+  let sum = 0;
+  for (const count of Object.values(counts)) {
+    sum += count * (count - 1);
+  }
+
+  return sum / (N * (N - 1));
+}
+
+function aplicarTextoCifradoCustom(texto) {
+  state.textoCifrado = texto.toUpperCase();
+  state.textoOriginal = ''; // En sandbox no hay solución fija
+  state.tablaSustitucion = {};
+  resetSustInputs();
+  renderTextoCifrado();
+  renderTextoDescifrado();
+  updateFrequencyChart();
+  generarFuerzaBrutaCesar();
+}
+
+// ─── Modal de Demos Interactivas ──────────────────────────────
+function initDemosModal() {
+  const modal = document.getElementById('modal-demos');
+  const btnOpen = document.getElementById('btn-open-demos');
+  const btnClose = document.getElementById('btn-close-demos');
+  const btnVerDemoMision = document.getElementById('btn-ver-demo-mision');
+
+  btnOpen?.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    renderAllDemos();
+  });
+
+  btnClose?.addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+
+  btnVerDemoMision?.addEventListener('click', () => {
+    const mision = MISIONES[state.misionIndex];
+    if (mision && mision.demoTab) {
+      modal.classList.remove('hidden');
+      switchDemoTab(mision.demoTab);
+      renderAllDemos();
+    }
+  });
+
+  // Tab switching inside demo modal
+  document.querySelectorAll('.demo-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchDemoTab(btn.dataset.tab);
+    });
+  });
+
+  // Live Demo César controls
+  const demoCesarInput = document.getElementById('demo-cesar-input');
+  const demoCesarSlider = document.getElementById('demo-cesar-slider');
+  demoCesarInput?.addEventListener('input', renderDemoCesar);
+  demoCesarSlider?.addEventListener('input', renderDemoCesar);
+
+  // Live Demo Frecuencias controls
+  const demoFreqInput = document.getElementById('demo-freq-input');
+  demoFreqInput?.addEventListener('input', renderDemoFrecuencias);
+
+  // Live Demo Vigenère controls
+  const demoVigMsg = document.getElementById('demo-vig-msg');
+  const demoVigKey = document.getElementById('demo-vig-key');
+  demoVigMsg?.addEventListener('input', renderDemoVigenere);
+  demoVigKey?.addEventListener('input', renderDemoVigenere);
+
+  // Live Demo Transposición controls
+  const demoTransInput = document.getElementById('demo-trans-input');
+  demoTransInput?.addEventListener('input', renderDemoTransposicion);
+}
+
+function renderAllDemos() {
+  renderDemoCesar();
+  renderDemoFrecuencias();
+  renderDemoVigenere();
+  renderDemoTransposicion();
+}
+
+function switchDemoTab(tabId) {
+  // Normalize target id (e.g. 'demo-cesar' vs 'demo-tab-cesar')
+  const cleanId = tabId.replace(/^demo-tab-/, 'demo-');
+
+  document.querySelectorAll('.demo-tab-btn').forEach(b => {
+    const bTab = b.dataset.tab ? b.dataset.tab.replace(/^demo-tab-/, 'demo-') : '';
+    b.classList.toggle('active', bTab === cleanId);
+  });
+
+  document.querySelectorAll('.demo-tab-content').forEach(content => {
+    content.classList.add('hidden');
+  });
+
+  const activeContent = document.getElementById(cleanId) 
+    || document.getElementById(`demo-tab-${cleanId.replace(/^demo-/, '')}`)
+    || document.getElementById(tabId);
+
+  if (activeContent) {
+    activeContent.classList.remove('hidden');
+  }
+
+  // Refresh active tab
+  if (cleanId.includes('cesar')) renderDemoCesar();
+  else if (cleanId.includes('frecuencia')) renderDemoFrecuencias();
+  else if (cleanId.includes('vigenere')) renderDemoVigenere();
+  else if (cleanId.includes('transposicion')) renderDemoTransposicion();
+}
+
+function renderDemoCesar() {
+  const inputEl = document.getElementById('demo-cesar-input');
+  const sliderEl = document.getElementById('demo-cesar-slider');
+  const shiftValEl = document.getElementById('demo-cesar-shift-val');
+  const mapEl = document.getElementById('demo-cesar-map');
+  const outputEl = document.getElementById('demo-cesar-output');
+  const ribbonEl = document.getElementById('demo-cesar-ribbon');
+
+  const text = inputEl ? inputEl.value.toUpperCase() : 'HOLA';
+  const shift = sliderEl ? parseInt(sliderEl.value, 10) : 3;
+
+  if (shiftValEl) shiftValEl.textContent = shift;
+  if (mapEl) mapEl.textContent = ALPHABET[(0 + shift) % 26];
+
+  const encrypted = Caesar.encrypt(text, shift);
+  if (outputEl) outputEl.textContent = encrypted;
+
+  if (ribbonEl) {
+    ribbonEl.innerHTML = '';
+    ALPHABET.split('').forEach((ch, idx) => {
+      const token = document.createElement('div');
+      token.className = 'alphabet-token';
+      const shiftedCh = ALPHABET[(idx + shift) % 26];
+      token.innerHTML = `<span style="font-weight:bold; color:#00e5ff;">${ch}</span><span class="sub">${shiftedCh}</span>`;
+      ribbonEl.appendChild(token);
+    });
+  }
+}
+
+function renderDemoFrecuencias() {
+  const inputEl = document.getElementById('demo-freq-input');
+  const statsEl = document.getElementById('demo-freq-stats');
+  if (!statsEl) return;
+
+  const text = inputEl ? inputEl.value.toUpperCase().replace(/[^A-Z]/g, '') : '';
+  if (!text) {
+    statsEl.innerHTML = '<span class="text-muted" style="font-size:0.8rem;">Escribe texto arriba para calcular frecuencias.</span>';
+    return;
+  }
+
+  const counts = {};
+  for (const ch of text) {
+    counts[ch] = (counts[ch] || 0) + 1;
+  }
+
+  const sorted = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
+
+  statsEl.innerHTML = '';
+  sorted.forEach(([ch, count]) => {
+    const pct = ((count / text.length) * 100).toFixed(1);
+    const espPct = (FrequencyAnalyzer.SPANISH_FREQS[ch] || 0).toFixed(1);
+    const badge = document.createElement('div');
+    badge.className = 'vigenere-pair';
+    badge.innerHTML = `
+      <span class="orig">${ch}</span>
+      <span class="ciph" style="font-size:0.8rem;">${count}x (${pct}%)</span>
+      <span class="key" style="font-size:0.68rem;">Esp: ${espPct}%</span>
+    `;
+    statsEl.appendChild(badge);
+  });
+}
+
+function renderDemoVigenere() {
+  const msgEl = document.getElementById('demo-vig-msg');
+  const keyEl = document.getElementById('demo-vig-key');
+  const pairsEl = document.getElementById('demo-vig-pairs');
+  const outputEl = document.getElementById('demo-vig-output');
+
+  const msg = msgEl ? msgEl.value.toUpperCase().replace(/[^A-Z ]/g, '') : 'ATAQUE';
+  const key = keyEl ? keyEl.value.toUpperCase().replace(/[^A-Z]/g, '') || 'SOL' : 'SOL';
+
+  const encrypted = Vigenere.encrypt(msg, key);
+  if (outputEl) outputEl.textContent = encrypted;
+
+  if (pairsEl) {
+    pairsEl.innerHTML = '';
+    let keyIdx = 0;
+    msg.split('').forEach(ch => {
+      if (ALPHABET.includes(ch)) {
+        const kChar = key[keyIdx % key.length];
+        const shift = ALPHABET.indexOf(kChar);
+        const cChar = ALPHABET[(ALPHABET.indexOf(ch) + shift) % 26];
+        keyIdx++;
+
+        const pair = document.createElement('div');
+        pair.className = 'vigenere-pair';
+        pair.innerHTML = `
+          <span class="orig">${ch}</span>
+          <span class="key">+${kChar}(${shift})</span>
+          <span class="ciph">${cChar}</span>
+        `;
+        pairsEl.appendChild(pair);
+      }
+    });
+  }
+}
+
+function renderDemoTransposicion() {
+  const inputEl = document.getElementById('demo-trans-input');
+  const revEl = document.getElementById('demo-trans-rev');
+  const colEl = document.getElementById('demo-trans-col');
+
+  const text = inputEl ? inputEl.value.toUpperCase() : 'CODIGO';
+  if (revEl) revEl.textContent = text.split('').reverse().join('');
+
+  // Columnar pares e impares
+  const pares = text.split('').filter((_, i) => i % 2 === 0).join('');
+  const impares = text.split('').filter((_, i) => i % 2 !== 0).join('');
+  if (colEl) colEl.textContent = `${pares} | ${impares}`;
 }
 
 // ─── Renderizar navegación de misiones ────────────────────────
@@ -175,19 +508,6 @@ function cargarMision(idx) {
   document.getElementById('mision-desc').textContent = mision.descripcion;
   document.getElementById('hud-pistas-left').textContent = mision.pistas.length - state.pistasUsadas;
 
-  // Visibilidad de herramientas según tipo
-  const secCesar = document.getElementById('section-cesar');
-  const secVigenere = document.getElementById('section-vigenere');
-  if (mision.tipo === 'vigenere') {
-    if (secCesar) secCesar.classList.add('hidden');
-    if (secVigenere) secVigenere.classList.remove('hidden');
-    const vKeyInput = document.getElementById('vigenere-key-input');
-    if (vKeyInput) vKeyInput.value = '';
-  } else {
-    if (secCesar) secCesar.classList.remove('hidden');
-    if (secVigenere) secVigenere.classList.add('hidden');
-  }
-
   // Reset de controles
   const cesarSlider = document.getElementById('cesar-slider');
   if (cesarSlider) {
@@ -203,6 +523,7 @@ function cargarMision(idx) {
   renderHistorial();
   updateFrequencyChart();
   renderMisionesNav();
+  generarFuerzaBrutaCesar();
 
   // Iniciar timer
   startTimer();
@@ -344,10 +665,12 @@ function resetSustInputs() {
   });
 }
 
-// ─── Slider César ─────────────────────────────────────────────
+// ─── Slider César & Escáner Fuerza Bruta ───────────────────────
 function initCesarSlider() {
   const slider = document.getElementById('cesar-slider');
   const btnReset = document.getElementById('btn-reset-cesar');
+  const btnToggleBrute = document.getElementById('btn-toggle-bruteforce');
+  const bruteWrap = document.getElementById('cesar-bruteforce-wrap');
 
   if (slider) {
     slider.addEventListener('input', e => {
@@ -364,6 +687,12 @@ function initCesarSlider() {
       applyCesarShift(0);
     });
   }
+
+  if (btnToggleBrute && bruteWrap) {
+    btnToggleBrute.addEventListener('click', () => {
+      bruteWrap.classList.toggle('hidden');
+    });
+  }
 }
 
 function updateCesarValue(shift) {
@@ -371,13 +700,12 @@ function updateCesarValue(shift) {
   const mapEl = document.getElementById('cesar-char-map');
   if (valEl) valEl.textContent = shift;
   if (mapEl) {
-    const targetIdx = (0 - shift + 26) % 26;
+    const targetIdx = (0 + shift) % 26;
     mapEl.textContent = ALPHABET[targetIdx];
   }
 }
 
 function applyCesarShift(shift) {
-  // Descifrado César equivalente a sustitución
   ALPHABET.split('').forEach((ch, idx) => {
     if (shift === 0) {
       delete state.tablaSustitucion[ch];
@@ -387,7 +715,6 @@ function applyCesarShift(shift) {
     }
   });
 
-  // Reflejar en teclado
   document.querySelectorAll('.sust-key-input').forEach(input => {
     const ch = input.dataset.char;
     if (state.tablaSustitucion[ch]) {
@@ -405,6 +732,30 @@ function applyCesarShift(shift) {
 
   renderTextoCifrado();
   renderTextoDescifrado();
+}
+
+function generarFuerzaBrutaCesar() {
+  const list = document.getElementById('cesar-bruteforce-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const shifts = Caesar.bruteForce(state.textoCifrado);
+  shifts.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'bruteforce-row';
+    row.innerHTML = `
+      <span class="bruteforce-shift">Shift +${item.shift}:</span>
+      <span class="bruteforce-text">${item.text}</span>
+    `;
+    row.addEventListener('click', () => {
+      const slider = document.getElementById('cesar-slider');
+      if (slider) slider.value = item.shift;
+      updateCesarValue(item.shift);
+      applyCesarShift(item.shift);
+      showToast(`Desplazamiento +${item.shift} seleccionado`, 'info');
+    });
+    list.appendChild(row);
+  });
 }
 
 // ─── Herramienta Vigenère ─────────────────────────────────────
@@ -588,6 +939,15 @@ function verificarSolucion() {
     return;
   }
 
+  if (state.mode === 'sandbox') {
+    showToast('¡Validación en Modo Sandbox libre! Texto comprobado.', 'info');
+    if (feedback) {
+      feedback.textContent = `Texto validado: ${respuesta.length} caracteres`;
+      feedback.className = 'submit-feedback success';
+    }
+    return;
+  }
+
   const esCorrecto = verifySolution(respuesta, state.textoOriginal);
   const now = new Date();
   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
@@ -615,7 +975,7 @@ function verificarSolucion() {
     state.misionesCompletadas.add(state.misionIndex);
     renderMisionesNav();
 
-    // Mostrar feedback
+    // Feedback visual
     if (feedback) {
       feedback.textContent = '¡RESPUESTA CORRECTA!';
       feedback.className = 'submit-feedback success';
@@ -628,7 +988,7 @@ function verificarSolucion() {
       feedback.textContent = 'Solución incorrecta. Revisa el texto y vuelve a intentarlo.';
       feedback.className = 'submit-feedback error';
     }
-    showToast('Código incorrecto, revisa las sustituciones', 'error');
+    showToast('Código incorrecto, revisa las herramientas', 'error');
   }
 }
 

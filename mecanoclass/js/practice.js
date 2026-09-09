@@ -1,5 +1,5 @@
-import { requireGameAccess, currentUser } from '../../js/common/auth.js';
-import { saveGameResult, getRandomMecanoText } from '../../js/common/db.js';
+import { requireGameAccess, currentUser, isAdmin } from '../../js/common/auth.js';
+import { saveGameResult, getRandomMecanoText, getClass } from '../../js/common/db.js';
 import { renderHeader, showToast } from '../../js/common/ui.js';
 import { getUrlParams } from '../../js/common/utils.js';
 
@@ -26,6 +26,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (!currentClassId && classId) {
                 currentClassId = classId;
+            }
+
+            if (currentClassId && (profile.role === 'teacher' || profile.role === 'admin' || isAdmin(user, profile))) {
+                try {
+                    const cls = await getClass(currentClassId);
+                    if (cls && (cls.teacherId === user.uid || profile.role === 'admin' || isAdmin(user, profile))) {
+                        const btnCreate = document.getElementById('btnCreateLive');
+                        if (btnCreate) btnCreate.style.display = 'inline-flex';
+                    }
+                } catch (e) {
+                    console.error("Error checking class ownership:", e);
+                }
             }
 
             await loadAndStartEngine();
