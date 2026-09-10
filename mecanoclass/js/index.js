@@ -4,7 +4,7 @@
 
 import { requireAuth, isAdmin } from '../../js/common/auth.js';
 import { renderHeader, showToast } from '../../js/common/ui.js';
-import { $ } from '../../js/common/utils.js';
+import { $, getUrlParams } from '../../js/common/utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     requireAuth({
@@ -18,6 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupUI(user, profile) {
     const isTeacherOrAdmin = profile.role === 'teacher' || profile.role === 'admin' || isAdmin(user, profile);
+
+    // Reenviar classId al modo entrenamiento si existe
+    const params = getUrlParams();
+    const classId = params.classId;
+    if (classId) {
+        const btnPractice = $('btn-practice-mode');
+        if (btnPractice) {
+            btnPractice.href = `practice.html?classId=${classId}`;
+        }
+    }
 
     // Mostrar panel docente
     if (isTeacherOrAdmin) {

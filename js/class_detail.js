@@ -2,7 +2,7 @@ import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassr
 import {
   getClass, updateClass, getClassMembers, getClassAssignments,
   toggleGameInClass, createAssignment, deleteAssignment,
-  getClassRanking, addStudentsToClass, removeStudentFromClass
+  getClassRanking, addStudentsToClass, removeStudentFromClass, getStudentResultsInClass
 } from './common/db.js';
 import { createClassroomAssignment, syncClassroomGrades } from './common/classroom.js';
 import { renderHeader, showToast, showLoading, hideLoading, renderPodium, renderRankingTable } from './common/ui.js';
@@ -179,6 +179,13 @@ async function loadStudentsTab() {
         }
       });
     });
+
+    // Eventos de historial
+    list.querySelectorAll('[data-action="view-history"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        showStudentHistory(btn.dataset.studentId, btn.dataset.studentName || 'Alumno');
+      });
+    });
   } catch (err) {
     showToast('Error', err.message, 'error');
   }
@@ -221,11 +228,85 @@ function renderStudentRow(m) {
       <span class="badge ${m.source === 'classroom' ? 'badge--accent' : 'badge--muted'}">
         ${m.source === 'classroom' ? 'Classroom' : 'Directo / PIN'}
       </span>
+      <button class="btn btn-ghost btn--sm" data-action="view-history" data-student-id="${escapeHtml(m.uid)}" data-student-name="${escapeHtml(displayName)}" title="Ver historial de partidas" style="padding:4px 8px;">
+        📊
+      </button>
       <button class="btn btn-ghost btn--sm" data-action="remove-student" data-student-id="${escapeHtml(identifier)}" data-student-name="${escapeHtml(displayName)}" title="Eliminar de la clase" style="color:var(--error); padding:4px 8px;">
         🗑️
       </button>
     </div>
   </div>`;
+}
+
+async function showStudentHistory(studentId, studentName) {
+  if (!studentId) {
+    showToast('Error', 'ID de alumno no disponible.', 'error');
+    return;
+  }
+  const GAME_NAMES = Object.fromEntries(Object.values(GAMES).map(g => [g.id, `${g.icon} ${g.name}`]));
+
+  let modal = document.getElementById('modal-student-history');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modal-student-history';
+    modal.className = 'modal-backdrop';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.innerHTML = `
+      <div class="modal-box" style="max-width:680px; width:95%;">
+        <div class="modal-header">
+          <h3 id="history-modal-title"></h3>
+          <button class="modal-close" id="close-history-modal" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+          <div id="history-modal-body" style="overflow-x:auto;"></div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    document.getElementById('close-history-modal').addEventListener('click', () => modal.classList.remove('modal-backdrop--visible'));
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('modal-backdrop--visible'); });
+  }
+
+  document.getElementById('history-modal-title').textContent = `📊 Historial de ${studentName}`;
+  document.getElementById('history-modal-body').innerHTML = '<div style="padding:32px; text-align:center;">⏳ Cargando partidas...</div>';
+  modal.classList.add('modal-backdrop--visible');
+
+  let results = [];
+  try {
+    results = await getStudentResultsInClass(studentId, classData.id, 50);
+  } catch(e) {
+    console.error('Error cargando historial:', e);
+    document.getElementById('history-modal-body').innerHTML = `<div style="padding:24px; text-align:center; color:var(--error);">⚠️ Error al cargar: ${escapeHtml(e.message)}</div>`;
+    return;
+  }
+
+  const rows = results.length === 0
+    ? '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px;">Sin partidas registradas en esta clase.</td></tr>'
+    : results.map(r => {
+        const gameName = GAME_NAMES[r.gameId] || r.gameId || '—';
+        const date = r.timestamp?.toDate ? r.timestamp.toDate().toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+        const wpm = r.metadata?.wpm ?? '—';
+        const acc = r.metadata?.accuracy != null ? r.metadata.accuracy + '%' : '—';
+        return `<tr>
+          <td style="padding:8px 12px;">${escapeHtml(gameName)}</td>
+          <td style="padding:8px 12px; text-align:center;">${r.score}</td>
+          <td style="padding:8px 12px; text-align:center;">${wpm !== '—' ? wpm + ' PPM' : '—'}${acc !== '—' ? ` / ${acc}` : ''}</td>
+          <td style="padding:8px 12px; color:var(--text-muted); font-size:0.85rem;">${date}</td>
+        </tr>`;
+      }).join('');
+
+  document.getElementById('history-modal-body').innerHTML = `
+    <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border); background:var(--surface-2);">
+          <th style="padding:10px 12px; text-align:left;">Juego</th>
+          <th style="padding:10px 12px; text-align:center;">Puntuación</th>
+          <th style="padding:10px 12px; text-align:center;">Detalle</th>
+          <th style="padding:10px 12px; text-align:left;">Fecha</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -346,7 +427,17 @@ async function renderResults() {
     renderPodium(enriched, 'results-podium');
     renderRankingTable(enriched, 'results-ranking');
   } catch (err) {
-    showToast('Error', err.message, 'error');
+    console.error(err);
+    const podium = document.getElementById('results-podium');
+    if (podium) {
+        podium.innerHTML = `<div class="empty-state" style="color:var(--error); padding: 20px; text-align: center;">
+            ⚠️ Firebase aún está construyendo el índice de rendimiento.<br>
+            Este proceso suele tardar de <strong>3 a 5 minutos</strong>.<br><br>
+            <small style="color:var(--text-muted)">Detalle técnico: ${err.message}</small>
+        </div>`;
+    }
+    const ranking = document.getElementById('results-ranking');
+    if (ranking) ranking.innerHTML = '';
   } finally {
     hideLoading();
   }
@@ -381,8 +472,8 @@ function setupModals(user) {
     $('assignment-classroom-note').style.display = 'block';
   }
 
-  const openModal  = () => { formAssignment?.reset(); $('assignment-error').textContent = ''; modalAssignment.setAttribute('aria-hidden', 'false'); };
-  const closeModal = () => modalAssignment.setAttribute('aria-hidden', 'true');
+  const openModal  = () => { formAssignment?.reset(); $('assignment-error').textContent = ''; modalAssignment.classList.add('modal-backdrop--visible'); modalAssignment.setAttribute('aria-hidden', 'false'); };
+  const closeModal = () => { modalAssignment.classList.remove('modal-backdrop--visible'); modalAssignment.setAttribute('aria-hidden', 'true'); };
 
   btnNew?.addEventListener('click', openModal);
   closeBtn?.addEventListener('click', closeModal);

@@ -64,9 +64,6 @@ export async function loginWithGoogle() {
     throw new Error(`Acceso denegado. El correo (${email}) no está registrado en ninguna clase activa. Pide a tu docente que te añada.`);
   }
 
-  // Resolver clases en las que está pendiente de registro
-  await resolvePendingStudent(result.user.uid, email);
-
   return result.user;
 }
 
@@ -256,6 +253,14 @@ export function setupAuthListener(callback) {
           // Usuario nuevo sin rol definido (login Google alumno por primera vez)
           currentProfile = await _createOrUpdateProfile(user, 'student');
         }
+
+        // Resolver pendientes si es alumno y no se ha resuelto antes
+        if (currentProfile?.role === 'student' && !currentProfile.resolvedPending) {
+          await resolvePendingStudent(user.uid, user.email);
+          await updateDoc(ref, { resolvedPending: true });
+          currentProfile.resolvedPending = true;
+        }
+
         callback(user, currentProfile);
       } catch (error) {
         console.warn("No se pudo obtener el perfil de usuario (puede que la sesión se haya cerrado):", error);

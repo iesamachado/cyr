@@ -92,7 +92,26 @@ export async function isStudentInAnyClass(email) {
   
   try {
     const snap = await getDoc(doc(db, 'allowed_students', email));
-    return snap.exists();
+    if (snap.exists()) return true;
+
+    // Fallback: buscar en todas las clases por si falta el documento en allowed_students
+    const q = query(collection(db, 'classes'));
+    const classesSnap = await getDocs(q);
+    for (const d of classesSnap.docs) {
+      const cls = d.data();
+      if (!cls.members) continue;
+      const found = cls.members.some(m => 
+        (typeof m === 'string' && m === email) || 
+        (m && typeof m === 'object' && m.email?.toLowerCase() === email)
+      );
+      if (found) {
+        // Reparar el documento faltante
+        await setDoc(doc(db, 'allowed_students', email), { allowed: true, recovered: true }, { merge: true });
+        return true;
+      }
+    }
+
+    return false;
   } catch (err) {
     console.error('Error comprobando si el alumno está en una clase:', err);
     return false;
@@ -307,10 +326,19 @@ export async function removeStudentFromClass(classId, studentIdOrEmail) {
  * o en la colección 'class_members' (unión por PIN).
  */
 export async function getStudentClasses(studentId) {
-  // 1. Clases donde está en el array 'members' (importación Classroom)
+  // 1. Clases donde está en el array 'members' (como UID)
   const q1 = query(collection(db, 'classes'), where('members', 'array-contains', studentId));
   const snap1 = await getDocs(q1);
   const byMembers = snap1.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // Obtener email del usuario para auto-reparar clases pendientes
+  let email = null;
+  try {
+    const userSnap = await getDoc(doc(db, 'users', studentId));
+    if (userSnap.exists()) {
+      email = (userSnap.data().email || '').toLowerCase().trim();
+    }
+  } catch (e) {}
 
   // 2. Clases donde se unió por PIN
   const q2 = query(collection(db, 'class_members'), where('studentId', '==', studentId));
@@ -323,7 +351,10 @@ export async function getStudentClasses(studentId) {
   for (const cid of classIdsByPin) {
     if (!alreadyLoaded.has(cid)) {
       const cls = await getClass(cid);
-      if (cls) byPinClasses.push(cls);
+      if (cls) {
+        byPinClasses.push(cls);
+        alreadyLoaded.add(cls.id);
+      }
     }
   }
 
@@ -390,9 +421,15 @@ export async function getClassMembers(classId) {
 
   // Fuente 2: array members del doc de clase (importación Classroom)
   const classSnap = await getDoc(doc(db, 'classes', classId));
+  let needsHeal = false;
+  let newMembersArr = [];
+
   if (classSnap.exists()) {
     const { members: arr = [] } = classSnap.data();
-    for (const entry of arr) {
+    newMembersArr = [...arr];
+
+    for (let i = 0; i < arr.length; i++) {
+      const entry = arr[i];
       if (typeof entry === 'string') {
         // UID directo
         if (!memberIds.has(entry)) {
@@ -401,10 +438,35 @@ export async function getClassMembers(classId) {
           if (profile) members.push({ ...profile, joinedAt: null, source: 'classroom' });
         }
       } else if (entry?.pending) {
-        // Alumno pendiente de registrarse
-        members.push({ ...entry, source: 'classroom', pending: true });
+        // Alumno pendiente: comprobar si ya se ha registrado en users
+        const registeredUser = await findUserByEmail(entry.email);
+        if (registeredUser) {
+          // Auto-reparar: el usuario ya existe.
+          needsHeal = true;
+          // Reemplazar el objeto pending por su UID
+          newMembersArr = newMembersArr.filter(e => e !== entry);
+          if (!newMembersArr.includes(registeredUser.uid)) {
+            newMembersArr.push(registeredUser.uid);
+          }
+          if (!memberIds.has(registeredUser.uid)) {
+            memberIds.add(registeredUser.uid);
+            members.push({ ...registeredUser, joinedAt: null, source: 'classroom' });
+          }
+        } else {
+          // Sigue pendiente
+          members.push({ ...entry, source: 'classroom', pending: true });
+        }
       }
     }
+  }
+
+  // Si hemos encontrado alumnos que ya estaban registrados, actualizamos la base de datos
+  // (El profesor tiene permisos de escritura en su propia clase)
+  if (needsHeal) {
+    await updateDoc(doc(db, 'classes', classId), {
+      members: newMembersArr,
+      updatedAt: serverTimestamp()
+    });
   }
 
   return members;
@@ -507,26 +569,34 @@ export async function getStudentResultsByGame(studentId, gameId, limitN = 20) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-export async function getClassResults(classId, gameId = null, limitN = 100) {
-  let q;
-  if (gameId) {
-    q = query(
-      collection(db, 'game_results'),
-      where('classId', '==', classId),
-      where('gameId', '==', gameId),
-      orderBy('timestamp', 'desc'),
-      limit(limitN)
-    );
-  } else {
-    q = query(
-      collection(db, 'game_results'),
-      where('classId', '==', classId),
-      orderBy('timestamp', 'desc'),
-      limit(limitN)
-    );
-  }
+/** Histórico completo de un alumno en una clase concreta (filtrado en cliente) */
+export async function getStudentResultsInClass(studentId, classId, limitN = 50) {
+  // Sin orderBy para evitar requerir índice compuesto. Se ordena en cliente.
+  const q = query(
+    collection(db, 'game_results'),
+    where('studentId', '==', studentId)
+  );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return all
+    .filter(r => r.classId === classId)
+    .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0))
+    .slice(0, limitN);
+}
+
+export async function getClassResults(classId, gameId = null, limitN = 100) {
+  // Siempre filtramos solo por classId+timestamp (índice ya creado).
+  // El filtro por gameId se aplica en cliente para evitar un tercer índice compuesto.
+  const q = query(
+    collection(db, 'game_results'),
+    where('classId', '==', classId),
+    orderBy('timestamp', 'desc'),
+    limit(gameId ? 500 : limitN)   // Si hay filtro por juego, traemos más para filtrar luego
+  );
+  const snap = await getDocs(q);
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (!gameId) return all.slice(0, limitN);
+  return all.filter(r => r.gameId === gameId).slice(0, limitN);
 }
 
 /** Obtiene el mejor score de un alumno en un juego para una clase */
@@ -695,16 +765,27 @@ export async function resolvePendingStudent(uid, email) {
     
     for (const d of snap.docs) {
       const cls = d.data();
-      if (!cls.members) continue;
+      if (!cls.members || !Array.isArray(cls.members)) continue;
 
-      const pendingObj = cls.members.find(m => m?.pending && m.email?.toLowerCase() === email);
-      if (pendingObj) {
-        // Encontramos una clase donde está pendiente. Lo reemplazamos por su UID.
+      let modified = false;
+      const newMembers = cls.members.filter(m => {
+        if (m && typeof m === 'object' && m.pending) {
+          const mEmail = (m.email || '').toLowerCase().trim();
+          if (mEmail === email) {
+            modified = true;
+            return false; // Eliminar del nuevo array
+          }
+        }
+        return true;
+      });
+
+      if (modified) {
+        if (!newMembers.includes(uid)) {
+          newMembers.push(uid);
+        }
         await updateDoc(doc(db, 'classes', d.id), {
-          members: arrayRemove(pendingObj)
-        });
-        await updateDoc(doc(db, 'classes', d.id), {
-          members: arrayUnion(uid)
+          members: newMembers,
+          updatedAt: serverTimestamp()
         });
       }
     }

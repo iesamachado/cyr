@@ -57,6 +57,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadAndStartEngine() {
     const textDisplay = document.getElementById('textDisplay');
+    const btnStart = document.getElementById('btnStartPractice');
+    
+    if (btnStart) {
+        btnStart.disabled = true;
+        btnStart.innerText = '⏳ Cargando texto...';
+        btnStart.style.opacity = '0.7';
+        btnStart.style.cursor = 'wait';
+    }
+
     if (!textDisplay) return;
     
     textDisplay.innerText = currentClassId
@@ -65,11 +74,15 @@ async function loadAndStartEngine() {
 
     let textData;
     try {
+        let result = null;
         if (currentClassId) {
-            const result = await getRandomMecanoText(currentClassId);
-            textData = result ? result.text : "No hay textos disponibles en esta clase.";
+            result = await getRandomMecanoText(currentClassId);
+        }
+
+        if (result && result.text) {
+            textData = result.text;
         } else {
-            // Use local fallback if db call not available without class
+            // Use local fallback si no hay textos asignados a la clase
             if (typeof initialTexts !== 'undefined' && initialTexts.length > 0) {
                 textData = initialTexts[Math.floor(Math.random() * initialTexts.length)].text;
             } else {
@@ -78,7 +91,11 @@ async function loadAndStartEngine() {
         }
     } catch (e) {
         console.error("Error fetching text", e);
-        textData = "Error al cargar texto. Usa este texto de ejemplo.";
+        if (typeof initialTexts !== 'undefined' && initialTexts.length > 0) {
+            textData = initialTexts[Math.floor(Math.random() * initialTexts.length)].text;
+        } else {
+            textData = "Error al cargar texto. Usa este texto de ejemplo.";
+        }
     }
 
     practiceText = textData;
@@ -101,6 +118,13 @@ async function loadAndStartEngine() {
             game.draw();
         }
     });
+
+    if (btnStart) {
+        btnStart.disabled = false;
+        btnStart.innerText = '⌨️ Comenzar a Escribir';
+        btnStart.style.opacity = '1';
+        btnStart.style.cursor = 'pointer';
+    }
 }
 
 function startPractice(event) {
@@ -164,8 +188,10 @@ async function saveAndExit() {
             showToast("¡Resultado guardado correctamente!", 'success');
 
             if (currentClassId) {
-                // Return to dashboard or keep playing
                 showToast("Guardado con éxito. Redirigiendo...", 'success');
+                setTimeout(() => {
+                    window.location.href = '../dashboard_student.html';
+                }, 1500);
             } else {
                 window.history.back();
             }

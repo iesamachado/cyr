@@ -125,7 +125,7 @@ export const GAMES = {
     color: '#00d4ff',
     colorDark: '#007a99',
     path: './mecanoclass/index.html',
-    gamePath: './mecanoclass/practice.html'
+    gamePath: './mecanoclass/index.html'
   },
   rompecodigos: {
     id: 'rompecodigos',
