@@ -6,7 +6,7 @@ import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassr
 import { getTeacherClasses, createClass, getClassMembers, getClassResults, getStudentResults, addStudentsToClass } from './common/db.js';
 import { fetchClassroomCourses, importClassroomStudents } from './common/classroom.js';
 import { renderHeader, showToast, showModal, showLoading, hideLoading } from './common/ui.js';
-import { GAMES, copyToClipboard, $, escapeHtml, formatDate, getUrlParams } from './common/utils.js';
+import { TOPICS, GAMES, copyToClipboard, $, escapeHtml, formatDate, getUrlParams } from './common/utils.js';
 
 let myClasses = [];
 
@@ -19,6 +19,7 @@ requireAuth({
     await loadAll(user, profile);
     setupModals();
     renderTeacherGameCards();
+    renderTeacherTopicCards();
     await loadTeacherHistory(user.uid);
   }
 });
@@ -109,13 +110,27 @@ function renderTeacherGameCards() {
   const grid = $('teacher-games-grid');
   if (!grid) return;
   grid.innerHTML = Object.values(GAMES).map(g => `
-    <div class="game-card" style="--game-color:${g.color}; --game-color-dark:${g.colorDark}">
-      <a class="game-card-link" href="${g.gamePath}">
+    <a class="game-card" href="${g.gamePath}" style="--game-color:${g.color}; --game-color-dark:${g.colorDark}; text-decoration: none;">
+      <div class="game-card-link" style="pointer-events: none;">
         <div class="game-card-icon">${g.icon}</div>
         <div class="game-card-name">${escapeHtml(g.name)}</div>
         <div class="game-card-desc">${escapeHtml(g.description)}</div>
-      </a>
-    </div>`).join('');
+      </div>
+    </a>`).join('');
+}
+
+// ── Tarjetas de Temario para el docente ──────────────────────────
+function renderTeacherTopicCards() {
+  const grid = $('teacher-topics-grid');
+  if (!grid) return;
+  grid.innerHTML = Object.values(TOPICS).map(t => `
+    <a class="game-card" href="${t.htmlPath || t.pdfPath}" target="_blank" style="--game-color:${t.color}; --game-color-dark:${t.colorDark}; text-decoration: none;">
+      <div class="game-card-link" style="pointer-events: none;">
+        <div class="game-card-icon">${t.icon}</div>
+        <div class="game-card-name">${escapeHtml(t.name)}</div>
+        <div class="game-card-desc">${escapeHtml(t.description || 'Ver temario')}</div>
+      </div>
+    </a>`).join('');
 }
 
 // ── Historial de partidas del Docente ──────────────────────────
@@ -184,11 +199,12 @@ function setupModals() {
     e.preventDefault();
     const name = $('class-name-input').value.trim();
     if (!name) return;
+    const level = parseInt($('class-level-input')?.value || '1');
     const studentsRaw = $('class-students-input')?.value || '';
 
     try {
       showLoading('Creando clase...');
-      const cls = await createClass(currentUser.uid, name);
+      const cls = await createClass(currentUser.uid, name, level);
       
       let addedInfo = '';
       if (studentsRaw.trim()) {
@@ -318,7 +334,11 @@ async function doImportClassroom(token) {
       const courseId = cb.value;
       const name     = cb.dataset.name;
 
-      const cls = await createClass(currentUser.uid, name, { classroomCourseId: courseId });
+      showLoading('Importando curso y alumnos...');
+      // 1. Crear clase en Firestore
+      const cls = await createClass(currentUser.uid, name, 1, { classroomCourseId: courseId });
+      
+      // 2. Traer alumnos de Classroom
       const { matched, pending } = await importClassroomStudents(token, courseId, cls.id);
       imported++;
       showToast(`Clase "${name}" importada`, `${matched} alumnos vinculados, ${pending} pendientes de registro.`, 'success', 4000);

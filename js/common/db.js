@@ -55,13 +55,14 @@ export async function findUserByEmail(email) {
  * @param {object} extra - campos adicionales (classroomCourseId, etc.)
  * @returns {object} { id, pin, name }
  */
-export async function createClass(teacherId, name, extra = {}) {
+export async function createClass(teacherId, name, level = 1, extra = {}) {
   const pin = generatePin();
   const ref = doc(collection(db, 'classes'));
   await setDoc(ref, {
     id:           ref.id,
     teacherId,
     name,
+    level,
     pin,
     enabledGames: [],   // El profesor los habilita después
     members:      [],   // UIDs de alumnos importados desde Classroom
@@ -392,6 +393,15 @@ export async function toggleGameInClass(classId, gameId, enabled) {
   });
 }
 
+/** Habilitar / deshabilitar un tema en una clase */
+export async function toggleTopicInClass(classId, topicId, enabled) {
+  const ref = doc(db, 'classes', classId);
+  await updateDoc(ref, {
+    enabledTopics: enabled ? arrayUnion(topicId) : arrayRemove(topicId),
+    updatedAt: serverTimestamp()
+  });
+}
+
 /** Actualizar nombre de clase */
 export async function updateClass(classId, data) {
   await updateDoc(doc(db, 'classes', classId), { ...data, updatedAt: serverTimestamp() });
@@ -496,6 +506,10 @@ export async function createAssignment(classId, data) {
     createdAt: serverTimestamp()
   });
   return ref.id;
+}
+
+export async function updateAssignment(classId, assignmentId, data) {
+  await updateDoc(doc(db, 'classes', classId, 'assignments', assignmentId), data);
 }
 
 export async function getClassAssignments(classId) {

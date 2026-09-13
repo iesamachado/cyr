@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloque 2: Programación - Computación y Robótica</title>
+  <link rel="stylesheet" href="css/temario.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🧩 Bloque 2: Programación (Scratch)</h1>
+    <p>Programar es, básicamente, enseñarle a una máquina a hacer algo dándole instrucciones paso a paso. En esta unidad aprenderemos a pensar como un programador.</p>
+    
+    <h2>1. Algoritmos: La receta de la computación</h2>
+    <p>Un <strong>algoritmo</strong> es una serie de pasos ordenados y finitos para resolver un problema. Piensa en ello como una receta de cocina o las instrucciones para montar un mueble.</p>
+    
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 20px; margin: 25px 0; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+      <img src="../temario/assets/img/ada_lovelace.jpg" alt="Ada Lovelace" style="width: 120px; border-radius: 8px; box-shadow: var(--shadow); flex-shrink: 0;">
+      <div style="flex: 1; min-width: 250px;">
+        <h3 style="margin-top: 0; color: #1d4ed8;">La primera programadora: Ada Lovelace</h3>
+        <p style="font-size: 0.95rem; margin-bottom: 0;">A mediados del siglo XIX, mucho antes de que existieran los ordenadores electrónicos, el matemático Charles Babbage diseñó una gigantesca "Máquina Analítica" mecánica. Fue su colaboradora, la matemática británica <strong>Ada Lovelace</strong>, quien se dio cuenta de que esa máquina podía procesar mucho más que simples números. En 1843, Ada publicó unas notas detallando una serie de instrucciones paso a paso para que la máquina calculara los números de Bernoulli. ¡Había escrito <strong>el primer algoritmo informático de la historia</strong>! Por eso, se la considera la primera programadora del mundo.</p>
+      </div>
+    </div>
+    
+    <div class="diagram-box" style="text-align: center;">
+      <strong>Ejemplo de Algoritmo: Cruzar el semáforo</strong>
+      
+      <div class="mermaid" style="margin-top: 20px;">
+        flowchart TD
+          A([Inicio]) --> B[Llegar al paso de cebra]
+          B --> C[Mirar el semáforo]
+          C --> D{¿Está verde?}
+          D -- No, está rojo --> E[Esperar]
+          E --> C
+          D -- Sí --> F[Cruzar la calle]
+          F --> G([Fin])
+      </div>
+      
+      <div style="text-align: left; margin-top: 20px; font-size: 0.95rem; color: var(--text-secondary);">
+        <strong>En texto:</strong>
+        <ol>
+          <li>Llegar al paso de cebra.</li>
+          <li>Mirar el color del semáforo.</li>
+          <li><strong>Si</strong> está rojo: Esperar y volver a mirar.</li>
+          <li><strong>Si</strong> está verde: Cruzar la calle.</li>
+        </ol>
+      </div>
+    </div>
+    
+    <h2>2. Programación por Bloques</h2>
+    <p>En lugar de escribir texto complicado en lenguajes como Python o C++, empezaremos usando <strong>Scratch</strong>, un lenguaje visual donde las instrucciones son como piezas de un puzzle.</p>
+
+    <h3>Conceptos Clave en Programación</h3>
+    
+    <h4>A. Secuencia</h4>
+    <p>El ordenador lee las instrucciones de arriba hacia abajo, una tras otra. Si te equivocas en el orden, el programa no funcionará como esperas.</p>
+    <div class="scratch-stack">
+      <div class="scratch-block scratch-hat s-events">al presionar 🚩</div>
+      <div class="scratch-block s-motion">mover <span class="s-input">10</span> pasos</div>
+      <div class="scratch-block s-motion">girar ↻ <span class="s-input">15</span> grados</div>
+    </div>
+
+    <h4>B. Variables</h4>
+    <p>Una variable es como una <strong>caja con una etiqueta</strong> donde puedes guardar información. Por ejemplo, en un videojuego, necesitas una caja llamada <code>Vidas</code> que empieza en 3. Cuando un enemigo te toca, abres la caja y restas 1.</p>
+    
+    <div class="scratch-stack">
+      <div class="scratch-block s-var">dar a <span class="s-input">Puntuacion ▼</span> el valor <span class="s-input">0</span></div>
+      <div class="scratch-block s-var">sumar a <span class="s-input">Puntuacion ▼</span> <span class="s-input">1</span></div>
+    </div>
+
+    <h4>C. Condicionales (Si... entonces)</h4>
+    <p>Los ordenadores pueden tomar decisiones basadas en condiciones. Se usa el bloque <strong>SI (condición) ENTONCES (acción)</strong>.</p>
+    
+    <div class="scratch-stack">
+      <div class="scratch-block scratch-c-block s-control">
+        si &lt;<span class="s-hex s-sensing">¿tocando el color <span style="display:inline-block; width:12px; height:12px; background:red; border-radius:50%; vertical-align:middle;"></span>?</span>&gt; entonces
+        <div class="scratch-inner">
+          <div class="scratch-block s-motion">ir a x: <span class="s-input">0</span> y: <span class="s-input">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h4>D. Bucles (Repetición)</h4>
+    <p>Los ordenadores son excelentes haciendo tareas repetitivas sin cansarse. En lugar de escribir "Avanzar 1 paso" diez veces, usamos un bucle:</p>
+    
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+      <div class="scratch-stack">
+        <div class="scratch-block scratch-c-block s-control">
+          repetir <span class="s-input">10</span>
+          <div class="scratch-inner">
+            <div class="scratch-block s-motion">mover <span class="s-input">10</span> pasos</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scratch-stack">
+        <div class="scratch-block scratch-c-block s-control">
+          por siempre
+          <div class="scratch-inner">
+            <div class="scratch-block s-motion">mover <span class="s-input">10</span> pasos</div>
+            <div class="scratch-block s-motion">rebotar si toca un borde</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>3. Depuración (Debugging)</h2>
+    <p>Rara vez un programa funciona bien a la primera. Los errores de código se llaman <strong>bugs</strong> (bichos). La depuración es el proceso de jugar a ser un detective: leer el código paso a paso para encontrar dónde se esconde el error y corregirlo.</p>
+    
+    <div class="alert alert-warning" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-start;">
+      <img src="../temario/assets/img/grace_hopper.jpg" alt="Grace Hopper" style="width: 100px; border-radius: 8px; box-shadow: var(--shadow); flex-shrink: 0; margin-top: 10px;">
+      <div style="flex: 1; min-width: 250px;">
+        <strong style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+          <span style="font-size: 1.8rem;">🦋</span> ¿Sabías de dónde viene la palabra "Bug"?
+        </strong>
+        En 1947, los primeros ordenadores no eran microchips, sino máquinas gigantes llenas de relés mecánicos. Un día, el ordenador Harvard Mark II empezó a fallar. La pionera informática <strong>Grace Hopper</strong> y su equipo lo abrieron para investigar y encontraron el problema: ¡Una polilla real se había quedado atrapada entre los relés! La pegaron con celo en su cuaderno de registro anotando: <em>"Primer caso real de bicho (bug) encontrado"</em>. Desde entonces, arreglar un error de código se llama "desbichar" (debug).
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <a href="block1.html" class="btn btn-outline">← Anterior (Bloque 1)</a>
+      <a href="block3.html" class="btn btn-primary">Siguiente Bloque →</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'base' });
+  </script>
+</body>
+</html>

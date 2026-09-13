@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloque 3: Robótica y Hardware - Computación y Robótica</title>
+  <link rel="stylesheet" href="css/temario.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 Bloque 3: Robótica y Arquitectura de Hardware</h1>
+    <p>Un ordenador o un robot no es más que un montón de piezas de plástico y metal (Hardware) cobrando vida gracias a las instrucciones (Software). Aquí entenderemos cómo interactúan.</p>
+    
+    <div class="alert alert-info">
+      <strong>¿Cómo distinguirlos? Una regla infalible:</strong> Existe un viejo chiste informático que dice: <em>"El Hardware es aquello que puedes partir con un hacha; el Software es aquello a lo que solo puedes maldecir"</em>. ¡Y es totalmente cierto! El hardware es la parte física (cables, chips, plástico), y el software son los programas invisibles (sistemas, apps, juegos).
+    </div>
+    
+    <h2>1. Arquitectura de un Ordenador (Hardware)</h2>
+    <p>Todo dispositivo informático (tu PC, tu móvil, tu consola) comparte una estructura básica parecida al cuerpo humano:</p>
+    
+    <ul>
+      <li><strong>Placa Base (Motherboard):</strong> Es el esqueleto y sistema nervioso. Conecta todas las piezas entre sí.</li>
+      <li><strong>CPU (Procesador):</strong> El cerebro. Se encarga de hacer todos los cálculos matemáticos y lógicos. Se calienta mucho, por lo que necesita un disipador.</li>
+      <li><strong>Memoria RAM:</strong> Es la memoria a corto plazo. Es rapidísima pero olvida todo cuando apagas el ordenador. Guarda los programas que estás usando <em>ahora mismo</em>.</li>
+      <li><strong>Almacenamiento (HDD / SSD):</strong> Es la memoria a largo plazo. Guarda tus fotos y juegos para siempre.</li>
+      <li><strong>Tarjeta Gráfica (GPU):</strong> Un cerebro especializado solo en dibujar gráficos y píxeles en la pantalla lo más rápido posible.</li>
+    </ul>
+
+    <h3 style="margin-top: 30px;">¿Cómo "piensa" realmente la CPU?</h3>
+    <p>Aunque parece magia, la CPU (Unidad Central de Procesamiento) en el fondo solo entiende dos cosas: <strong>Encendido (1) y Apagado (0)</strong>. Toda tu música, fotos y videojuegos se reducen a larguísimas cadenas de unos y ceros: <strong>el sistema binario</strong>.</p>
+    <p>El corazón de la CPU se llama <strong>ALU (Unidad Aritmético Lógica)</strong>. Es una calculadora rapidísima que hace operaciones matemáticas sencillas con esos ceros y unos: sumas, restas y operaciones lógicas como AND (Y), OR (O) y NOT (NO).</p>
+    
+    <div style="background: #fdf4ff; border: 1px solid #f5d0fe; border-radius: var(--radius); padding: 20px; margin: 25px 0;">
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; min-width: 250px;">
+          <h4 style="margin-top: 0; color: #a21caf; font-size: 1.2rem;">🌑 Juega a MOON para entender la CPU</h4>
+          <p style="font-size: 0.95rem;">Para entender exactamente cómo la ALU suma números, mueve información a la memoria RAM y hace operaciones lógicas en binario, jugaremos a <strong>MOON</strong>. En este juego de mesa digital, TÚ eres el procesador principal de la nave espacial y tendrás que arreglar fallos matemáticos operando con <em>bits</em> en los cuatro registros de memoria (A, B, C y D).</p>
+          <p style="font-size: 0.95rem; margin-bottom: 0;">Moverás "fichas de energía" (1s y 0s) usando cartas de instrucciones informáticas reales como <code>MOV</code>, <code>AND</code> o <code>INC</code>.</p>
+          <a href="../moon/index.html" class="btn" style="background: #a21caf; color: white; display: inline-block; margin-top: 15px; text-decoration: none;">Iniciar Misión MOON</a>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+          <img src="../moon/img/and.png" alt="Instrucción AND" style="width: 80px; border-radius: 6px; box-shadow: var(--shadow);">
+          <img src="../moon/img/mov.png" alt="Instrucción MOV" style="width: 80px; border-radius: 6px; box-shadow: var(--shadow);">
+          <img src="../moon/img/inc.png" alt="Instrucción INC" style="width: 80px; border-radius: 6px; box-shadow: var(--shadow);">
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-success">
+      <strong>🎮 Práctica Recomendada:</strong> Te invitamos a jugar a <strong>CyberSmith Arcade</strong> en tu panel de alumno. En este juego tendrás que montar ordenadores pieza a pieza, cumpliendo los pedidos de clientes dentro de un límite de tiempo. ¡Aprenderás hardware jugando!
+    </div>
+    
+    <h2>2. Periféricos</h2>
+    <p>Son los dispositivos que permiten al ordenador comunicarse con el mundo exterior.</p>
+    <ul>
+      <li><strong>De entrada:</strong> Teclado, ratón, micrófono, cámara. (Envían información al ordenador).</li>
+      <li><strong>De salida:</strong> Pantalla, altavoces, impresora. (Muestran la información procesada al usuario).</li>
+      <li><strong>De entrada/salida:</strong> Pantalla táctil, Pendrive USB.</li>
+    </ul>
+
+    <h2>3. Las Tres Leyes de la Robótica</h2>
+    <p>Antes de construir robots, debemos pensar en la ética. El famoso escritor de ciencia ficción <strong>Isaac Asimov</strong> introdujo en 1942 (en su relato corto <em>"Círculo Vicioso"</em> / <em>"Runaround"</em>) tres reglas fundamentales que todo robot con inteligencia artificial debería cumplir para proteger a la humanidad:</p>
+    
+    <div class="diagram-box" style="text-align: left;">
+      <ol style="font-size: 1.1rem; line-height: 1.8;">
+        <li><strong>Primera Ley:</strong> Un robot no hará daño a un ser humano, ni por inacción permitirá que un ser humano sufra daño.</li>
+        <li><strong>Segunda Ley:</strong> Un robot debe cumplir las órdenes dadas por los seres humanos, a excepción de aquellas que entren en conflicto con la Primera Ley.</li>
+        <li><strong>Tercera Ley:</strong> Un robot debe proteger su propia existencia en la medida en que esta protección no entre en conflicto con la Primera o con la Segunda Ley.</li>
+      </ol>
+      <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary);"><em>Nota: Años más tarde, Asimov añadió la <strong>Ley Cero</strong>: "Un robot no puede causar daño a la humanidad ni, por inacción, permitir que la humanidad sufra daño".</em></p>
+    </div>
+
+    <h3 style="margin-top: 30px;">🤖 Robots Famosos en la Cultura Pop</h3>
+    <p>La ciencia ficción ha imaginado múltiples tipos de robots, androides y cíborgs a lo largo de las décadas. Muchos de estos diseños exploran precisamente cómo se aplican o se rompen las leyes de Asimov. ¿Conoces a estos famosos ejemplos?</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; text-align: center; margin-bottom: 40px;">
+      
+      <div style="background: white; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);">
+        <img src="../temario/assets/img/r2d2.jpg" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px;" alt="R2-D2">
+        <h4 style="margin: 10px 0 5px 0;">R2-D2 y C-3PO</h4>
+        <p style="font-size: 0.8rem; margin:0; color: var(--text-secondary);">Droide astromecánico y de protocolo (Star Wars).</p>
+      </div>
+
+      <div style="background: white; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);">
+        <img src="../temario/assets/img/wall-e.jpg" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px;" alt="WALL-E">
+        <h4 style="margin: 10px 0 5px 0;">WALL-E</h4>
+        <p style="font-size: 0.8rem; margin:0; color: var(--text-secondary);">Robot compactador de basura con sentimientos (Pixar).</p>
+      </div>
+
+      <div style="background: white; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);">
+        <img src="../temario/assets/img/terminator.jpg" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px;" alt="Terminator">
+        <h4 style="margin: 10px 0 5px 0;">Terminator (T-800)</h4>
+        <p style="font-size: 0.8rem; margin:0; color: var(--text-secondary);">Cíborg asesino programado por Skynet (Terminator).</p>
+      </div>
+
+      <div style="background: white; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);">
+        <img src="../temario/assets/img/robocop.jpg" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px;" alt="RoboCop">
+        <h4 style="margin: 10px 0 5px 0;">RoboCop</h4>
+        <p style="font-size: 0.8rem; margin:0; color: var(--text-secondary);">Mitad hombre, mitad máquina. Todo policía (Robocop).</p>
+      </div>
+
+      <div style="background: white; padding: 15px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);">
+        <img src="../temario/assets/img/johnny5.jpg" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; background: #eee; font-size: 0.7rem;" alt="Johnny 5">
+        <h4 style="margin: 10px 0 5px 0;">Cortocircuito</h4>
+        <p style="font-size: 0.8rem; margin:0; color: var(--text-secondary);">El robot militar Johnny 5 que adquiere conciencia y vida.</p>
+      </div>
+
+    </div>
+    <h2>4. Robótica Educativa en Clase</h2>
+    <p>Mientras que un ordenador está pensado para interactuar contigo mediante una pantalla, un <strong>robot</strong> interactúa con el mundo físico. En clase utilizaremos dos componentes principales:</p>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 20px;">
+      
+      <!-- TARJETA MICROBIT -->
+      <div style="flex: 1; min-width: 250px; background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; box-shadow: var(--shadow);">
+        <svg viewBox="0 0 100 85" width="120" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 15px;">
+          <!-- Placa -->
+          <rect x="5" y="5" width="90" height="70" rx="6" fill="#1e1e1e" />
+          <!-- Conectores dorados inferiores -->
+          <rect x="10" y="65" width="12" height="10" fill="#f5a623" rx="2"/>
+          <rect x="25" y="65" width="8" height="10" fill="#f5a623" rx="1"/>
+          <rect x="36" y="65" width="12" height="10" fill="#f5a623" rx="2"/>
+          <rect x="51" y="65" width="8" height="10" fill="#f5a623" rx="1"/>
+          <rect x="62" y="65" width="12" height="10" fill="#f5a623" rx="2"/>
+          <rect x="77" y="65" width="13" height="10" fill="#f5a623" rx="2"/>
+          <!-- Etiquetas de pines -->
+          <text x="14" y="60" fill="white" font-size="6" font-family="sans-serif">0</text>
+          <text x="40" y="60" fill="white" font-size="6" font-family="sans-serif">1</text>
+          <text x="66" y="60" fill="white" font-size="6" font-family="sans-serif">2</text>
+          <text x="80" y="60" fill="white" font-size="5" font-family="sans-serif">3V</text>
+          <!-- Botones -->
+          <circle cx="15" cy="38" r="4" fill="#111" stroke="white" stroke-width="0.5"/>
+          <circle cx="85" cy="38" r="4" fill="#111" stroke="white" stroke-width="0.5"/>
+          <text x="13" y="30" fill="white" font-size="6" font-family="sans-serif">A</text>
+          <text x="83" y="30" fill="white" font-size="6" font-family="sans-serif">B</text>
+          <!-- Matriz de LEDs 5x5 -->
+          <g fill="#ff4040">
+            <!-- Corazón -->
+            <rect x="40" y="25" width="3" height="3"/><rect x="56" y="25" width="3" height="3"/>
+            <rect x="36" y="29" width="3" height="3"/><rect x="44" y="29" width="3" height="3"/><rect x="52" y="29" width="3" height="3"/><rect x="60" y="29" width="3" height="3"/>
+            <rect x="36" y="33" width="3" height="3"/><rect x="48" y="33" width="3" height="3"/><rect x="60" y="33" width="3" height="3"/>
+            <rect x="40" y="37" width="3" height="3"/><rect x="56" y="37" width="3" height="3"/>
+            <rect x="44" y="41" width="3" height="3"/><rect x="52" y="41" width="3" height="3"/>
+            <rect x="48" y="45" width="3" height="3"/>
+          </g>
+        </svg>
+        <h3 style="margin-top: 0;">Placa Micro:bit</h3>
+        <p style="font-size: 0.95rem;">Es el "cerebro" o <strong>microcontrolador</strong>. Es un pequeño ordenador de bolsillo que incluye una matriz de 25 luces LED rojas, botones, brújula, acelerómetro y conexión Bluetooth.</p>
+      </div>
+
+      <!-- TARJETA CUTEBOT -->
+      <div style="flex: 1; min-width: 250px; background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; box-shadow: var(--shadow);">
+        <svg viewBox="0 0 120 100" width="130" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 15px;">
+          <!-- Ruedas -->
+          <rect x="10" y="20" width="20" height="60" rx="5" fill="#333" />
+          <rect x="90" y="20" width="20" height="60" rx="5" fill="#333" />
+          <!-- Chasis principal Cutebot -->
+          <path d="M 25 30 Q 60 10 95 30 L 95 80 Q 60 95 25 80 Z" fill="#50e3c2" stroke="#222" stroke-width="2"/>
+          <!-- Ojos (Sensor Ultrasónico) -->
+          <circle cx="45" cy="45" r="10" fill="#silver" stroke="#555" stroke-width="2"/>
+          <circle cx="45" cy="45" r="4" fill="#222"/>
+          <circle cx="75" cy="45" r="10" fill="#silver" stroke="#555" stroke-width="2"/>
+          <circle cx="75" cy="45" r="4" fill="#222"/>
+          <!-- Slot para Microbit -->
+          <rect x="40" y="65" width="40" height="8" fill="#111" />
+          <rect x="45" y="55" width="30" height="10" fill="#222" />
+        </svg>
+        <h3 style="margin-top: 0;">Robot Cutebot</h3>
+        <p style="font-size: 0.95rem;">Es el "cuerpo" del robot. Tiene dos ruedas motorizadas, sensores para seguir líneas en el suelo y unos "ojos" (sensor ultrasónico) para detectar obstáculos y no chocarse.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 30px;">¿Cómo funcionan juntos?</h3>
+    <p>La Micro:bit se pincha en la ranura superior del Cutebot. Programamos la Micro:bit para que lea la información de los sensores del Cutebot (como los ojos ultrasónicos) y envíe señales a los motores para esquivar paredes o seguir un circuito.</p>
+
+    <h3 style="margin-top: 30px;">📡 Comunicación por Radio (Walkie-Talkie)</h3>
+    <p>La placa Micro:bit tiene un sensor/antena de <strong>Radio</strong> incorporado. Esto permite que múltiples placas se comuniquen entre sí de forma inalámbrica, ¡exactamente igual que unos Walkie-Talkies!</p>
+    <ul>
+      <li><strong>Establecer el Grupo de Radio:</strong> Al igual que en un walkie-talkie tienes que sintonizar el mismo canal (ejemplo: Canal 4) para hablar con tu amigo, en Micro:bit debes establecer el "Grupo de radio". Solo las placas que estén en el mismo número de grupo (del 0 al 255) podrán enviarse y recibir mensajes entre sí.</li>
+      <li><strong>Enviar y Recibir:</strong> Una vez en el mismo grupo, puedes programar una placa para que actúe como mando a distancia. Al pulsar el Botón A, envía la palabra "AVANZAR". La otra placa (pinchada en el Cutebot) tiene un bloque <em>"Al recibir el mensaje de radio"</em> que activa los motores al recibir esa palabra.</li>
+    </ul>
+    <div class="alert alert-warning">
+      <strong>⚠️ Importante en clase:</strong> Cuando estemos en el aula, ¡cada pareja de alumnos debe elegir un <strong>Grupo de radio distinto</strong>! Si todos usamos el Grupo 1, las señales se cruzarán y tu mando moverá el robot de la otra punta de la clase (y el tuyo se volverá loco), causando un caos absoluto.
+    </div>
+
+    <div class="nav-buttons">
+      <a href="block2.html" class="btn btn-outline">← Anterior (Bloque 2)</a>
+      <a href="block4.html" class="btn btn-primary">Siguiente Bloque →</a>
+    </div>
+  </div>
+</body>
+</html>

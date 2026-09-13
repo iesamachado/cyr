@@ -109,6 +109,7 @@
         <div id="sust-keyboard" class="sust-keyboard">
           <!-- generado por JS -->
         </div>
+        <div id="palabras-cortas-juego" style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.05);"></div>
       </div>
 
       <!-- Caesar test -->
@@ -128,6 +129,25 @@
             <span id="cesar-val" class="text-primary font-bold">0</span>
           </div>
           <div id="cesar-preview" class="cesar-preview text-mono"></div>
+          <div id="cesar-suggestions" style="margin-top:6px;"></div>
+        </div>
+      </div>
+
+      <!-- Vigenère Palabra Conocida -->
+      <div class="panel-section" style="margin-top:12px;">
+        <div class="section-title" style="font-size:0.75rem;">🛡️ Probar Clave Vigenère</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; gap:4px;">
+            <input type="text" id="vigenere-known-juego" placeholder="Palabra que buscar..." maxlength="10"
+                   style="flex:1; background:rgba(0,0,0,0.3); border:1px solid rgba(0,212,255,0.2);
+                          color:rgba(0,212,255,0.9); font-family:'JetBrains Mono',monospace; font-size:0.78rem;
+                          padding:4px 8px; border-radius:4px; text-transform:uppercase;">
+            <button id="btn-known-juego" style="background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.25);
+                    color:rgba(0,212,255,0.9); font-size:0.72rem; padding:4px 8px; border-radius:4px; cursor:pointer;">
+              🔍
+            </button>
+          </div>
+          <div id="vigenere-known-result-juego" style="font-size:0.78rem;"></div>
         </div>
       </div>
 
@@ -140,6 +160,7 @@
       <div class="panel-section">
         <div class="section-title">🎯 Enviar Solución</div>
         <div class="submit-area">
+          <div id="puntos-preview" style="font-size:0.78rem; font-family:'JetBrains Mono',monospace; margin-bottom:6px; font-weight:700;">—</div>
           <textarea
             id="input-solucion"
             class="form-input solucion-input"

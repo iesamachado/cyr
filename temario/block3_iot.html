@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lectura: Dispositivos Móviles e Internet de las Cosas — Computación y Robótica</title>
+  <link rel="stylesheet" href="css/temario.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📱 Dispositivos Móviles e Internet de las Cosas (IoT)</h1>
+    <p>Lectura obligatoria antes del Test Plickers. Vivimos rodeados de dispositivos inteligentes: móviles, relojes, altavoces, cámaras de seguridad… Todos ellos están conectados a Internet y se comunican entre sí. A esta red de objetos conectados se le llama <strong>Internet de las Cosas</strong> (IoT).</p>
+
+    <div class="alert alert-info">
+      <strong>📖 ¿Qué significa IoT?</strong> Las siglas IoT vienen del inglés <em>Internet of Things</em>. Es la idea de que cualquier objeto cotidiano (un frigorífico, una bombilla, un reloj, un termómetro) pueda conectarse a Internet, enviar datos y recibir órdenes de forma automática, sin que un humano tenga que intervenir.
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>1. ¿Qué es el Internet de las Cosas (IoT)?</h2>
+    
+    <p>Imagina que tu despertador suena a las 7:00 y, automáticamente, la cafetera se enciende, la calefacción sube dos grados y las persianas se abren solas. Nadie ha tenido que pulsar ningún botón: los dispositivos se han comunicado entre sí a través de Internet. <strong>Eso es IoT</strong>.</p>
+
+    <h3>Componentes de un sistema IoT</h3>
+    <p>Todo sistema IoT tiene cuatro piezas fundamentales que trabajan juntas:</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 25px 0;">
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🌡️</div>
+        <h4 style="margin: 0 0 8px 0; color: #2563eb;">1. Sensores</h4>
+        <p style="font-size: 0.85rem; margin: 0;">Captan información del mundo real: temperatura, humedad, movimiento, luz, sonido, localización GPS…</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">📡</div>
+        <h4 style="margin: 0 0 8px 0; color: #2563eb;">2. Conectividad</h4>
+        <p style="font-size: 0.85rem; margin: 0;">Los sensores envían los datos a través de Wi-Fi, Bluetooth, redes móviles (4G/5G) o protocolos especiales como Zigbee.</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">☁️</div>
+        <h4 style="margin: 0 0 8px 0; color: #2563eb;">3. Procesamiento</h4>
+        <p style="font-size: 0.85rem; margin: 0;">Un servidor en la nube recibe los datos, los analiza y toma decisiones (ej: «la temperatura supera los 25°C → enciende el ventilador»).</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">⚡</div>
+        <h4 style="margin: 0 0 8px 0; color: #2563eb;">4. Actuadores</h4>
+        <p style="font-size: 0.85rem; margin: 0;">Ejecutan la acción física: encender un motor, activar una alarma, abrir una cerradura, enviar una notificación al móvil…</p>
+      </div>
+    </div>
+
+    <div class="diagram-box" style="text-align: center;">
+      <strong>Esquema simplificado de un sistema IoT</strong>
+      <div style="font-family: monospace; margin-top: 15px; font-size: 1.1rem;">
+        🌡️ Sensor → 📡 Red (Wi-Fi/Bluetooth) → ☁️ Nube (Servidor) → ⚡ Actuador<br>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">
+          (Ejemplo: Termómetro → Wi-Fi → Google Home → Enciende el aire acondicionado)
+        </span>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>2. ¿Cómo funciona IoT?</h2>
+
+    <p>El funcionamiento del IoT se puede resumir en un ciclo de 3 pasos que se repite continuamente:</p>
+
+    <ol style="line-height: 2;">
+      <li><strong>Recoger:</strong> Los sensores del dispositivo captan datos del entorno (temperatura, movimiento, pulsaciones del corazón…).</li>
+      <li><strong>Transmitir:</strong> Esos datos viajan por una red inalámbrica (Wi-Fi, Bluetooth, 4G…) hasta un servidor en la nube.</li>
+      <li><strong>Actuar:</strong> El servidor analiza los datos y envía una orden de vuelta al dispositivo o a otro aparato conectado. También puede enviarte una notificación al móvil.</li>
+    </ol>
+
+    <div class="alert alert-warning">
+      <strong>🔑 Concepto clave:</strong> Un dispositivo IoT <strong>NO necesita que un humano lo controle en cada momento</strong>. Funciona de forma automática o semiautomática. Un termostato inteligente mide la temperatura solo y decide cuándo encender la calefacción sin que tengas que hacer nada.
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>3. Tipos de comunicación en IoT</h2>
+
+    <p>Los dispositivos IoT necesitan comunicarse entre sí y con Internet. Para ello, utilizan diferentes tecnologías inalámbricas. Cada una tiene sus ventajas:</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem;">
+      <thead>
+        <tr style="background: var(--accent-color); color: white;">
+          <th style="padding: 12px; text-align: left; border-radius: 8px 0 0 0;">Tecnología</th>
+          <th style="padding: 12px; text-align: center;">Alcance</th>
+          <th style="padding: 12px; text-align: center;">Velocidad</th>
+          <th style="padding: 12px; text-align: left;">Ejemplo de uso</th>
+          <th style="padding: 12px; text-align: center; border-radius: 0 8px 0 0;">Consumo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 10px;"><strong>Wi-Fi</strong> 📶</td>
+          <td style="padding: 10px; text-align: center;">~50 m</td>
+          <td style="padding: 10px; text-align: center;">Alta</td>
+          <td style="padding: 10px;">Cámaras de seguridad, altavoces inteligentes</td>
+          <td style="padding: 10px; text-align: center;">Alto</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border); background: #f8fafc;">
+          <td style="padding: 10px;"><strong>Bluetooth (BLE)</strong> 🔵</td>
+          <td style="padding: 10px; text-align: center;">~10 m</td>
+          <td style="padding: 10px; text-align: center;">Media</td>
+          <td style="padding: 10px;">Relojes inteligentes, auriculares, Micro:bit</td>
+          <td style="padding: 10px; text-align: center;">Muy bajo</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 10px;"><strong>4G / 5G</strong> 📱</td>
+          <td style="padding: 10px; text-align: center;">km</td>
+          <td style="padding: 10px; text-align: center;">Muy alta</td>
+          <td style="padding: 10px;">Coches conectados, drones, móviles</td>
+          <td style="padding: 10px; text-align: center;">Alto</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--border); background: #f8fafc;">
+          <td style="padding: 10px;"><strong>Zigbee / Z-Wave</strong> 🏠</td>
+          <td style="padding: 10px; text-align: center;">~100 m</td>
+          <td style="padding: 10px; text-align: center;">Baja</td>
+          <td style="padding: 10px;">Bombillas y enchufes inteligentes, sensores de puerta</td>
+          <td style="padding: 10px; text-align: center;">Muy bajo</td>
+        </tr>
+        <tr style="background: #f8fafc;">
+          <td style="padding: 10px;"><strong>Radio (RF)</strong> 📻</td>
+          <td style="padding: 10px; text-align: center;">~70 m</td>
+          <td style="padding: 10px; text-align: center;">Baja</td>
+          <td style="padding: 10px;">Micro:bit (radio entre placas), mandos a distancia</td>
+          <td style="padding: 10px; text-align: center;">Bajo</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-info">
+      <strong>🤔 ¿Por qué hay tantas tecnologías?</strong> Porque cada situación necesita algo diferente. Una cámara de seguridad que graba vídeo en directo necesita mucha velocidad (Wi-Fi), pero un sensor de temperatura que envía un número cada 5 minutos necesita gastar poquísima batería (Zigbee o BLE). No existe una tecnología perfecta para todo.
+    </div>
+
+    <p><strong>¿Lo reconoces?</strong> La comunicación por <strong>Radio</strong> de la tabla es exactamente lo que usamos con nuestras placas <strong>Micro:bit</strong> en clase: enviamos mensajes de punto y raya (Código Morse) o comandos al CuteBot por radiofrecuencia. ¡Ya estás haciendo IoT sin saberlo! 🎉</p>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>4. Aplicaciones reales del IoT</h2>
+
+    <p>El IoT está presente en muchísimos ámbitos de nuestra vida. Aquí tienes los más importantes:</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin: 25px 0;">
+      
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 15px;">
+        <h4 style="margin: 0 0 8px 0;">🏠 Hogar Inteligente (Smart Home)</h4>
+        <ul style="font-size: 0.85rem; margin: 0; padding-left: 18px;">
+          <li>Altavoces: Alexa, Google Home</li>
+          <li>Termostatos: Nest, Tado</li>
+          <li>Bombillas inteligentes: Philips Hue</li>
+          <li>Cerraduras electrónicas</li>
+          <li>Aspiradoras robot: Roomba</li>
+        </ul>
+      </div>
+
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius); padding: 15px;">
+        <h4 style="margin: 0 0 8px 0;">🏥 Salud (eHealth)</h4>
+        <ul style="font-size: 0.85rem; margin: 0; padding-left: 18px;">
+          <li>Relojes: Apple Watch, Fitbit</li>
+          <li>Monitores de glucosa continuos</li>
+          <li>Pulseras de actividad</li>
+          <li>Telemedicina por videollamada</li>
+        </ul>
+      </div>
+
+      <div style="background: #fdf4ff; border: 1px solid #f5d0fe; border-radius: var(--radius); padding: 15px;">
+        <h4 style="margin: 0 0 8px 0;">🚗 Transporte Inteligente</h4>
+        <ul style="font-size: 0.85rem; margin: 0; padding-left: 18px;">
+          <li>Coches autónomos: Tesla, Waymo</li>
+          <li>GPS y navegadores en tiempo real</li>
+          <li>Patinetes eléctricos compartidos</li>
+          <li>Semáforos inteligentes</li>
+        </ul>
+      </div>
+
+      <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: var(--radius); padding: 15px;">
+        <h4 style="margin: 0 0 8px 0;">🌾 Agricultura y Medio Ambiente</h4>
+        <ul style="font-size: 0.85rem; margin: 0; padding-left: 18px;">
+          <li>Sensores de humedad del suelo</li>
+          <li>Riego automático inteligente</li>
+          <li>Drones para supervisar cultivos</li>
+          <li>Estaciones meteorológicas conectadas</li>
+        </ul>
+      </div>
+
+      <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius); padding: 15px;">
+        <h4 style="margin: 0 0 8px 0;">🏭 Industria 4.0</h4>
+        <ul style="font-size: 0.85rem; margin: 0; padding-left: 18px;">
+          <li>Robots industriales conectados</li>
+          <li>Sensores de mantenimiento predictivo</li>
+          <li>Control de calidad automático</li>
+          <li>Almacenes robotizados: Amazon</li>
+        </ul>
+      </div>
+
+      <div style="background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: var(--radius); padding: 15px;">
+        <h4 style="margin: 0 0 8px 0;">🎮 Ocio y Entretenimiento</h4>
+        <ul style="font-size: 0.85rem; margin: 0; padding-left: 18px;">
+          <li>Consolas conectadas online</li>
+          <li>Gafas de Realidad Virtual</li>
+          <li>Mandos con sensores de movimiento</li>
+          <li>Streaming: Netflix, Spotify</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>5. Dispositivos Móviles: ¿Qué llevas en el bolsillo?</h2>
+
+    <p>Tu <strong>smartphone</strong> es probablemente el dispositivo IoT más potente que tienes. Es un ordenador de bolsillo con más capacidad de cálculo que los ordenadores que llevaron al hombre a la Luna. Vamos a ver qué lleva dentro:</p>
+
+    <h3>Componentes principales de un smartphone</h3>
+    <ul>
+      <li><strong>Procesador (SoC):</strong> El cerebro del móvil. Integra la CPU, la GPU y el módem en un solo chip (ej: Apple A17, Qualcomm Snapdragon).</li>
+      <li><strong>Memoria RAM:</strong> Igual que en un ordenador, guarda las apps abiertas en ese momento. Cuanta más RAM, más apps puedes tener abiertas sin que se cierren.</li>
+      <li><strong>Almacenamiento interno:</strong> Donde se guardan tus fotos, apps y vídeos (64 GB, 128 GB, 256 GB…).</li>
+      <li><strong>Pantalla táctil:</strong> Es a la vez un dispositivo de <strong>entrada</strong> (detecta tus dedos) y de <strong>salida</strong> (muestra la imagen). Tecnologías: LCD, OLED, AMOLED.</li>
+      <li><strong>Batería:</strong> Alimenta todo el dispositivo. Se mide en mAh (miliamperios-hora).</li>
+      <li><strong>Cámaras:</strong> Sensores ópticos de entrada que captan luz y la convierten en imagen digital.</li>
+    </ul>
+
+    <h3>Sensores ocultos del móvil</h3>
+    <p>Tu móvil tiene entre <strong>10 y 15 sensores</strong> que funcionan sin que te des cuenta:</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 20px 0;">
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">📍</div>
+        <strong style="font-size: 0.85rem;">GPS</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Localización por satélite</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">🔄</div>
+        <strong style="font-size: 0.85rem;">Acelerómetro</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Detecta movimiento e inclinación</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">🧭</div>
+        <strong style="font-size: 0.85rem;">Giroscopio</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Orientación 3D (juegos, VR)</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">🧲</div>
+        <strong style="font-size: 0.85rem;">Magnetómetro</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Brújula digital</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">👆</div>
+        <strong style="font-size: 0.85rem;">Proximidad</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Apaga pantalla en llamadas</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">☀️</div>
+        <strong style="font-size: 0.85rem;">Luz ambiental</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Ajusta brillo automáticamente</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">🔊</div>
+        <strong style="font-size: 0.85rem;">Barómetro</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Presión atmosférica (altitud)</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 1.5rem;">🫀</div>
+        <strong style="font-size: 0.85rem;">Pulsómetro *</strong>
+        <p style="font-size: 0.78rem; margin: 4px 0 0 0; color: var(--text-secondary);">Ritmo cardíaco (relojes)</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <strong>🤔 Piensa en esto:</strong> Todos esos sensores están recopilando datos sobre ti constantemente: dónde estás, cómo te mueves, cuántas horas duermes, qué buscas en Internet… Las empresas tecnológicas usan esos datos para personalizar la publicidad. <strong>¿Te has parado a pensar quién tiene acceso a toda esa información?</strong> Lo veremos en profundidad en el Bloque 5 (Ciberseguridad y Privacidad).
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>6. Redes de Comunicación: ¿Cómo viaja la información?</h2>
+
+    <p>Para que dos dispositivos se comuniquen (tu móvil con el router de casa, una Micro:bit con otra, o un sensor con la nube), necesitan una <strong>red de comunicación</strong>.</p>
+
+    <h3>Tipos de redes según su tamaño</h3>
+    <ul>
+      <li><strong>PAN (Red de Área Personal):</strong> Tu móvil conectado al reloj inteligente por Bluetooth. Alcance de pocos metros.</li>
+      <li><strong>LAN (Red de Área Local):</strong> Todos los dispositivos conectados al router Wi-Fi de tu casa o del instituto. Alcance de decenas de metros.</li>
+      <li><strong>WAN (Red de Área Amplia):</strong> Internet. Conecta millones de redes LAN de todo el mundo mediante cables submarinos, satélites y antenas.</li>
+    </ul>
+
+    <h3>Elementos básicos de una red doméstica</h3>
+    <ul>
+      <li><strong>Router:</strong> Es el «director de tráfico» de tu casa. Recibe Internet del proveedor (Movistar, Vodafone…) y lo reparte a todos tus dispositivos por Wi-Fi o por cable Ethernet.</li>
+      <li><strong>Dirección IP:</strong> Es la «dirección postal» de cada dispositivo en la red. Permite que los datos lleguen al destino correcto.</li>
+      <li><strong>Ancho de banda:</strong> Es la «autopista» por donde circulan los datos. Cuanta más velocidad (Mbps), más rápido cargan las webs y los vídeos.</li>
+    </ul>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>7. Conexión con lo que ya hemos aprendido</h2>
+
+    <p>¿Te das cuenta de que ya has trabajado con IoT en clase sin saberlo?</p>
+
+    <div class="diagram-box" style="text-align: left;">
+      <ul style="line-height: 2; font-size: 1.05rem;">
+        <li>📻 <strong>Código Morse por Radio</strong> (Tarea 19): Comunicación inalámbrica entre dos Micro:bit = Red PAN por radiofrecuencia.</li>
+        <li>🚗 <strong>Coche Teledirigido</strong> (Tarea 21): Un mando (sensor) envía datos al coche (actuador) por radio = Sistema IoT básico.</li>
+        <li>📏 <strong>CuteBot SigueLíneas</strong> (Tarea 20): Sensores infrarrojos detectan la línea → el microcontrolador procesa → los motores actúan = Ciclo Sensor-Proceso-Actuador.</li>
+        <li>🌡️ <strong>Sensor de temperatura de la Micro:bit</strong>: Mide la temperatura real de la placa = Sensor IoT integrado.</li>
+      </ul>
+    </div>
+
+    <p>Lo que diferencia nuestras prácticas de un sistema IoT completo es que nuestras Micro:bit se comunican entre ellas directamente (dispositivo a dispositivo), sin pasar por la nube. En un sistema IoT real, los datos suelen pasar por un servidor en Internet antes de llegar a su destino.</p>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>8. Riesgos y responsabilidad</h2>
+
+    <p>El IoT nos hace la vida más cómoda, pero también plantea riesgos importantes que debes conocer:</p>
+
+    <ul>
+      <li>🔐 <strong>Seguridad:</strong> Si alguien hackea tu cámara de seguridad, puede verte dentro de tu casa. Muchos dispositivos IoT baratos tienen contraseñas por defecto que nunca se cambian.</li>
+      <li>🕵️ <strong>Privacidad:</strong> Los altavoces inteligentes (Alexa, Google Home) están siempre escuchando, esperando la palabra de activación. ¿Qué pasa con las conversaciones que captan sin querer?</li>
+      <li>🌍 <strong>Medio ambiente:</strong> Miles de millones de dispositivos IoT necesitan baterías, microchips y conexión permanente. Fabricarlos y alimentarlos tiene un coste ecológico.</li>
+      <li>♻️ <strong>Residuos electrónicos (e-waste):</strong> Los dispositivos IoT tienen una vida útil corta. Cuando dejan de recibir actualizaciones, se convierten en basura electrónica.</li>
+    </ul>
+
+    <div class="alert alert-info">
+      <strong>📊 Dato impactante:</strong> Se estima que en 2025 habrá más de <strong>75.000 millones de dispositivos IoT</strong> conectados en el mundo. ¡Eso son casi 10 dispositivos por cada persona del planeta!
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>📝 Resumen para el Test</h2>
+
+    <div class="diagram-box" style="text-align: left;">
+      <p style="margin-top: 0;"><strong>Recuerda estos conceptos clave para el Test Plickers:</strong></p>
+      <ol style="line-height: 2;">
+        <li><strong>IoT</strong> = Objetos cotidianos conectados a Internet que recogen datos y actúan automáticamente.</li>
+        <li><strong>4 componentes IoT:</strong> Sensor → Conectividad → Procesamiento (nube) → Actuador.</li>
+        <li><strong>Tipos de comunicación:</strong> Wi-Fi (rápido, alto consumo), Bluetooth/BLE (corto alcance, bajo consumo), 4G/5G (largo alcance), Zigbee (hogar inteligente), Radio (Micro:bit).</li>
+        <li><strong>Smartphone:</strong> Procesador SoC, RAM, almacenamiento, pantalla táctil, batería, cámaras y >10 sensores ocultos.</li>
+        <li><strong>Redes:</strong> PAN (personal) → LAN (local, Wi-Fi casa) → WAN (Internet global).</li>
+        <li><strong>Router:</strong> Reparte Internet a todos los dispositivos de tu red doméstica.</li>
+        <li><strong>Riesgos IoT:</strong> Hackeos, privacidad, impacto ambiental, obsolescencia.</li>
+        <li><strong>Micro:bit en clase = mini-IoT:</strong> Sensores + comunicación por radio + actuadores (LEDs, motores CuteBot).</li>
+      </ol>
+    </div>
+
+    <div class="nav-buttons">
+      <a href="block3.html" class="btn btn-outline">← Volver al Bloque 3 (Robótica)</a>
+      <a href="block4.html" class="btn btn-primary">← Volver al Menú Bloque 4</a>
+    </div>
+  </div>
+</body>
+</html>

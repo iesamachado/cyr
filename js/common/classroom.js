@@ -96,7 +96,8 @@ export async function createClassroomAssignment(token, courseId, classId, {
   description,
   targetScore,
   dueDate = null,
-  siteUrl = null
+  siteUrl = null,
+  skipFirestore = false
 }) {
   const base = siteUrl || window.location.origin;
   const gameUrl = `${base}/${gameId}/index.html?classId=${classId}`;
@@ -118,15 +119,17 @@ export async function createClassroomAssignment(token, courseId, classId, {
     body:   JSON.stringify(body)
   });
 
-  // Guardar en Firestore
-  await createAssignment(classId, {
-    gameId,
-    title,
-    targetScore: parseInt(targetScore) || 0,
-    classroomCourseId:     courseId,
-    classroomCourseWorkId: coursework.id,
-    dueDate:               dueDate || null
-  });
+  // Guardar en Firestore (solo si no es una publicación de tarea ya existente)
+  if (!skipFirestore) {
+    await createAssignment(classId, {
+      gameId,
+      title,
+      targetScore: parseInt(targetScore) || 0,
+      classroomCourseId:     courseId,
+      classroomCourseWorkId: coursework.id,
+      dueDate:               dueDate || null
+    });
+  }
 
   return coursework;
 }

@@ -1,12 +1,13 @@
 import { requireAuth, currentUser, currentProfile, classroomToken, refreshClassroomToken, isAdmin } from './common/auth.js';
 import {
   getClass, updateClass, getClassMembers, getClassAssignments,
-  toggleGameInClass, createAssignment, deleteAssignment,
-  getClassRanking, addStudentsToClass, removeStudentFromClass, getStudentResultsInClass
+  toggleGameInClass, toggleTopicInClass, createAssignment, updateAssignment, deleteAssignment,
+  getClassRanking, addStudentsToClass, removeStudentFromClass, getStudentResultsInClass,
+  getStudentBestScore
 } from './common/db.js';
 import { createClassroomAssignment, syncClassroomGrades } from './common/classroom.js';
 import { renderHeader, showToast, showLoading, hideLoading, renderPodium, renderRankingTable } from './common/ui.js';
-import { GAMES, $, $$, escapeHtml, formatDate, getUrlParams, copyToClipboard } from './common/utils.js';
+import { GAMES, TOPICS, $, $$, escapeHtml, formatDate, getUrlParams, copyToClipboard } from './common/utils.js';
 
 let classData = null;
 let members   = [];
@@ -34,6 +35,7 @@ requireAuth({
 
       initPage(user, profile);
       await loadGamesTab();
+      await loadTopicsTab();
     } catch (err) {
       console.error(err);
       showToast('Error', 'No se pudo cargar la clase.', 'error');
@@ -121,6 +123,62 @@ async function loadGamesTab() {
         }
         showToast(
           active ? `${GAMES[gameId].icon} ${GAMES[gameId].name} activado` : `${GAMES[gameId].name} desactivado`,
+          '',
+          active ? 'success' : 'info',
+          2000
+        );
+      } catch (err) {
+        input.checked = !active; // Revertir
+        showToast('Error', err.message, 'error');
+      }
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TAB: TEMARIO Y JUEGOS (sección temas)
+// ══════════════════════════════════════════════════════════════
+
+async function loadTopicsTab() {
+  const list = $('topics-toggle-list');
+  if (!list) return;
+
+  const enabled = classData.enabledTopics || [];
+
+  list.innerHTML = Object.values(TOPICS).map(t => `
+    <div class="game-toggle-row" id="topic-row-${t.id}">
+      <div class="game-toggle-info">
+        <span class="game-toggle-icon">${t.icon}</span>
+        <div>
+          <strong>${escapeHtml(t.name)}</strong>
+          <small>${escapeHtml(t.description)}</small>
+        </div>
+      </div>
+      <div class="game-toggle-actions">
+        <label class="toggle-switch" title="${enabled.includes(t.id) ? 'Ocultar' : 'Mostrar'}">
+          <input type="checkbox" 
+                 id="toggle-topic-${t.id}"
+                 data-topic-id="${t.id}"
+                 ${enabled.includes(t.id) ? 'checked' : ''}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>`).join('');
+
+  // Eventos toggle para temas
+  $$('[data-topic-id]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const topicId = input.dataset.topicId;
+      const active = input.checked;
+      try {
+        await toggleTopicInClass(classData.id, topicId, active);
+        if (active) {
+          classData.enabledTopics = [...(classData.enabledTopics || []), topicId];
+        } else {
+          classData.enabledTopics = (classData.enabledTopics || []).filter(t => t !== topicId);
+        }
+        showToast(
+          active ? `${TOPICS[topicId].icon} ${TOPICS[topicId].name} activado` : `${TOPICS[topicId].name} desactivado`,
           '',
           active ? 'success' : 'info',
           2000
@@ -329,6 +387,7 @@ async function loadAssignmentsTab() {
 
     list.innerHTML = assignments.map(a => {
       const g = GAMES[a.gameId] || { icon: '🎮', name: a.gameId };
+      const canPublish = classData.classroomCourseId && !a.classroomCourseWorkId;
       return `<div class="assignment-row">
         <div class="assignment-info">
           <span class="assignment-game-icon">${g.icon}</span>
@@ -338,11 +397,23 @@ async function loadAssignmentsTab() {
           </div>
         </div>
         <div class="assignment-actions">
+          <button class="btn btn-ghost btn--sm" data-assignment-id="${a.id}"
+                  data-game-id="${a.gameId}" data-target="${a.targetScore}"
+                  data-title="${escapeHtml(a.title)}" onclick="window._viewProgress(this)">
+            👥 Ver progreso
+          </button>
           ${a.classroomCourseWorkId ? `
             <button class="btn btn-ghost btn--sm" data-assignment-id="${a.id}"
                     data-game-id="${a.gameId}" data-target="${a.targetScore}"
                     data-coursework="${a.classroomCourseWorkId}" onclick="window._syncGrade(this)">
               📤 Sincronizar notas
+            </button>` : ''}
+          ${canPublish ? `
+            <button class="btn btn-ghost btn--sm" data-assignment-id="${a.id}"
+                    data-game-id="${a.gameId}" data-target="${a.targetScore}"
+                    data-title="${escapeHtml(a.title)}" data-due="${a.dueDate || ''}"
+                    onclick="window._publishToClassroom(this)">
+              🔗 Publicar en Classroom
             </button>` : ''}
           <span class="badge ${a.classroomCourseWorkId ? 'badge--accent' : 'badge--muted'}">
             ${a.classroomCourseWorkId ? '🔗 Classroom' : 'Solo ClassHub'}
@@ -350,6 +421,123 @@ async function loadAssignmentsTab() {
         </div>
       </div>`;
     }).join('');
+
+    // Handler de ver progreso de la tarea
+    window._viewProgress = async (btn) => {
+      const { gameId, target, title } = btn.dataset;
+      const targetScore = parseInt(target);
+
+      // Crear o reutilizar el modal de progreso
+      let modal = document.getElementById('modal-assignment-progress');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-assignment-progress';
+        modal.className = 'modal-backdrop';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.innerHTML = `
+          <div class="modal-box" style="max-width:700px; width:95%;">
+            <div class="modal-header">
+              <h3 id="progress-modal-title"></h3>
+              <button class="modal-close" id="close-progress-modal" aria-label="Cerrar">✕</button>
+            </div>
+            <div class="modal-body" style="padding:0;">
+              <div id="progress-modal-body" style="overflow-x:auto;"></div>
+            </div>
+          </div>`;
+        document.body.appendChild(modal);
+        document.getElementById('close-progress-modal').addEventListener('click', () => modal.classList.remove('modal-backdrop--visible'));
+        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('modal-backdrop--visible'); });
+      }
+
+      document.getElementById('progress-modal-title').textContent = `👥 Progreso: ${title}`;
+      document.getElementById('progress-modal-body').innerHTML = '<div style="padding:32px; text-align:center;">⏳ Cargando...</div>';
+      modal.classList.add('modal-backdrop--visible');
+
+      try {
+        // Cargar miembros y sus puntuaciones en paralelo
+        const currentMembers = members.length > 0 ? members : await getClassMembers(classData.id);
+        const activeMembers = currentMembers.filter(m => !m.pending);
+
+        const rows = await Promise.all(activeMembers.map(async m => {
+          const score = await getStudentBestScore(m.uid, gameId, classData.id);
+          const grade = Math.min(10, Math.round((score / targetScore) * 10 * 10) / 10);
+          const pct   = Math.min(100, Math.round((score / targetScore) * 100));
+          const done  = score >= targetScore;
+          const name  = m.displayNameAnonymized || m.displayName || m.email || 'Alumno';
+
+          let statusBadge;
+          if (done)        statusBadge = '<span class="badge badge--success">✅ Superada</span>';
+          else if (score > 0) statusBadge = '<span class="badge badge--warning">⏳ En progreso</span>';
+          else             statusBadge = '<span class="badge badge--muted">❌ Sin jugar</span>';
+
+          return { name, score, grade, pct, done, statusBadge };
+        }));
+
+        // Ordenar: completadas abajo, sin jugar arriba
+        rows.sort((a, b) => {
+          if (a.done !== b.done) return b.done ? -1 : 1;
+          return b.score - a.score;
+        });
+
+        if (activeMembers.length === 0) {
+          document.getElementById('progress-modal-body').innerHTML =
+            '<p class="empty-state" style="padding:24px">No hay alumnos registrados en esta clase.</p>';
+          return;
+        }
+
+        // Estadísticas resumen
+        const nDone   = rows.filter(r => r.done).length;
+        const nPlayed = rows.filter(r => r.score > 0 && !r.done).length;
+        const nNone   = rows.filter(r => r.score === 0).length;
+
+        document.getElementById('progress-modal-body').innerHTML = `
+          <div style="display:flex; gap:var(--space-4); padding:var(--space-4); border-bottom:1px solid var(--border); flex-wrap:wrap;">
+            <div style="text-align:center; flex:1">
+              <div style="font-size:1.5rem; font-weight:700; color:var(--success)">${nDone}</div>
+              <div style="font-size:var(--text-xs); color:var(--text-muted)">Superada</div>
+            </div>
+            <div style="text-align:center; flex:1">
+              <div style="font-size:1.5rem; font-weight:700; color:var(--warning)">${nPlayed}</div>
+              <div style="font-size:var(--text-xs); color:var(--text-muted)">En progreso</div>
+            </div>
+            <div style="text-align:center; flex:1">
+              <div style="font-size:1.5rem; font-weight:700; color:var(--text-muted)">${nNone}</div>
+              <div style="font-size:var(--text-xs); color:var(--text-muted)">Sin jugar</div>
+            </div>
+          </div>
+          <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border); background:var(--surface-2);">
+                <th style="padding:10px 12px; text-align:left;">Alumno</th>
+                <th style="padding:10px 12px; text-align:center;">Puntuación</th>
+                <th style="padding:10px 12px; text-align:center;">Nota</th>
+                <th style="padding:10px 12px; text-align:center;">Progreso</th>
+                <th style="padding:10px 12px; text-align:center;">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr style="border-bottom:1px solid var(--border);">
+                  <td style="padding:8px 12px;">${escapeHtml(r.name)}</td>
+                  <td style="padding:8px 12px; text-align:center;">${r.score}</td>
+                  <td style="padding:8px 12px; text-align:center; font-weight:600; color:${r.done ? 'var(--success)' : r.score > 0 ? 'var(--warning)' : 'var(--text-muted)'}">
+                    ${r.score > 0 ? r.grade + '/10' : '—'}
+                  </td>
+                  <td style="padding:8px 12px; min-width:120px;">
+                    <div style="background:var(--border); border-radius:99px; height:6px; overflow:hidden;">
+                      <div style="background:${r.done ? 'var(--success)' : 'var(--primary)'}; width:${r.pct}%; height:100%; border-radius:99px;"></div>
+                    </div>
+                  </td>
+                  <td style="padding:8px 12px; text-align:center;">${r.statusBadge}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        document.getElementById('progress-modal-body').innerHTML =
+          `<div style="padding:24px; text-align:center; color:var(--error);">⚠️ Error: ${escapeHtml(err.message)}</div>`;
+      }
+    };
 
     // Handler de sincronizar
     window._syncGrade = async (btn) => {
@@ -374,10 +562,42 @@ async function loadAssignmentsTab() {
         hideLoading();
       }
     };
+
+    // Handler de publicar tarea existente en Classroom
+    window._publishToClassroom = async (btn) => {
+      let token = classroomToken;
+      if (!token) {
+        try { token = await refreshClassroomToken(); } catch { return; }
+      }
+      const { assignmentId, gameId, target, title, due } = btn.dataset;
+      try {
+        showLoading('Publicando en Classroom...');
+        const settings = await import('./common/db.js').then(m => m.getSiteSettings());
+        const result = await createClassroomAssignment(token, classData.classroomCourseId, classData.id, {
+          gameId, title, targetScore: parseInt(target),
+          dueDate: due || null,
+          siteUrl: settings.siteUrl,
+          skipFirestore: true
+        });
+        // Actualizar el documento existente en Firestore con el ID de Classroom
+        await updateAssignment(classData.id, assignmentId, {
+          classroomCourseId: classData.classroomCourseId,
+          classroomCourseWorkId: result.id
+        });
+        showToast('Tarea publicada en Classroom', title, 'success');
+        await loadAssignmentsTab();
+      } catch (err) {
+        showToast('Error', err.message, 'error');
+      } finally {
+        hideLoading();
+      }
+    };
+
   } catch (err) {
     showToast('Error', err.message, 'error');
   }
 }
+
 
 // ══════════════════════════════════════════════════════════════
 //  TAB: RESULTADOS
@@ -449,6 +669,8 @@ async function renderResults() {
 
 function setupModals(user) {
 
+
+
   // Modal nueva tarea
   const modalAssignment = $('modal-new-assignment');
   const formAssignment  = $('form-new-assignment');
@@ -465,6 +687,33 @@ function setupModals(user) {
       opt.textContent = `${g.icon} ${g.name}`;
       gameSelect.appendChild(opt);
     });
+
+    gameSelect.addEventListener('change', async () => {
+      const criteriaContainer = $('assignment-criteria-suggestion');
+      if (!criteriaContainer) return;
+      const gameId = gameSelect.value;
+      
+      try {
+        const { GAMES_CRITERIA_MAPPING } = await import('./common/utils.js');
+        const mapping = GAMES_CRITERIA_MAPPING[gameId];
+        
+        if (mapping) {
+          criteriaContainer.innerHTML = `
+            <strong>💡 Sugerencia de Criterios (Andalucía)</strong><br>
+            <ul style="margin:4px 0 0 16px; padding:0;">
+              <li><strong>1º ESO:</strong> ${escapeHtml(mapping['1º ESO'])}</li>
+              <li><strong>2º ESO:</strong> ${escapeHtml(mapping['2º ESO'])}</li>
+              <li><strong>3º ESO:</strong> ${escapeHtml(mapping['3º ESO'])}</li>
+            </ul>
+          `;
+          criteriaContainer.style.display = 'block';
+        } else {
+          criteriaContainer.style.display = 'none';
+        }
+      } catch (e) {
+        console.warn('No se pudo cargar el mapeo de criterios', e);
+      }
+    });
   }
 
   // Mostrar nota si no hay Classroom vinculado
@@ -472,7 +721,13 @@ function setupModals(user) {
     $('assignment-classroom-note').style.display = 'block';
   }
 
-  const openModal  = () => { formAssignment?.reset(); $('assignment-error').textContent = ''; modalAssignment.classList.add('modal-backdrop--visible'); modalAssignment.setAttribute('aria-hidden', 'false'); };
+  const openModal  = () => { 
+    formAssignment?.reset(); 
+    if ($('assignment-criteria-suggestion')) $('assignment-criteria-suggestion').style.display = 'none';
+    $('assignment-error').textContent = ''; 
+    modalAssignment.classList.add('modal-backdrop--visible'); 
+    modalAssignment.setAttribute('aria-hidden', 'false'); 
+  };
   const closeModal = () => { modalAssignment.classList.remove('modal-backdrop--visible'); modalAssignment.setAttribute('aria-hidden', 'true'); };
 
   btnNew?.addEventListener('click', openModal);

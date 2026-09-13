@@ -242,6 +242,13 @@
         <button id="btn-mode-misiones" class="mode-switch-btn active">🎯 MISIONES</button>
         <button id="btn-mode-sandbox" class="mode-switch-btn">🧪 LABORATORIO LIBRE</button>
       </div>
+      <select id="difficulty-select" style="font-family:var(--font-head); font-size:0.78rem; font-weight:700;
+              letter-spacing:0.06em; padding:5px 10px; border-radius:var(--radius-sm); margin-left:12px;
+              background:var(--bg-surface2); border:1px solid var(--border); color:var(--text-muted); cursor:pointer;">
+        <option value="recluta">🟢 Recluta</option>
+        <option value="agente">🟡 Agente</option>
+        <option value="maestro">🔴 Maestro</option>
+      </select>
     </div>
     <div class="hud-center">
       <div class="hud-ronda" id="hud-mision-wrap">
@@ -364,6 +371,7 @@
             <span class="text-dim" style="font-size:0.75rem;">A → <span id="cesar-char-map" class="text-accent font-bold">A</span></span>
           </div>
           <div id="cesar-preview" class="cesar-preview"></div>
+          <div id="cesar-suggestions" style="margin-top:8px;"></div>
         </div>
 
         <!-- Tabla de Fuerza Bruta César (Desplegable) -->
@@ -385,6 +393,15 @@
           <p class="text-muted" style="font-size:0.75rem; margin:0;">
             Cada letra de la clave desplaza la letra correspondiente según su posición (A=0, B=1, C=2...).
           </p>
+          <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">🔍 ¿Sabes qué palabra puede estar en el mensaje?</div>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="vigenere-known-word" class="form-input" placeholder="SISTEMA, DATOS, CLAVE..." 
+                     style="text-transform:uppercase; font-family:var(--font-mono); font-size:0.85rem;" maxlength="12">
+              <button id="btn-known-plaintext" class="btn btn-ghost btn-sm">🔍 Buscar</button>
+            </div>
+            <div id="vigenere-known-result" style="margin-top:8px; font-size:0.82rem;"></div>
+          </div>
         </div>
       </div>
 
@@ -411,6 +428,10 @@
         <div id="sust-keyboard" class="sust-keyboard">
           <!-- Generado por JS -->
         </div>
+      </div>
+      
+      <div class="panel-section" id="section-palabras-cortas">
+        <div id="palabras-cortas-panel"></div>
       </div>
 
     </section>
@@ -640,6 +661,7 @@
         <div class="solucion-label">Mensaje Original Revelado</div>
         <div id="modal-solucion" class="solucion-text"></div>
       </div>
+      <div id="modal-estrellas" style="font-size:1.8rem; letter-spacing:4px; margin:8px 0; text-align:center;"></div>
 
       <div style="display:flex; justify-content:space-around; width:100%; padding:0.5rem 0; font-family:var(--font-head);">
         <div>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lectura: Desarrollo Móvil — Computación y Robótica</title>
+  <link rel="stylesheet" href="css/temario.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📱 Desarrollo Móvil: Creando Aplicaciones</h1>
+    <p>Lectura obligatoria para prepararte para el simulador de <strong>AppFlow</strong>. Todos usamos aplicaciones móviles (WhatsApp, TikTok, juegos), pero... ¿cómo funcionan exactamente por dentro? ¿Cómo sabe el móvil cuándo tiene que vibrar, hacer una foto o enviar un mensaje?</p>
+
+    <div class="alert alert-info">
+      <strong>🤓 Ser Ingeniero de Apps:</strong> Crear una aplicación no es magia. Es conectar las piezas lógicas que relacionan lo que ocurre en el mundo exterior con las acciones que el teléfono debe realizar.
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>1. Programación Orientada a Eventos</h2>
+    
+    <p>La mayoría de programas que hemos hecho hasta ahora (como en Scratch o Code.org) siguen una secuencia: el código se ejecuta línea por línea de principio a fin. Sin embargo, las aplicaciones móviles usan un sistema diferente llamado <strong>Programación Orientada a Eventos</strong>.</p>
+
+    <p>En este sistema, el programa se queda "esperando" (dormido) a que suceda algo. Ese "algo" que sucede se llama <strong>Evento</strong>.</p>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 25px 0;">
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🔌</div>
+        <h4 style="margin: 0 0 8px 0; color: #ff9800;">1. El Sensor (Input)</h4>
+        <p style="font-size: 0.85rem; margin: 0;">Es el hardware o la pantalla que recoge el estímulo externo. Ejemplo: El cristal táctil, el GPS, la cámara, el acelerómetro.</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">⚡</div>
+        <h4 style="margin: 0 0 8px 0; color: #2196f3;">2. El Evento (Disparador)</h4>
+        <p style="font-size: 0.85rem; margin: 0;">Es la interpretación del estímulo. Ejemplo: "El usuario ha hecho click", "El móvil se está agitando", "La luz ha bajado del 10%".</p>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; text-align: center; box-shadow: var(--shadow);">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🚀</div>
+        <h4 style="margin: 0 0 8px 0; color: #4caf50;">3. La Acción (Output)</h4>
+        <p style="font-size: 0.85rem; margin: 0;">La respuesta programada de la app. Ejemplo: Enviar notificación, encender la linterna, guardar la foto o reproducir un sonido.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>2. Front-End y Back-End</h2>
+
+    <p>Cuando un desarrollador crea una app móvil, tiene que trabajar en dos mundos completamente distintos:</p>
+
+    <ul>
+      <li>🎨 <strong>Front-End (Interfaz de Usuario o UI):</strong> Es todo lo que ves y tocas. El color de los botones, el tamaño del texto, las animaciones y dónde está cada menú. Está pensado para que la aplicación sea fácil y agradable de usar (UX - Experiencia de Usuario).</li>
+      <li>⚙️ <strong>Back-End (Lógica Oculta):</strong> Es el código que funciona por detrás. Se encarga de guardar los datos en la base de datos, comprobar tu contraseña, comunicarse con los sensores (GPS, cámara) y procesar eventos lógicos. ¡Aquí es donde jugarás en AppFlow!</li>
+    </ul>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>3. Tipos de Aplicaciones</h2>
+
+    <p>No todas las apps de tu móvil están fabricadas igual. Existen diferentes enfoques:</p>
+
+    <div class="diagram-box" style="text-align: left;">
+      <ul style="line-height: 2; font-size: 1.05rem;">
+        <li>📱 <strong>App Nativa:</strong> Programada específicamente para Android (ej. en lenguaje Kotlin) o para iPhone (ej. en lenguaje Swift). Funcionan rapidísimo y tienen acceso total a los sensores físicos.</li>
+        <li>🌐 <strong>Web App:</strong> Es una página web diseñada para verse perfecta en móvil. No se instala desde la tienda (Play Store), se entra desde Chrome o Safari. No puede usar sensores avanzados y necesita Internet, pero no ocupa espacio.</li>
+        <li>🏗️ <strong>App Híbrida:</strong> Es un intermedio. Se programa una sola vez (usando tecnologías web como HTML y JavaScript) y luego se empaqueta como si fuera una app nativa para instalarla.</li>
+      </ul>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>4. ¿Cómo piensa la App? (Lógica Condicional)</h2>
+
+    <p>A veces un evento no es suficiente para lanzar una acción. Imagina que el móvil detecta que has entrado a tu instituto (Sensor GPS → Evento "Llegar") y la acción programada es "Poner el móvil en silencio". ¿Pero qué pasa si es sábado por la tarde y has ido a las pistas de baloncesto? ¡No quieres que se ponga en silencio!</p>
+    
+    <p>Por eso los desarrolladores usan <strong>Condiciones Lógicas (Filtros)</strong>, que actúan como "porteros de discoteca".</p>
+    
+    <div class="alert alert-warning">
+      <strong>🧠 Regla lógica de AppFlow:</strong><br>
+      GPS (Llegar al IES) ➡️ <strong>[SI es lunes a viernes a las 08:15]</strong> ➡️ Activar Modo Silencio.
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2>📝 Resumen para AppFlow</h2>
+
+    <div class="diagram-box" style="text-align: left;">
+      <p style="margin-top: 0;"><strong>Lo que vas a necesitar en el simulador:</strong></p>
+      <ol style="line-height: 2;">
+        <li><strong>Lee el encargo:</strong> Fíjate bien en qué te pide el cliente. ¿Necesita sonido? ¿Linterna? ¿NFC?</li>
+        <li><strong>Identifica el Sensor (Input):</strong> ¿Qué hardware va a captar la acción inicial del usuario? (Cámara, GPS, Botón, Giroscopio).</li>
+        <li><strong>Identifica el Evento:</strong> ¿Bajo qué circunstancia se activa ese sensor? (Ruido fuerte, Al agitar, Oscuridad).</li>
+        <li><strong>Identifica la Condición (Si la hay):</strong> Busca palabras clave como "Solo si...", "Y además...", "Pero solo cuando...".</li>
+        <li><strong>Conecta la Acción (Output):</strong> Termina la cadena decidiendo qué debe hacer el teléfono.</li>
+      </ol>
+    </div>
+
+    <div class="nav-buttons">
+      <a href="block4.html" class="btn btn-outline">← Volver al Menú Bloque 4</a>
+    </div>
+  </div>
+</body>
+</html>

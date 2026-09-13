@@ -12,30 +12,30 @@ const MISIONES = [
     id: 1,
     titulo: 'Misión 1: Cifrado César Básico',
     tipo: 'caesar',
-    tipoBadge: 'César (+3)',
+    tipoBadge: 'César',
     demoTab: 'demo-cesar',
-    descripcion: 'El mensaje ha sido desplazado un número fijo de posiciones en el alfabeto. Utiliza el slider César o el escáner de fuerza bruta para descubrir el mensaje original.',
+    descripcion: 'El mensaje ha sido desplazado un número fijo de posiciones en el alfabeto. Analiza las frecuencias y usa las herramientas César para descubrirlo.',
     textoOriginal: 'EL CODIGO SECRETO HA SIDO DESCIFRADO CON EXITO',
     shift: 3,
     pistas: [
-      'El cifrado César mueve cada letra un número constante de posiciones en el alfabeto.',
-      'La letra original "A" se ha transformado en "D" (un avance de 3 letras).',
-      'Desplaza el control deslizante a la posición 3 o usa la herramienta "Fuerza Bruta".'
+      'Fíjate en el gráfico de frecuencias: una letra destaca claramente sobre todas las demás. En español, esa letra suele ser la E o la A.',
+      'Observa el bloque azul más alto del gráfico. Compara su posición en el alfabeto con la de la E (5ª letra). La diferencia te dará el desplazamiento.',
+      'Prueba los desplazamientos sugeridos en el panel azul debajo del slider. Uno de ellos debería producir texto legible.'
     ]
   },
   {
     id: 2,
     titulo: 'Misión 2: Interceptación Espacial',
     tipo: 'caesar',
-    tipoBadge: 'César (+7)',
+    tipoBadge: 'César',
     demoTab: 'demo-cesar',
-    descripcion: 'Un mensaje interceptado de la base lunar. Utiliza la gráfica de frecuencias para deducir qué letra cifrada corresponde a la "E" o la "A".',
+    descripcion: 'Un mensaje interceptado de la base lunar. Las frecuencias del texto te revelarán el desplazamiento exacto si sabes interpretarlas.',
     textoOriginal: 'LA BASE LUNAR NECESITA SUMINISTROS DE ENERGIA DE INMEDIATO',
     shift: 7,
     pistas: [
-      'Observa en el gráfico de barras la letra que tiene la frecuencia más alta.',
-      'En el idioma español, las vocales "E" y "A" son las más utilizadas.',
-      'Prueba a situar el slider César en la posición 7.'
+      'En el texto cifrado aparecen varios grupos de dos letras iguales. En español, palabras como "DE" o "LA" son muy comunes. Busca palabras cortas repetidas.',
+      'La tabla de fuerza bruta (botón ⚡) muestra los 25 posibles descifrados. Busca la fila que contiene palabras con sentido completo.',
+      'El desplazamiento que buscas está entre el 5 y el 10. Comprueba cada uno en la tabla de fuerza bruta y busca el que produce una frase sobre recursos o energía.'
     ]
   },
   {
@@ -44,7 +44,7 @@ const MISIONES = [
     tipo: 'substitution',
     tipoBadge: 'Sustitución',
     demoTab: 'demo-frecuencias',
-    descripcion: 'Cifrado por sustitución monoalfabética. Cada letra ha sido cambiada por otra. Pulsa "Sugerir Sustitución" y ajusta letra por letra con el teclado.',
+    descripcion: 'Cifrado monoalfabético: cada letra ha sido reemplazada por otra diferente. El análisis de frecuencias y las palabras cortas son tu mejor arma.',
     textoOriginal: 'LA CRIPTOGRAFIA PROTEGE LA INFORMACION MEDIANTE ALGORITMOS MATEMATICOS',
     substMap: {
       'A': 'X', 'B': 'Y', 'C': 'Z', 'D': 'A', 'E': 'B', 'F': 'C', 'G': 'D', 'H': 'E',
@@ -53,39 +53,39 @@ const MISIONES = [
       'Y': 'V', 'Z': 'W'
     },
     pistas: [
-      'En este cifrado las letras no siguen un desplazamiento uniforme.',
-      'Pulsa el botón "Sugerir Sustitución" para obtener un punto de partida estadístico.',
-      'Palabras cortas como "LA" o "DE" te indican rápidamente las vocales principales.'
+      'Las palabras cortas son la clave. Fíjate en las palabras de 2 letras que se repiten en el texto cifrado — en español casi siempre son LA, DE, EL, EN o AL.',
+      'Pulsa "✨ Sugerir Sustitución" para obtener un punto de partida basado en frecuencias. No será perfecto, pero te dará las vocales principales.',
+      'Una vez tengas las vocales colocadas, las consonantes se deducen solas: si ves _N_ORMACION ya sabes que esas letras son I y F. Usa el panel de palabras cortas.'
     ]
   },
   {
     id: 4,
-    titulo: 'Misión 4: Cifrado Polialfabético Vigenère',
+    titulo: 'Misión 4: Cifrado Polialfabético',
     tipo: 'vigenere',
     tipoBadge: 'Vigenère',
     demoTab: 'demo-vigenere',
-    descripcion: 'Cifrado polialfabético usando una palabra clave. La clave modifica el desplazamiento de cada letra secuencialmente.',
+    descripcion: 'Un cifrado más sofisticado usa una palabra como clave para variar el desplazamiento en cada posición. El análisis de frecuencias ya no funciona directamente.',
     textoOriginal: 'LA CLAVE SECRETA ABRE TODAS LAS PUERTAS DEL SISTEMA CENTRAL',
     key: 'ROBOT',
     pistas: [
-      'Vigenère utiliza una palabra clave para cifrar cada letra con un desplazamiento distinto.',
-      'La clave interceptada tiene 5 letras y se relaciona con autómatas y programación...',
-      'Escribe la palabra "ROBOT" en el campo de clave Vigenère y pulsa "Aplicar Clave".'
+      'Este cifrado usa el Índice de Coincidencia: si el texto parece tener frecuencias uniformes (las barras del gráfico están muy igualadas), es polialfabético. La clave tiene una longitud relacionada con la tecnología que estudias en clase.',
+      'Prueba palabras cortas del vocabulario del tema: los robots siguen instrucciones, los ordenadores ejecutan programas, las máquinas tienen motores...',
+      'La clave tiene 5 letras y es el nombre de una máquina que sigue órdenes automáticamente. Introdúcela en el campo de Vigenère y pulsa Aplicar.'
     ]
   },
   {
     id: 5,
-    titulo: 'Misión 5: Reto Ciberpunk ROT13',
+    titulo: 'Misión 5: Reto Final — ROT13',
     tipo: 'caesar',
     tipoBadge: 'ROT13',
     demoTab: 'demo-cesar',
-    descripcion: 'Misión final a contrarreloj. Aplica el histórico algoritmo ROT13 (desplazamiento simétrico de 13 posiciones) para completar el entrenamiento.',
+    descripcion: 'Misión final. Este cifrado tiene una propiedad matemática especial: cifrarlo dos veces produce el mensaje original. ¿Cuántos pasos hay en la mitad exacta del alfabeto?',
     textoOriginal: 'FELICIDADES AGENTE HAS DEMOSTRADO UN GRAN DOMINIO DE LA CRIPTOGRAFIA',
     shift: 13,
     pistas: [
-      'ROT13 es un cifrado César simétrico con exactamente 13 posiciones de desplazamiento.',
-      'Al tener el alfabeto 26 letras, cifrar dos veces con ROT13 devuelve el mensaje original.',
-      'Ajusta el slider César a 13.'
+      'El alfabeto tiene 26 letras. Este cifrado divide el alfabeto exactamente por la mitad, creando una simetría perfecta: A↔N, B↔O, C↔P...',
+      'Si hay 26 letras y el desplazamiento es exactamente la mitad, ¿qué número es la mitad de 26? Ese es el desplazamiento que necesitas.',
+      'El slider del desplazamiento César tiene un valor máximo de 25. El desplazamiento correcto es el número 13. Colócalo ahí.'
     ]
   }
 ];
@@ -98,6 +98,7 @@ const state = {
   profile: null,
   mode: 'misiones', // 'misiones' | 'sandbox'
   misionIndex: 0,
+  difficulty: 'recluta',
   textoCifrado: '',
   textoOriginal: '',
   tablaSustitucion: {}, // { cifrado -> descifrado }
@@ -129,12 +130,17 @@ function initApp() {
   buildSustKeyboard();
   initCesarSlider();
   initVigenereHandler();
+  initVigenereKnownPlaintext();
   initSubmitHandler();
   initDemosModal();
   initModeSwitcher();
   initSandboxHandlers();
   renderMisionesNav();
   cargarMision(0);
+
+  document.getElementById('difficulty-select')?.addEventListener('change', () => {
+    cargarMision(state.misionIndex);
+  });
 }
 
 // ─── Selector de Modo (Misiones vs Sandbox) ───────────────────
@@ -508,6 +514,14 @@ function cargarMision(idx) {
   document.getElementById('mision-desc').textContent = mision.descripcion;
   document.getElementById('hud-pistas-left').textContent = mision.pistas.length - state.pistasUsadas;
 
+  // En nivel Maestro, ocultar el tipo de cifrado
+  const tipoEl = document.getElementById('mision-tipo');
+  const difficultySelect = document.getElementById('difficulty-select');
+  state.difficulty = difficultySelect ? difficultySelect.value : 'recluta';
+  if (tipoEl) {
+    tipoEl.style.visibility = state.difficulty === 'maestro' ? 'hidden' : 'visible';
+  }
+
   // Reset de controles
   const cesarSlider = document.getElementById('cesar-slider');
   if (cesarSlider) {
@@ -524,6 +538,8 @@ function cargarMision(idx) {
   updateFrequencyChart();
   renderMisionesNav();
   generarFuerzaBrutaCesar();
+  renderCesarSuggestions();
+  renderPalabrasCortas();
 
   // Iniciar timer
   startTimer();
@@ -608,6 +624,9 @@ function buildSustKeyboard() {
 
       renderTextoCifrado();
       renderTextoDescifrado();
+      if (MISIONES[state.misionIndex]?.tipo === 'substitution') {
+        renderPalabrasCortas();
+      }
     });
 
     keyWrap.appendChild(label);
@@ -1029,6 +1048,11 @@ function mostrarModalVictoria(puntos, segundos) {
   const sec = String(segundos % 60).padStart(2, '0');
   if (timeText) timeText.textContent = `${min}:${sec}`;
 
+  // Estrellas según pistas usadas
+  const estrellas = state.pistasUsadas === 0 ? '⭐⭐⭐' : state.pistasUsadas === 1 ? '⭐⭐☆' : '⭐☆☆';
+  const estrellasEl = document.getElementById('modal-estrellas');
+  if (estrellasEl) estrellasEl.textContent = estrellas;
+
   if (modal) modal.classList.remove('hidden');
 
   if (btnSig) {
@@ -1090,4 +1114,146 @@ function stopTimer() {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
   }
+}
+
+// ─── Sugerencias César ────────────────────────────────────────
+function renderCesarSuggestions() {
+  const container = document.getElementById('cesar-suggestions');
+  if (!container || !state.textoCifrado) return;
+
+  const suggestions = suggestCaesarShifts(state.textoCifrado);
+  if (!suggestions.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">🔍 Desplazamientos más probables:</div>
+    ${suggestions.map(s => `
+      <button class="cesar-suggestion-btn" data-shift="${s.shift}"
+              style="background:rgba(0,229,255,0.08); border:1px solid rgba(0,229,255,0.25);
+                     color:var(--primary); font-family:var(--font-mono); font-size:0.78rem;
+                     padding:4px 10px; border-radius:4px; cursor:pointer; margin:2px;
+                     transition:all 0.15s;">
+        +${s.shift} — ${s.reason}
+      </button>`).join('')}
+  `;
+
+  container.querySelectorAll('.cesar-suggestion-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const shift = parseInt(btn.dataset.shift);
+      const slider = document.getElementById('cesar-slider');
+      if (slider) slider.value = shift;
+      updateCesarValue(shift);
+      applyCesarShift(shift);
+      showToast(`Desplazamiento +${shift} aplicado`, 'info');
+    });
+  });
+}
+
+// ─── Panel de Palabras Cortas ─────────────────────────────────
+const PALABRAS_CORTAS_ES = {
+  1: ['A', 'Y', 'O', 'U', 'E'],
+  2: ['DE', 'LA', 'EL', 'EN', 'UN', 'ES', 'AL', 'LO', 'LE', 'SE', 'YA', 'NO'],
+  3: ['LOS', 'LAS', 'DEL', 'CON', 'UNA', 'QUE', 'POR', 'SUS', 'MAS', 'SON'],
+  4: ['PARA', 'COMO', 'ESTE', 'ESTA', 'CUAL', 'PERO', 'TODO', 'CADA']
+};
+
+function renderPalabrasCortas() {
+  const container = document.getElementById('palabras-cortas-panel');
+  if (!container) return;
+
+  // Extraer palabras únicas del texto cifrado (separadas por espacios), longitud 1-4
+  const words = [...new Set(
+    state.textoCifrado.split(/[^A-Z]+/).filter(w => w.length >= 1 && w.length <= 4)
+  )].sort((a, b) => a.length - b.length);
+
+  if (!words.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div class="section-title" style="margin-bottom:8px;">🔎 Palabras cortas — punto de ataque</div>
+    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">
+      Las palabras cortas son el mejor punto de partida. Haz clic en un candidato para aplicar esa correspondencia.
+    </div>
+    ${words.map(word => {
+      const candidates = PALABRAS_CORTAS_ES[word.length] || [];
+      return `
+        <div style="margin-bottom:10px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:6px; padding:8px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <span style="font-family:var(--font-mono); font-size:1rem; color:var(--primary); font-weight:700; letter-spacing:0.12em;">${word}</span>
+            <span style="font-size:0.7rem; color:var(--text-muted);">(${word.length} letras)</span>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:4px;">
+            ${candidates.map(cand => `
+              <button class="word-cand-btn" data-cipher="${word}" data-plain="${cand}"
+                      style="background:rgba(255,255,255,0.05); border:1px solid var(--border);
+                             color:var(--text-bright); font-family:var(--font-mono); font-size:0.78rem;
+                             padding:3px 8px; border-radius:4px; cursor:pointer; transition:all 0.15s;">
+                ${cand}
+              </button>`).join('')}
+          </div>
+        </div>`;
+    }).join('')}
+  `;
+
+  container.querySelectorAll('.word-cand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cipher = btn.dataset.cipher;
+      const plain  = btn.dataset.plain;
+      // Aplicar correspondencia letra a letra
+      for (let i = 0; i < cipher.length; i++) {
+        const cChar = cipher[i];
+        const pChar = plain[i];
+        state.tablaSustitucion[cChar] = pChar;
+        const input = document.querySelector(`.sust-key-input[data-char="${cChar}"]`);
+        if (input) { input.value = pChar; input.classList.add('filled'); }
+      }
+      renderTextoCifrado();
+      renderTextoDescifrado();
+      showToast(`Aplicado: ${cipher} → ${plain}`, 'success');
+    });
+  });
+}
+
+// ─── Vigenère — Texto Conocido ────────────────────────────────
+function initVigenereKnownPlaintext() {
+  const btnKnown = document.getElementById('btn-known-plaintext');
+  const inputKnown = document.getElementById('vigenere-known-word');
+  const resultContainer = document.getElementById('vigenere-known-result');
+
+  btnKnown?.addEventListener('click', () => {
+    const word = inputKnown?.value.trim().toUpperCase();
+    if (!word) { showToast('Introduce una palabra para buscar', 'warning'); return; }
+
+    const results = knownPlaintextVigenere(state.textoCifrado, word);
+    if (!results.length) {
+      resultContainer.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;">La palabra "${word}" no parece estar en el texto cifrado.</div>`;
+      return;
+    }
+
+    resultContainer.innerHTML = `
+      <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Si "${word}" está en el texto, la clave en esas posiciones sería:</div>
+      ${results.slice(0, 5).map(r => `
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+          <span style="color:var(--text-muted); font-size:0.72rem;">pos ${r.position}:</span>
+          <button class="vig-key-fragment-btn" data-fragment="${r.keyFragment}"
+                  style="font-family:var(--font-mono); font-size:0.9rem; color:var(--accent);
+                         background:rgba(0,255,136,0.08); border:1px solid rgba(0,255,136,0.2);
+                         padding:3px 10px; border-radius:4px; cursor:pointer; font-weight:700;">
+            ${r.keyFragment}
+          </button>
+          <span style="font-size:0.7rem; color:var(--text-muted);">← prueba esta clave</span>
+        </div>`).join('')}
+    `;
+
+    resultContainer.querySelectorAll('.vig-key-fragment-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const fragment = btn.dataset.fragment;
+        const keyInput = document.getElementById('vigenere-key-input');
+        if (keyInput) keyInput.value = fragment;
+        // Aplicar automáticamente
+        const descifrado = Vigenere.decrypt(state.textoCifrado, fragment);
+        const descContainer = document.getElementById('texto-descifrado');
+        if (descContainer) descContainer.textContent = descifrado;
+        showToast(`Clave "${fragment}" aplicada`, 'info');
+      });
+    });
+  });
 }

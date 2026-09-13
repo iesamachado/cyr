@@ -173,3 +173,42 @@ function generateCipherMessage(textoOriginal, tipoCifrado, clave) {
   }
   return texto;
 }
+
+// ─── Sugerir desplazamientos César probables ──────────────────
+function suggestCaesarShifts(cipherText) {
+  const freqs = FrequencyAnalyzer.analyze(cipherText);
+  const topLetter = freqs[0]?.char; // letra más frecuente en el texto cifrado
+  if (!topLetter) return [];
+  const topIdx = ALPHABET_ES.indexOf(topLetter);
+  // Si la letra más frecuente es la 'E' cifrada → shift = (topIdx - 4 + 26) % 26
+  // Si es la 'A' cifrada → shift = topIdx
+  const shiftIfE = ((topIdx - 4) + 26) % 26;
+  const shiftIfA = topIdx;
+  return [
+    { shift: shiftIfE, reason: `"${topLetter}" es probablemente la E (más común en español)` },
+    { shift: shiftIfA, reason: `"${topLetter}" es probablemente la A (2ª más común)` }
+  ].filter((v, i, arr) => arr.findIndex(x => x.shift === v.shift) === i); // dedup
+}
+
+// ─── Ataque por texto conocido para Vigenère ──────────────────
+// Dado un texto cifrado y una palabra que sospechamos está en él,
+// calcula qué fragmento de clave produciría cada posición.
+function knownPlaintextVigenere(cipherText, guessWord) {
+  const clean = cipherText.toUpperCase().replace(/[^A-Z]/g, '');
+  const guess = guessWord.toUpperCase().replace(/[^A-Z]/g, '');
+  if (!clean || !guess) return [];
+
+  const results = [];
+  for (let startPos = 0; startPos <= clean.length - guess.length; startPos++) {
+    let keyFragment = '';
+    let valid = true;
+    for (let i = 0; i < guess.length; i++) {
+      const cIdx = ALPHABET_ES.indexOf(clean[startPos + i]);
+      const pIdx = ALPHABET_ES.indexOf(guess[i]);
+      if (cIdx < 0 || pIdx < 0) { valid = false; break; }
+      keyFragment += ALPHABET_ES[(cIdx - pIdx + 26) % 26];
+    }
+    if (valid) results.push({ position: startPos, keyFragment });
+  }
+  return results;
+}

@@ -57,6 +57,7 @@ async function initJuego(user) {
   buildSustKeyboard();
   initCesarSlider();
   initSubmitHandler();
+  initVigenereKnownPlaintextJuego();
   listenSesion();
   listenEquiposPuntuacion();
 }
@@ -167,6 +168,9 @@ function renderTextoCifrado() {
       selectChar(ch);
     });
   });
+
+  renderCesarSuggestionsJuego();
+  renderPalabrasCortasJuego();
 }
 
 // ─── Seleccionar char ─────────────────────────────────────────
@@ -664,3 +668,144 @@ function showRondaOverlay(ganaste, ganadorEquipo, solucion) {
 
   overlay.classList.remove('hidden');
 }
+
+// ─── Funciones Añadidas para RompeCódigos 2.0 ────────────────
+
+function renderCesarSuggestionsJuego() {
+  const container = document.getElementById('cesar-suggestions');
+  if (!container || !state.textoCifrado) return;
+
+  // suggestCaesarShifts está definido en cifrado.js (global)
+  const suggestions = suggestCaesarShifts(state.textoCifrado);
+  if (!suggestions.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div style="font-size:0.72rem; color:rgba(0,212,255,0.6); margin-bottom:4px;">🔍 Más probables:</div>
+    ${suggestions.map(s => `
+      <button class="cesar-sugg-btn" data-shift="${s.shift}"
+              style="background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.2);
+                     color:rgba(0,212,255,0.9); font-family:'JetBrains Mono',monospace; font-size:0.72rem;
+                     padding:3px 8px; border-radius:3px; cursor:pointer; margin:2px; display:block; width:100%;
+                     text-align:left; transition:all 0.15s;">
+        +${s.shift}: ${s.reason}
+      </button>`).join('')}
+  `;
+
+  container.querySelectorAll('.cesar-sugg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const shift = parseInt(btn.dataset.shift);
+      const slider = document.getElementById('cesar-slider');
+      const valEl = document.getElementById('cesar-val');
+      if (slider) slider.value = shift;
+      if (valEl) valEl.textContent = shift;
+      actualizarCesarPreview();
+    });
+  });
+}
+
+const PALABRAS_CORTAS_ES_JUEGO = {
+  1: ['A', 'Y', 'O'],
+  2: ['DE', 'LA', 'EL', 'EN', 'UN', 'ES', 'AL', 'LO'],
+  3: ['LOS', 'LAS', 'DEL', 'CON', 'UNA', 'QUE', 'POR'],
+  4: ['PARA', 'COMO', 'ESTE', 'ESTA', 'PERO', 'TODO']
+};
+
+function renderPalabrasCortasJuego() {
+  const container = document.getElementById('palabras-cortas-juego');
+  if (!container) return;
+
+  const words = [...new Set(
+    state.textoCifrado.split(/[^A-Z]+/).filter(w => w.length >= 1 && w.length <= 4)
+  )].sort((a, b) => a.length - b.length).slice(0, 8);
+
+  if (!words.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div style="font-size:0.72rem; color:rgba(0,212,255,0.6); margin-bottom:6px;">🔎 Palabras cortas — ataca por aquí:</div>
+    ${words.map(word => {
+      const candidates = PALABRAS_CORTAS_ES_JUEGO[word.length] || [];
+      return \`<div style="margin-bottom:6px;">
+        <span style="font-family:'JetBrains Mono',monospace; color:rgba(0,212,255,0.9); font-weight:700; font-size:0.85rem;">\${word}</span>
+        <span style="color:rgba(255,255,255,0.25); font-size:0.7rem;"> → </span>
+        \${candidates.map(c => \`<button class="word-cand-juego" data-cipher="\${word}" data-plain="\${c}"
+                style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1);
+                       color:rgba(255,255,255,0.7); font-size:0.7rem; padding:2px 6px;
+                       border-radius:3px; cursor:pointer; margin:1px; font-family:'JetBrains Mono',monospace;">\${c}</button>\`).join('')}
+      </div>\`;
+    }).join('')}
+  `;
+
+  container.querySelectorAll('.word-cand-juego').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cipher = btn.dataset.cipher;
+      const plain  = btn.dataset.plain;
+      for (let i = 0; i < cipher.length; i++) {
+        const cChar = cipher[i];
+        const pChar = plain[i];
+        state.tablaSustitucion[cChar] = pChar;
+        const input = document.querySelector(\`.sust-key-input[data-source="\${cChar}"]\`);
+        if (input) { input.value = pChar; input.classList.add('filled'); }
+      }
+      updatePreviewDescifrado();
+      renderTextoCifrado();
+      guardarSustitucionEnFirestore();
+    });
+  });
+}
+
+function initVigenereKnownPlaintextJuego() {
+  const btn = document.getElementById('btn-known-juego');
+  const input = document.getElementById('vigenere-known-juego');
+  const result = document.getElementById('vigenere-known-result-juego');
+
+  btn?.addEventListener('click', () => {
+    const word = input?.value.trim().toUpperCase();
+    if (!word) return;
+    const results = knownPlaintextVigenere(state.textoCifrado, word);
+    if (!results.length) {
+      result.innerHTML = \`<span style="color:rgba(255,255,255,0.3); font-size:0.72rem;">No encontrado en este texto.</span>\`;
+      return;
+    }
+    result.innerHTML = results.slice(0, 4).map(r => \`
+      <div style="margin-bottom:3px;">
+        <span style="color:rgba(255,255,255,0.3); font-size:0.68rem;">pos \${r.position}:</span>
+        <button class="vig-frag-juego" data-frag="\${r.keyFragment}"
+                style="font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:#00ff88;
+                       background:rgba(0,255,136,0.08); border:1px solid rgba(0,255,136,0.2);
+                       padding:2px 8px; border-radius:3px; cursor:pointer; font-weight:700;">
+          \${r.keyFragment}
+        </button>
+      </div>\`).join('');
+
+    result.querySelectorAll('.vig-frag-juego').forEach(b => {
+      b.addEventListener('click', () => {
+        const frag = b.dataset.frag;
+        // Aplicar como descifrado Vigenère
+        const descifrado = Vigenere.decrypt(state.textoCifrado, frag);
+        // Rellenar el tablaSustitucion letra por letra desde el descifrado
+        const textArr = state.textoCifrado.replace(/[^A-Z]/g,'').split('');
+        const descArr = descifrado.replace(/[^A-Z]/g,'').split('');
+        for (let i = 0; i < textArr.length; i++) {
+          if (textArr[i] && descArr[i]) state.tablaSustitucion[textArr[i]] = descArr[i];
+        }
+        updatePreviewDescifrado();
+        renderTextoCifrado();
+        showToast(\`Clave "\${frag}" aplicada como Vigenère\`, 'info');
+        guardarSustitucionEnFirestore();
+      });
+    });
+  });
+}
+
+function updatePuntosPreview(remaining) {
+  const el = document.getElementById('puntos-preview');
+  if (!el) return;
+  let pts;
+  if (remaining > 240) pts = 150;
+  else if (remaining > 120) pts = 100;
+  else if (remaining > 60) pts = 75;
+  else pts = 50;
+  el.textContent = \`Si lo resuelves ahora: +\${pts} pts\`;
+  el.style.color = remaining > 120 ? '#00ff88' : remaining > 60 ? '#ffcc00' : '#ff4466';
+}
+

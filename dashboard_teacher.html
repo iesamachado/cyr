@@ -79,14 +79,30 @@
           Aún no tienes ninguna clase. ¡Crea la primera!
         </p>
       </section>
+      
+      <!-- Sección: Temario -->
+      <section class="animate-fade-up delay-2" aria-labelledby="section-topics-title">
+        <div class="section-header">
+          <h2 class="section-title" id="section-topics-title">📚 Bloques Temáticos (Temario)</h2>
+        </div>
+        <p class="section-desc">Accede al contenido teórico de la asignatura para repasarlo o proyectarlo en clase.</p>
+        <div class="games-grid" id="teacher-topics-grid">
+          <!-- Renderizado por JS -->
+        </div>
+      </section>
 
       <!-- Sección: También puedes jugar -->
       <section class="animate-fade-up delay-3" aria-labelledby="section-play-title">
-        <div class="section-header">
-          <h2 class="section-title" id="section-play-title">🎮 También puedes jugar</h2>
+        <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 class="section-title" id="section-play-title">🎮 También puedes jugar</h2>
+            <p class="section-desc" style="margin-bottom:0;">Como docente puedes acceder a cualquier juego para probarlo o practicar.</p>
+          </div>
+          <a href="roadmap.html" class="btn btn-ghost btn--sm" style="display:flex; align-items:center; gap:6px;">
+            🚀 <span>Ver Roadmap de Juegos</span>
+          </a>
         </div>
-        <p class="section-desc">Como docente puedes acceder a cualquier juego para probarlo o practicar.</p>
-        <div class="games-grid" id="teacher-games-grid">
+        <div class="games-grid" id="teacher-games-grid" style="margin-top: var(--space-4);">
           <!-- Renderizado por JS -->
         </div>
       </section>
@@ -130,6 +146,14 @@
             <label class="form-label" for="class-name-input">Nombre de la clase *</label>
             <input type="text" id="class-name-input" placeholder="Ej: 1º ESO Tecnología Grupo A"
                    maxlength="60" required>
+          </div>
+          <div class="form-group" style="margin-top: var(--space-4);">
+            <label class="form-label" for="class-level-input">Nivel (ESO)</label>
+            <select id="class-level-input" required>
+              <option value="1" selected>1º ESO</option>
+              <option value="2">2º ESO</option>
+              <option value="3">3º ESO</option>
+            </select>
           </div>
           <div class="form-group" style="margin-top: var(--space-4);">
             <label class="form-label" for="class-students-input">Correos de alumnos (opcional)</label>
