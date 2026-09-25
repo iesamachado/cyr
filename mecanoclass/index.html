@@ -240,9 +240,12 @@
                         <h2 class="card-title">Panel de Carrera Live</h2>
                         <p class="card-desc">Crea una sala de competición para proyectar la pista de carreras en la pantalla del aula, gestionar la salida y proclamar el podio de campeones.</p>
                     </div>
-                    <div>
+                    <div class="d-flex flex-column gap-2 mt-3">
                         <button id="btn-crear-carrera" class="btn-premium-glow" style="width: 100%; padding: 14px; font-size: 1.05rem;">
                             🚀 Crear Carrera en Vivo
+                        </button>
+                        <button id="btn-historial-carreras" class="btn-secondary-glow" style="width: 100%; padding: 10px; font-size: 0.95rem;">
+                            📚 Historial de Carreras
                         </button>
                     </div>
                 </div>
@@ -275,6 +278,23 @@
             </section>
         </div>
     </main>
+
+    <!-- Historial Modal -->
+    <div id="historialModal" class="d-none" style="position: fixed; inset: 0; background: rgba(15,23,42,0.9); z-index: 1050; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div class="glass-panel p-4" style="width: 95%; max-width: 900px; max-height: 85vh; overflow-y: auto; position: relative; border-color: rgba(255,255,255,0.1);">
+            <button id="closeHistorialBtn" class="btn-secondary-glow" style="position: absolute; right: 1rem; top: 1rem; padding: 5px 12px; font-size: 0.9rem;">✕ Cerrar</button>
+            <h2 class="text-white mb-4"><span class="text-warning">📚</span> Historial de Carreras en Vivo</h2>
+            
+            <div id="historialLoading" class="text-center py-5 d-none">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-white mt-3">Cargando historial...</p>
+            </div>
+            
+            <div id="historialList" class="d-flex flex-column gap-3">
+                <!-- Se rellena por JS -->
+            </div>
+        </div>
+    </div>
 
     <div id="app-footer"></div>
 

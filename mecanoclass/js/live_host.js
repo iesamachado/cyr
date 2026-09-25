@@ -20,6 +20,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('btnJoinAsPlayer').addEventListener('click', joinAsPlayer);
             document.getElementById('btnExitGame').addEventListener('click', exitGame);
             document.getElementById('startGameBtn').addEventListener('click', startGame);
+            
+            document.getElementById('forceEndGameBtn').addEventListener('click', () => {
+                if (confirm('¿Estás seguro de finalizar la carrera ahora?')) {
+                    updateLiveSession(gamePin, { status: 'finished' });
+                    showPodium(participants);
+                }
+            });
         }
     });
 });
@@ -152,15 +159,54 @@ function updateRaceTracks(currentParticipants) {
 }
 
 function showPodium(finalParticipants) {
-    const qualifiedParticipants = finalParticipants.filter(p => p.status !== 'disqualified');
+    const sortedParticipants = [...finalParticipants].sort((a, b) => {
+        const aDisq = a.status === 'disqualified';
+        const bDisq = b.status === 'disqualified';
+        if (aDisq && !bDisq) return 1;
+        if (!aDisq && bDisq) return -1;
+        if (b.progress !== a.progress) {
+            return (b.progress || 0) - (a.progress || 0);
+        }
+        return (b.wpm || 0) - (a.wpm || 0);
+    });
 
-    qualifiedParticipants.sort((a, b) => (b.wpm || 0) - (a.wpm || 0));
-
+    const qualifiedParticipants = sortedParticipants.filter(p => p.status !== 'disqualified');
     const [first, second, third] = qualifiedParticipants;
 
     if (first) setPodiumData('gold', first);
     if (second) setPodiumData('silver', second);
     if (third) setPodiumData('bronze', third);
+
+    // Fill table
+    const tableBody = document.getElementById('allParticipantsTableBody');
+    tableBody.innerHTML = '';
+    sortedParticipants.forEach((p, index) => {
+        const uid = p.userId || p.studentId;
+        const profile = playerProfilesCache[uid] || { displayName: 'Player' };
+        const errors = p.accuracy !== undefined ? (100 - p.accuracy).toFixed(1) + '%' : '-';
+        const wpm = p.wpm || 0;
+        const progress = p.progress || 0;
+        const isDisq = p.status === 'disqualified';
+        
+        let position = index + 1;
+        if (isDisq) position = 'DESC.';
+
+        const tr = `
+            <tr class="${isDisq ? 'text-danger opacity-75' : ''}">
+                <td>${position}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="${profile.photoURL || ''}" class="rounded-circle" style="width: 24px; height: 24px; object-fit: cover; background: #333;">
+                        ${profile.displayName}
+                    </div>
+                </td>
+                <td>${wpm}</td>
+                <td>${errors}</td>
+                <td>${progress}%</td>
+            </tr>
+        `;
+        tableBody.insertAdjacentHTML('beforeend', tr);
+    });
 
     document.getElementById('raceView').classList.add('d-none');
     document.getElementById('raceView').classList.remove('d-block');
@@ -174,7 +220,18 @@ async function setPodiumData(type, participant) {
     if (!profile) profile = await getUserProfile(uid);
 
     if (profile) {
-        document.getElementById(`${type}Avatar`).src = profile.photoURL;
+        const avatarEl = document.getElementById(`${type}Avatar`);
+        if (avatarEl) avatarEl.src = profile.photoURL || '';
+    }
+    
+    const statsEl = document.getElementById(`${type}Stats`);
+    if (statsEl) {
+        const wpm = participant.wpm || 0;
+        const errors = participant.accuracy !== undefined ? (100 - participant.accuracy).toFixed(1) : 0;
+        statsEl.innerHTML = `
+            <div>${wpm} PPM</div>
+            <div class="text-white-50" style="font-size: 0.9em;">${errors}% Err</div>
+        `;
     }
 }
 

@@ -705,6 +705,12 @@ export function listenToLiveParticipants(pin, onChange) {
   });
 }
 
+export async function getLiveParticipants(pin) {
+  const q = query(collection(db, 'live_participants'), where('sessionId', '==', pin));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data());
+}
+
 export async function getHostLiveSessions(hostId, gameId) {
   const q = query(
     collection(db, 'live_sessions'),

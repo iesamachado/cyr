@@ -3,7 +3,7 @@ import {
   getClass, updateClass, getClassMembers, getClassAssignments,
   toggleGameInClass, toggleTopicInClass, createAssignment, updateAssignment, deleteAssignment,
   getClassRanking, addStudentsToClass, removeStudentFromClass, getStudentResultsInClass,
-  getStudentBestScore
+  getStudentBestScore, getUserProfile
 } from './common/db.js';
 import { createClassroomAssignment, syncClassroomGrades } from './common/classroom.js';
 import { renderHeader, showToast, showLoading, hideLoading, renderPodium, renderRankingTable } from './common/ui.js';
@@ -13,6 +13,7 @@ let classData = null;
 let members   = [];
 let activeTab = 'games';
 let activeGameFilter = '';
+let rankingInterval = null;
 
 // ── Guard ───────────────────────────────────────────────────────
 requireAuth({
@@ -68,12 +69,30 @@ function initPage(user, profile) {
       const tab = btn.dataset.tab;
       $(`tab-${tab}`).style.display = 'block';
       activeTab = tab;
+      localStorage.setItem('classDetailTab', tab);
+      
+      if (rankingInterval) {
+          clearInterval(rankingInterval);
+          rankingInterval = null;
+      }
 
       if (tab === 'students')    await loadStudentsTab();
       if (tab === 'assignments') await loadAssignmentsTab();
-      if (tab === 'results')     await loadResultsTab();
+      if (tab === 'results') {
+          await loadResultsTab();
+          rankingInterval = setInterval(() => {
+              if (activeTab === 'results') renderResults(false);
+          }, 10000);
+      }
     });
   });
+
+  // Restore active tab
+  const storedTab = localStorage.getItem('classDetailTab') || 'games';
+  setTimeout(() => {
+      const initialBtn = document.querySelector(`.tab-btn[data-tab="${storedTab}"]`);
+      if (initialBtn) initialBtn.click();
+  }, 100);
 
   setupModals(user);
 }
@@ -629,18 +648,26 @@ async function setGameFilter(gameId) {
   await renderResults();
 }
 
-async function renderResults() {
+async function renderResults(showLoader = true) {
   try {
-    showLoading('Cargando resultados...');
+    if (showLoader) showLoading('Cargando resultados...');
+    if (members.length === 0) {
+      members = await getClassMembers(classData.id);
+    }
     const ranking = await getClassRanking(classData.id, activeGameFilter || null);
 
-    // Enriquecer con perfiles
-    const enriched = await Promise.all(ranking.map(async r => {
-      const member = members.find(m => m.uid === r.studentId);
+    // Enriquecer con perfiles (filtrando a los que no son alumnos de la clase, como el profe)
+    const filteredRanking = ranking.filter(r => members.some(m => m.uid === r.studentId));
+    
+    const enriched = await Promise.all(filteredRanking.map(async r => {
+      let member = members.find(m => m.uid === r.studentId);
+      let displayName = member?.displayNameAnonymized || member?.displayName || 'Alumno';
+      let photoURL = member?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${r.studentId}`;
+      
       return {
         ...r,
-        displayNameAnonymized: member?.displayNameAnonymized || member?.displayName || 'Alumno',
-        photoURL: member?.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${r.studentId}`
+        displayNameAnonymized: displayName,
+        photoURL: photoURL
       };
     }));
 
