@@ -56,10 +56,17 @@ async function fetchQuestions() {
   try {
     const qSnap = await getDocs(query(collection(db, 'preguntas'), where('block', '==', currentTopicId)));
     let allQ = [];
+    const seenEnunciados = new Set();
+    
     qSnap.forEach(d => {
       let data = d.data();
       data.id = d.id;
-      allQ.push(data);
+      // Anti-duplicados: Solo añadimos la pregunta si no hemos visto antes este mismo enunciado
+      const normalizedEnunciado = data.enunciado ? data.enunciado.trim().toLowerCase() : '';
+      if (normalizedEnunciado && !seenEnunciados.has(normalizedEnunciado)) {
+        seenEnunciados.add(normalizedEnunciado);
+        allQ.push(data);
+      }
     });
     
     // Shuffle and pick up to 10
@@ -166,17 +173,30 @@ function setupEvents() {
   });
   
   document.getElementById('btn-exit').addEventListener('click', () => {
-    showModal('Salir sin guardar', '¿Seguro que quieres salir? Perderás el progreso.', () => {
-      window.location.href = `../temario/${currentTopicId}.html`;
+    showModal({
+      title: 'Salir sin guardar',
+      body: '¿Seguro que quieres salir? Perderás el progreso del test actual.',
+      confirmText: 'Salir y Perder Progreso',
+      cancelText: 'Cancelar',
+      dangerous: true,
+      onConfirm: () => {
+        window.location.href = `../temario/${currentTopicId}.html`;
+      }
     });
   });
 }
 
 function submitTest() {
   if (!testActive) return;
-  showModal('Entregar Test', '¿Estás seguro de entregar el test? Se evaluarán tus respuestas y no podrás repetirlo.', async () => {
-    document.getElementById('test-view').style.display = 'none';
-    await processSubmission();
+  showModal({
+    title: 'Entregar Test',
+    body: '¿Estás seguro de entregar el test? Se evaluarán tus respuestas y no podrás cambiar nada.',
+    confirmText: 'Entregar Test',
+    cancelText: 'Seguir Revisando',
+    onConfirm: async () => {
+      document.getElementById('test-view').style.display = 'none';
+      await processSubmission();
+    }
   });
 }
 
@@ -204,10 +224,12 @@ async function processSubmission(forcedFail = false) {
     
     respuestas.push({
       preguntaId: q.id,
+      criterio: q.criterio || null,
+      ce: q.ce || null,
       enunciado: q.enunciado,
       marcada: answered !== -1 ? q.opciones[answered].texto : 'BLANCO',
       correctaTexto: q.opciones.find(o => o.correcta)?.texto || '?',
-      isCorrect: isCorrect,
+      isCorrect: forcedFail ? false : isCorrect,
       isBlanco: answered === -1
     });
   });
@@ -218,17 +240,29 @@ async function processSubmission(forcedFail = false) {
   finalScore = Math.round(finalScore * 100) / 100;
   if (forcedFail) finalScore = 0;
 
-  if (currentProfile.role === 'student') {
+  if (currentProfile.role === 'student' && !forcedFail) {
     try {
-      if (finalScore >= 5) {
-        const xp = Math.round(finalScore * 10);
-        await addXPAndCheckLogros(currentUser.uid, xp);
+      // 1. XP (Experiencia)
+      let xpEarned = 20; // 20 XP base por completarlo
+      if (finalScore >= 5) xpEarned += 30; // +30 XP por aprobar
+      if (finalScore >= 9) xpEarned += 50; // +50 XP por sobresaliente
+      
+      await addXPAndCheckLogros(currentUser.uid, xpEarned);
+
+      // 2. Medallas
+      await awardMedal(currentUser.uid, 'primer_examen');
+      
+      if (finalScore === 10) {
+        await awardMedal(currentUser.uid, 'maestro_teoria');
+      } else if (finalScore >= 9) {
+        await awardMedal(currentUser.uid, 'casi_perfecto');
       }
       
-      await awardMedal(currentUser.uid, 'primer_examen');
-      if (finalScore === 10) await awardMedal(currentUser.uid, 'maestro_teoria');
-      if (finalScore >= 9 && finalScore < 10) await awardMedal(currentUser.uid, 'casi_perfecto');
-      if (finalScore === 5) await awardMedal(currentUser.uid, 'por_los_pelos');
+      if (finalScore > 5) {
+        await awardMedal(currentUser.uid, 'aprobado_teoria');
+      } else if (finalScore === 5) {
+        await awardMedal(currentUser.uid, 'por_los_pelos');
+      }
     } catch(err) {
       console.error('Error awarding medals:', err);
     }
@@ -243,6 +277,7 @@ async function processSubmission(forcedFail = false) {
       score: finalScore,
       rawScore: score,
       maxPossible: totalPossible,
+      forcedFail: forcedFail,
       respuestas: respuestas,
       fecha: serverTimestamp()
     });
@@ -278,13 +313,27 @@ function handleFocusLost() {
   blurWarnings++;
   
   if (blurWarnings === 1) {
-    showModal('⚠️ ¡Atención! Actividad sospechosa', 'Hemos detectado que has salido de la ventana o cambiado de pestaña. Durante el test no está permitido consultar otras fuentes.<br><br><b>Si vuelves a salir, el test se suspenderá automáticamente con un 0.</b>', () => {});
+    showModal({
+      title: '⚠️ ¡Atención! Actividad sospechosa',
+      body: 'Hemos detectado que has salido de la ventana o cambiado de pestaña. Durante el test no está permitido consultar otras fuentes.<br><br><b>Si vuelves a salir, el test se suspenderá automáticamente con un 0.</b>',
+      confirmText: 'Entendido',
+      cancelText: 'Cerrar'
+    });
   } else if (blurWarnings >= 2) {
     testActive = false;
-    alert('❌ Test Suspendido. Has vuelto a salir de la ventana. El test ha sido anulado con un 0 automático.');
-    processSubmission(true).then(() => {
-      window.location.href = `../temario/${currentTopicId}.html`;
-    });
+    processSubmission(true); // Guarda el 0 en segundo plano
+    
+    // Ocultar el test y mostrar mensaje grande
+    document.getElementById('test-view').style.display = 'none';
+    document.getElementById('loading-view').style.display = 'block';
+    document.getElementById('loading-view').innerHTML = `
+      <div class="card" style="text-align:center; margin-top: 100px; padding: 40px; border: 2px solid var(--error);">
+        <div style="font-size: 4rem; margin-bottom: 20px;">❌</div>
+        <h2 style="margin-bottom: 15px; color: var(--error);">Test Suspendido</h2>
+        <p style="color: var(--text-muted); margin-bottom: 30px; font-size: 1.1rem;">Has vuelto a salir de la ventana. El test ha sido anulado con un 0 automático por medidas anti-chuletas.</p>
+        <button class="btn btn-primary" onclick="window.location.href = '../temario/${currentTopicId}.html'" style="font-weight: bold;">← Volver al temario</button>
+      </div>
+    `;
   }
 }
 

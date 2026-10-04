@@ -2,6 +2,7 @@
 //  CLASSHUB — dashboard_student.js
 // ═══════════════════════════════════════════════════════════════════════
 
+import { db, collection, query, where, getDocs } from "./common/firebase-config.js";
 import { requireAuth, currentUser, currentProfile } from './common/auth.js';
 import { getStudentClasses, joinClassByPin, getStudentResults, getClassAssignments } from './common/db.js';
 import { renderHeader, showToast, showLoading, hideLoading } from './common/ui.js';
@@ -36,6 +37,7 @@ requireAuth({
     await loadExams(user, myClasses);
     await loadAssignments(user);
     await loadHistory(user);
+    await loadGrades(user);
     setupModals(user);
   }
 });
@@ -391,4 +393,76 @@ function setupModals(user) {
       hideLoading();
     }
   });
+}
+
+// ── Notas de Teoría ───────────────────────────────────────────────
+async function loadGrades(user) {
+  try {
+    const q = query(collection(db, 'test_teoria_respuestas'), where('uid', '==', user.uid));
+    const snap = await getDocs(q);
+    
+    let tests = [];
+    snap.forEach(d => {
+      let data = d.data();
+      tests.push(data);
+    });
+    
+    // Sort chronologically to find the "last" one properly
+    tests.sort((a, b) => {
+      const ta = a.fecha ? a.fecha.toMillis() : 0;
+      const tb = b.fecha ? b.fecha.toMillis() : 0;
+      return ta - tb;
+    });
+    
+    // Determine the last test for each topic
+    const lastPerTopic = {};
+    tests.forEach(t => {
+      lastPerTopic[t.topicId] = t; // Since it's sorted, the last one processed will overwrite
+    });
+    
+    const tbody = $('grades-tbody');
+    const table = $('grades-table');
+    const empty = $('grades-empty');
+    
+    if (!tbody) return;
+
+    if (tests.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+    
+    table.style.display = 'table';
+    empty.style.display = 'none';
+    
+    // reverse to show newest first in the list
+    tests.reverse();
+    
+    tbody.innerHTML = tests.map(t => {
+      const isLast = (lastPerTopic[t.topicId] === t);
+      const isPassed = t.score >= 5;
+      
+      let dateStr = '—';
+      if (t.fecha) {
+        const d = t.fecha.toDate();
+        dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      }
+      
+      const badge = isLast 
+        ? `<span class="badge badge--primary" style="font-size:0.7rem; margin-left:8px;">✅ NOTA FINAL</span>`
+        : `<span class="badge badge--ghost" style="font-size:0.7rem; margin-left:8px; opacity:0.6;">📝 INTENTO ANTERIOR</span>`;
+        
+      const scoreColor = isPassed ? 'var(--success)' : 'var(--error)';
+      
+      return `<tr>
+        <td style="font-weight:bold;">${escapeHtml(t.topicName || t.topicId)}</td>
+        <td style="font-weight:900; font-size:1.1rem; color:${scoreColor}">${t.score} / 10</td>
+        <td style="color:var(--text-muted); font-size:var(--text-sm)">${dateStr}</td>
+        <td>${badge}</td>
+      </tr>`;
+    }).join('');
+    
+  } catch (err) {
+    console.error('Error cargando notas de teoría:', err);
+  }
 }

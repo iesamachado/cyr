@@ -377,7 +377,7 @@ async function showStudentHistory(studentId, studentName) {
   }
 
   const rows = results.length === 0
-    ? '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px;">Sin partidas registradas en esta clase.</td></tr>'
+    ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px;">Sin partidas registradas en esta clase.</td></tr>'
     : results.map(r => {
         const gameName = GAME_NAMES[r.gameId] || r.gameId || '—';
         const date = r.timestamp?.toDate ? r.timestamp.toDate().toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -851,7 +851,7 @@ async function loadExamsTab() {
   if (teoriaList) {
     const studentIds = members.map(m => m.uid);
     if (studentIds.length === 0) {
-      teoriaList.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay alumnos en esta clase.</td></tr>';
+      teoriaList.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay alumnos en esta clase.</td></tr>';
       return;
     }
     
@@ -882,7 +882,7 @@ async function loadExamsTab() {
       finalResults.sort((a,b) => b.t - a.t);
       
       if (finalResults.length === 0) {
-        teoriaList.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Aún no hay resultados de teoría.</td></tr>';
+        teoriaList.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Aún no hay resultados de teoría.</td></tr>';
       } else {
         teoriaList.innerHTML = finalResults.map(r => `
           <tr>
@@ -899,12 +899,15 @@ async function loadExamsTab() {
               </span>
             </td>
             <td class="text-muted">${r.fecha?.toDate ? r.fecha.toDate().toLocaleString() : 'Reciente'}</td>
+            <td>
+              <button class="btn btn-ghost btn--sm" onclick="window._deleteStudentTests('${r.uid}', '${r.topicId}', '${escapeHtml(r.alumnoNombre || 'Alumno')}')" title="Borrar todos los intentos de este tema" style="color:var(--error)">🗑️</button>
+            </td>
           </tr>
         `).join('');
       }
     }).catch(e => {
       console.error(e);
-      teoriaList.innerHTML = '<tr><td colspan="4" class="text-center text-error">Error al cargar resultados.</td></tr>';
+      teoriaList.innerHTML = '<tr><td colspan="5" class="text-center text-error">Error al cargar resultados.</td></tr>';
     });
   }
 }
@@ -963,19 +966,46 @@ function setupModals(user) {
     const name = student.displayNameAnonymized || student.displayName || 'Alumno';
     $('medallas-alumno-nombre').textContent = `Medallero de ${name}`;
     
-    // NOTA: student.logros es un array de objetos {id}, no un array de strings en CyR
     const logrosObtenidos = student.logros || [];
     
-    $('medallas-alumno-list').innerHTML = MEDALS_CATALOG.map(m => {
-      const tiene = logrosObtenidos.some(l => l.id === m.id);
+    const conseguidas = [];
+    const noConseguidas = [];
+    
+    MEDALS_CATALOG.forEach(m => {
+      if (logrosObtenidos.some(l => l.id === m.id)) {
+        conseguidas.push(m);
+      } else {
+        noConseguidas.push(m);
+      }
+    });
+    
+    const renderMedal = (m, tiene) => {
+      const filter = tiene ? 'none' : 'grayscale(100%) opacity(0.6)';
+      const bg = tiene ? 'var(--warning-light, rgba(243,156,18,0.1))' : 'var(--bg-card)';
+      const border = tiene ? 'var(--warning)' : 'var(--border)';
+      const boxShadow = tiene ? '4px 4px 0px var(--warning)' : '4px 4px 0px rgba(0,0,0,0.1)';
       return `
-        <div style="border:1px solid ${tiene ? 'var(--warning)' : 'var(--border)'}; padding:16px; border-radius:8px; opacity:${tiene ? 1 : 0.5}; background:${tiene ? 'var(--warning-light, rgba(243,156,18,0.1))' : 'transparent'}">
-          <div style="font-size:2rem; margin-bottom:8px;">${m.icon}</div>
-          <strong style="display:block;">${m.name}</strong>
-          <small style="color:var(--text-muted)">${m.desc}</small>
+        <div style="border:2px solid ${border}; padding:15px; border-radius:8px; background:${bg}; filter:${filter}; display:flex; flex-direction:column; align-items:center; text-align:center; box-shadow: ${boxShadow};">
+          <div style="font-size:2.5rem; margin-bottom:8px; line-height: 1;">${m.icon}</div>
+          <strong style="display:block; margin-bottom:5px; font-size:0.95rem; color:var(--text-primary);">${m.name}</strong>
+          <small style="color:var(--text-secondary); font-size:0.75rem; line-height:1.2;">${m.desc}</small>
         </div>
       `;
-    }).join('');
+    };
+
+    const listEl = $('medallas-alumno-list');
+    listEl.style.gridTemplateColumns = '1fr 1fr';
+    listEl.style.gap = '15px';
+    listEl.style.padding = '10px 5px';
+    listEl.style.maxHeight = '60vh';
+    listEl.style.overflowY = 'auto';
+    
+    const allHTML = [
+      ...conseguidas.map(m => renderMedal(m, true)),
+      ...noConseguidas.map(m => renderMedal(m, false))
+    ].join('');
+    
+    listEl.innerHTML = allHTML || '<p>No hay medallas disponibles.</p>';
     
     $('modal-medallas').classList.add('modal-backdrop--visible');
   };
@@ -1199,3 +1229,165 @@ function setupModals(user) {
     }
   });
 }
+
+
+// ── Evaluación por Criterios ────────────────────────────────────
+$('btn-view-criteria')?.addEventListener('click', async () => {
+  $('modal-criteria').classList.add('modal-backdrop--visible');
+  const container = $('criteria-table-container');
+  container.innerHTML = '<div style="text-align:center; padding:40px;"><div class="spinner"></div> Calculando notas...</div>';
+  
+  try {
+    // Obtenemos todas las respuestas de exámenes (el profesor tiene acceso a todas)
+    const snap = await getDocs(collection(db, 'test_teoria_respuestas'));
+    const allTests = [];
+    snap.forEach(d => allTests.push(d.data()));
+    
+    // Ordenar por fecha cronológicamente
+    allTests.sort((a, b) => {
+      const ta = a.fecha ? a.fecha.toMillis() : 0;
+      const tb = b.fecha ? b.fecha.toMillis() : 0;
+      return ta - tb;
+    });
+
+    // Quedarse SÓLO con el ÚLTIMO test de cada bloque para cada alumno
+    const validTestsMap = {};
+    allTests.forEach(test => {
+      if (test.uid && test.topicId) {
+        validTestsMap[test.uid + '_' + test.topicId] = test;
+      }
+    });
+    const validTests = Object.values(validTestsMap);
+    
+    // Diccionario: studentUid -> { criterioStr -> { aciertos: 0, fallos: 0, blancos: 0, total: 0 } }
+    const studentGrades = {};
+    const allCriterios = new Set();
+    
+    // Inicializar alumnos de esta clase
+    members.forEach(m => {
+      studentGrades[m.uid] = {};
+    });
+    
+    validTests.forEach(test => {
+      // Filtrar solo alumnos de la clase
+      if (!studentGrades[test.uid]) return;
+      
+      const stats = studentGrades[test.uid];
+      
+      // Analizar cada pregunta
+      if (test.respuestas && Array.isArray(test.respuestas)) {
+        test.respuestas.forEach(r => {
+          if (!r.criterio) return; // Exámenes antiguos que no guardaron criterio
+          
+          allCriterios.add(r.criterio);
+          if (!stats[r.criterio]) {
+            stats[r.criterio] = { aciertos: 0, fallos: 0, blancos: 0, total: 0 };
+          }
+          
+          stats[r.criterio].total++;
+          if (r.isBlanco) {
+            stats[r.criterio].blancos++;
+          } else if (r.isCorrect) {
+            stats[r.criterio].aciertos++;
+          } else {
+            stats[r.criterio].fallos++;
+          }
+        });
+      }
+    });
+    
+    const critList = Array.from(allCriterios).sort((a,b) => a.localeCompare(b, undefined, {numeric: true}));
+    
+    if (critList.length === 0) {
+      container.innerHTML = '<div class="empty-state">No hay datos suficientes con criterios LOMLOE.<br>Los exámenes antiguos no guardaban esta información, espera a que los alumnos realicen tests nuevos.</div>';
+      return;
+    }
+    
+    let html = `
+      <table class="ranking-table" style="font-size:0.85rem;">
+        <thead>
+          <tr>
+            <th style="position:sticky; left:0; background:var(--surface-1); z-index:2; min-width:180px;">Alumno</th>
+    `;
+    
+    critList.forEach(c => {
+      html += `<th>Crit. ${c}</th>`;
+    });
+    
+    html += `</tr></thead><tbody>`;
+    
+    members.sort((a, b) => {
+      const na = a.displayNameAnonymized || a.displayName || '';
+      const nb = b.displayNameAnonymized || b.displayName || '';
+      return na.localeCompare(nb);
+    }).forEach(m => {
+      const name = m.displayNameAnonymized || m.displayName || m.email;
+      html += `
+        <tr>
+          <td style="position:sticky; left:0; background:var(--bg-card); font-weight:bold;">${escapeHtml(name)}</td>
+      `;
+      
+      critList.forEach(c => {
+        const d = studentGrades[m.uid][c];
+        if (!d) {
+          html += `<td style="color:var(--text-muted); opacity:0.5;">—</td>`;
+        } else {
+          let score = d.aciertos - (d.fallos * 0.33);
+          let grade = (score / d.total) * 10;
+          if (grade < 0) grade = 0;
+          
+          const gradeStr = grade.toFixed(2);
+          const color = grade >= 5 ? 'var(--success)' : 'var(--error)';
+          
+          html += `
+            <td style="color:${color}; font-weight:900;" title="Aciertos: ${d.aciertos}, Fallos: ${d.fallos}, Blancos: ${d.blancos}">
+              ${gradeStr}
+            </td>
+          `;
+        }
+      });
+      
+      html += `</tr>`;
+    });
+    
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+    
+  } catch (err) {
+    console.error('Error calculando criterios:', err);
+    container.innerHTML = '<div class="alert alert-error">Error al calcular las notas por criterios.</div>';
+  }
+});
+
+$('btn-close-criteria')?.addEventListener('click', () => {
+  $('modal-criteria').classList.remove('modal-backdrop--visible');
+});
+
+window._deleteStudentTests = async (uid, topicId, studentName) => {
+  if (confirm(`¿Seguro que deseas eliminar TODOS los intentos del test "${topicId}" para el alumno ${studentName}?`)) {
+    try {
+      showLoading('Eliminando exámenes...');
+      const snap = await getDocs(query(collection(db, 'test_teoria_respuestas'), where('uid', '==', uid)));
+      
+      const deletePromises = [];
+      snap.forEach(d => {
+        if (d.data().topicId === topicId) {
+          deletePromises.push(deleteDoc(doc(db, 'test_teoria_respuestas', d.id)));
+        }
+      });
+      
+      await Promise.all(deletePromises);
+      showToast('Eliminados', `Se han borrado ${deletePromises.length} intentos de teoría.`, 'success');
+      
+      // Reload tab to update view
+      const activeTab = document.querySelector('.tab-btn.active').dataset.target;
+      if (activeTab === 'tab-tests') loadTestsTab();
+      
+    } catch (e) {
+      console.error(e);
+      showToast('Error', e.message, 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+};

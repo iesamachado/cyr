@@ -92,6 +92,7 @@ export const MEDALS_CATALOG = [
   // Exámenes
   { id: 'primer_examen',      name: 'Primer Examen',           desc: 'Entrega tu primer examen tipo test.',                               icon: '📝', public: true },
   { id: 'maestro_teoria',     name: 'Maestro de la Teoría',    desc: 'Saca un 10 absoluto en un examen.',                                 icon: '💯', public: true },
+  { id: 'aprobado_teoria',      name: 'Aprobado Teórico',        desc: 'Saca más de un 5 en un examen.',                               icon: '🎓', public: true },
   { id: 'casi_perfecto',      name: 'Casi Perfecto',           desc: 'Saca un 9 en un examen.',                                           icon: '🎯', public: true },
   { id: 'por_los_pelos',      name: 'Por los Pelos',           desc: 'Saca exactamente un 5 en un examen.',                               icon: '😅', public: true },
   { id: 'remontada',          name: 'La Remontada',            desc: 'Saca más de un 8 habiendo suspendido el examen anterior.',          icon: '📈', public: true },

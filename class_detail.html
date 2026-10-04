@@ -178,6 +178,7 @@
           <div class="section-actions" style="display:flex; gap:10px;">
             <a href="banco_preguntas.html" class="btn btn-ghost" id="btn-banco">📚 Banco de Preguntas</a>
             <button class="btn btn-primary" id="btn-new-exam">➕ Generar Examen</button>
+            <button class="btn btn-outline" id="btn-view-criteria" style="margin-left:5px;">🎯 Notas por Criterios</button>
           </div>
         </div>
         <div class="card" style="padding:0; overflow:hidden;">
@@ -189,6 +190,7 @@
                 <th>Tiempo</th>
                 <th>Estado</th>
                 <th>Fecha</th>
+                  <th>Acción</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -216,6 +218,7 @@
                   <th>Bloque</th>
                   <th>Nota Final</th>
                   <th>Fecha</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody id="teoria-test-list">
@@ -378,5 +381,22 @@
   </div>
 
   <script type="module" src="js/class_detail.js"></script>
+
+  <!-- Modal Evaluación por Criterios -->
+  <div id="modal-criteria" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="criteria-title">
+    <div class="modal-box" style="max-width: 900px; width: 95%;">
+      <div class="modal-header">
+        <h3 id="criteria-title">Evaluación por Criterios (LOMLOE)</h3>
+        <button class="modal-close" id="btn-close-criteria">✕</button>
+      </div>
+      <div class="modal-body" style="overflow-x: auto;">
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px;">Esta tabla calcula la nota media sobre 10 de cada alumno en cada criterio, analizando las preguntas concretas que han respondido en los tests de teoría (penalizando fallos con -0.33). Solo se muestran los criterios que han aparecido en los tests realizados por tus alumnos.</p>
+        <div id="criteria-table-container">
+          <div style="text-align:center; padding:40px;"><div class="spinner"></div> Cargando datos...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
