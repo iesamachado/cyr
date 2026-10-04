@@ -17,8 +17,23 @@ requireAuth({
     const name = profile.displayNameAnonymized || profile.displayName || 'Alumno';
     $('student-welcome').textContent = `¡Hola, ${name.split(' ')[0]}! 👋`;
 
+    // Gamification
+    const pts = profile.puntosTotal || 0;
+    const { getLeague } = await import('./common/gamification.js');
+    const league = getLeague(pts);
+    
+    if ($('hero-league-icon')) $('hero-league-icon').textContent = league.icon;
+    if ($('hero-league-name')) $('hero-league-name').textContent = league.name;
+    if ($('hero-xp')) $('hero-xp').textContent = pts + ' XP';
+    
+    if (profile.gremio && $('hero-guild-info')) {
+      $('hero-guild-info').style.display = 'block';
+      if ($('hero-guild-name')) $('hero-guild-name').textContent = profile.gremio;
+    }
+
     checkNoAccessAlert();
     await loadClasses(user);
+    await loadExams(user, myClasses);
     await loadAssignments(user);
     await loadHistory(user);
     setupModals(user);
@@ -135,8 +150,8 @@ function renderStudentClassCard(cls) {
 // ── Stats ───────────────────────────────────────────────────────
 function updateStats(classes) {
   const totalGames = new Set(classes.flatMap(c => c.enabledGames || [])).size;
-  $('stat-my-classes').textContent     = classes.length;
-  $('stat-available-games').textContent = totalGames;
+  if ($('stat-my-classes')) $('stat-my-classes').textContent = classes.length;
+  if ($('stat-available-games')) $('stat-available-games').textContent = totalGames;
 }
 
 // ── Tareas pendientes del alumno ────────────────────────────────
@@ -251,7 +266,7 @@ async function loadHistory(user) {
 
     // Mejor puntuación global
     const best = Math.max(...results.map(r => r.score || 0));
-    $('stat-total-score').textContent = best;
+    if ($('stat-total-score')) $('stat-total-score').textContent = best;
 
     table.style.display = 'table';
     empty.style.display = 'none';
@@ -267,6 +282,69 @@ async function loadHistory(user) {
     }).join('');
   } catch (err) {
     console.error('Error cargando historial:', err);
+  }
+}
+
+// ── Exámenes Activos ────────────────────────────────────────────
+async function loadExams(user, classes) {
+  const section = $('section-exams');
+  const list = $('student-exams-list');
+  if (!section || !list) return;
+  
+  if (!classes || classes.length === 0) return;
+  
+  try {
+    const { db, collection, query, where, getDocs } = await import('./common/firebase-config.js');
+    
+    const classIds = classes.map(c => c.id);
+    const chunks = [];
+    for (let i = 0; i < classIds.length; i += 10) {
+      chunks.push(classIds.slice(i, i + 10));
+    }
+    
+    let activeExams = [];
+    for (const chunk of chunks) {
+      const q = query(
+        collection(db, 'examenes_test'),
+        where('estado', '==', 'activo'),
+        where('claseId', 'in', chunk)
+      );
+      const snap = await getDocs(q);
+      snap.forEach(doc => {
+        activeExams.push({ id: doc.id, ...doc.data() });
+      });
+    }
+    
+    if (activeExams.length === 0) return;
+    
+    const answersQ = query(
+      collection(db, 'respuestas_test'),
+      where('uid', '==', user.uid)
+    );
+    const answersSnap = await getDocs(answersQ);
+    const submittedExamIds = new Set();
+    answersSnap.forEach(doc => {
+      const data = doc.data();
+      if (data.examenId) submittedExamIds.add(data.examenId);
+    });
+    
+    const pendingExams = activeExams.filter(e => !submittedExamIds.has(e.id));
+    if (pendingExams.length === 0) return;
+    
+    section.style.display = 'block';
+    list.innerHTML = pendingExams.map(ex => {
+      const cls = classes.find(c => c.id === ex.claseId);
+      const className = cls ? cls.name : 'Tu clase';
+      return `
+        <div class="card" style="padding:var(--space-4); border-left:4px solid var(--primary);">
+          <h3 style="margin-bottom:var(--space-1); font-size:1.1rem;">${escapeHtml(ex.titulo || 'Examen')}</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:var(--space-3);">Clase: ${escapeHtml(className)}</p>
+          <a href="examen.html?id=${ex.id}" class="btn btn-primary btn--sm" style="width:100%; justify-content:center;">Comenzar Examen</a>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Error cargando exámenes:', err);
   }
 }
 

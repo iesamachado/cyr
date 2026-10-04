@@ -8,6 +8,8 @@ import {
 import { createClassroomAssignment, syncClassroomGrades } from './common/classroom.js';
 import { renderHeader, showToast, showLoading, hideLoading, renderPodium, renderRankingTable } from './common/ui.js';
 import { GAMES, TOPICS, $, $$, escapeHtml, formatDate, getUrlParams, copyToClipboard } from './common/utils.js';
+import { GUILDS_CATALOG, MEDALS_CATALOG, getLeague } from './common/gamification.js';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, db } from './common/firebase-config.js';
 
 let classData = null;
 let members   = [];
@@ -78,6 +80,8 @@ function initPage(user, profile) {
 
       if (tab === 'students')    await loadStudentsTab();
       if (tab === 'assignments') await loadAssignmentsTab();
+      if (tab === 'guilds')      await loadGuildsTab();
+      if (tab === 'exams')       await loadExamsTab();
       if (tab === 'results') {
           await loadResultsTab();
           rankingInterval = setInterval(() => {
@@ -173,8 +177,11 @@ async function loadTopicsTab() {
           <small>${escapeHtml(t.description)}</small>
         </div>
       </div>
-      <div class="game-toggle-actions">
-        <label class="toggle-switch" title="${enabled.includes(t.id) ? 'Ocultar' : 'Mostrar'}">
+      <div class="game-toggle-actions" style="display:flex; align-items:center; gap: 15px;">
+        <a href="${t.htmlPath}" target="_blank" class="btn btn-ghost btn--sm" style="text-decoration:none; display:flex; align-items:center; gap:5px;" title="Ver contenido del bloque">
+          👁️ Ver
+        </a>
+        <label class="toggle-switch" title="${enabled.includes(t.id) ? 'Ocultar a alumnos' : 'Mostrar a alumnos'}">
           <input type="checkbox" 
                  id="toggle-topic-${t.id}"
                  data-topic-id="${t.id}"
@@ -237,6 +244,10 @@ async function loadStudentsTab() {
         ${members.map(m => renderStudentRow(m)).join('')}
       </div>`;
 
+    if (typeof renderGamificationPodium === 'function') {
+      renderGamificationPodium();
+    }
+
     // Eventos de eliminación
     list.querySelectorAll('[data-action="remove-student"]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -290,6 +301,10 @@ function renderStudentRow(m) {
     </div>`;
   }
 
+  const pts = m.puntosTotal || 0;
+  const gremioInfo = m.gremio ? `<span class="badge" style="background:#eee; color:#333;">🛡️ ${escapeHtml(m.gremio)}</span>` : '';
+  const xpBadge = `<span class="badge badge--warning">⭐ ${pts} XP</span>`;
+
   return `<div class="student-row" style="display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-3); border-bottom:1px solid var(--border);">
     <div style="display:flex; align-items:center; gap:var(--space-3);">
       <img class="student-row-avatar"
@@ -299,12 +314,16 @@ function renderStudentRow(m) {
       <div class="student-row-info">
         <strong>${escapeHtml(displayName)}</strong>
         <small style="display:block; color:var(--text-muted);">${escapeHtml(m.email || '')}</small>
+        <div style="margin-top:4px; display:flex; gap:4px;">${gremioInfo}${xpBadge}</div>
       </div>
     </div>
     <div style="display:flex; align-items:center; gap:var(--space-2);">
       <span class="badge ${m.source === 'classroom' ? 'badge--accent' : 'badge--muted'}">
         ${m.source === 'classroom' ? 'Classroom' : 'Directo / PIN'}
       </span>
+      <button class="btn btn-ghost btn--sm" onclick="window._showMedallas('${escapeHtml(m.uid)}')" title="Ver medallas" style="padding:4px 8px;">
+        🏅
+      </button>
       <button class="btn btn-ghost btn--sm" data-action="view-history" data-student-id="${escapeHtml(m.uid)}" data-student-name="${escapeHtml(displayName)}" title="Ver historial de partidas" style="padding:4px 8px;">
         📊
       </button>
@@ -694,11 +713,311 @@ async function renderResults(showLoader = true) {
 //  MODALES
 // ══════════════════════════════════════════════════════════════
 
+async function loadGuildsTab() {
+  if (!members || members.length === 0) {
+    showLoading('Cargando gremios...');
+    try {
+      members = await getClassMembers(classData.id);
+    } catch(e) {
+      console.error(e);
+      showToast('Error', 'No se pudieron cargar los alumnos', 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  const counts = {};
+  const points = {};
+  GUILDS_CATALOG.forEach(g => { counts[g.name] = 0; points[g.name] = 0; });
+  members.forEach(m => {
+    if (m.gremio && counts[m.gremio] !== undefined) {
+      counts[m.gremio]++;
+      points[m.gremio] += (m.puntosTotal || 0);
+    }
+  });
+  
+  const ranking = GUILDS_CATALOG.map(g => ({
+    name: g.name, icon: g.icon, image: g.image, color: g.color,
+    points: points[g.name], members: counts[g.name]
+  })).sort((a,b) => b.points - a.points);
+  
+  $('guilds-ranking-list').innerHTML = ranking.map((g, idx) => {
+    const isFirst = idx === 0;
+    const isSecond = idx === 1;
+    const isThird = idx === 2;
+    let badge = '';
+    let scale = '1';
+    let border = g.color;
+    let bg = 'var(--bg-card)';
+    
+    // Buscar al MVP de este gremio
+    const guildMembers = members.filter(m => m.gremio === g.name).sort((a,b) => (b.puntosTotal||0) - (a.puntosTotal||0));
+    const mvp = guildMembers.length > 0 ? guildMembers[0] : null;
+    let mvpHtml = '';
+    if (mvp && mvp.puntosTotal > 0) {
+      mvpHtml = `<div style="margin-top:12px; background:rgba(0,0,0,0.05); border-radius:8px; padding:8px 12px; display:inline-block; border-left:3px solid ${g.color};">
+        <span style="font-size:0.85rem; text-transform:uppercase; color:var(--text-muted); font-weight:bold;">👑 MVP:</span> 
+        <span style="font-weight:bold; color:var(--text-primary); margin-left:5px;">${escapeHtml(mvp.displayNameAnonymized || mvp.displayName || mvp.email?.split('@')[0])}</span> 
+        <span style="color:var(--warning); font-weight:bold; font-size:0.9rem;">(⭐ ${mvp.puntosTotal})</span>
+      </div>`;
+    }
+
+    // Calcular distancia con el anterior
+    let distanceHtml = '';
+    if (idx > 0 && ranking[idx-1].points > 0) {
+      const diff = ranking[idx-1].points - g.points;
+      if (diff > 0) {
+        distanceHtml = `<div style="color:var(--error); font-size:0.85rem; font-weight:bold; margin-top:5px; text-transform:uppercase; background:#ffeaa7; padding:4px 8px; border-radius:4px; border:1px solid #fdcb6e; display:inline-block;">
+          🔥 ¡A solo ${diff} XP de subir de puesto!
+        </div>`;
+      }
+    }
+    
+    if (isFirst) { badge = '🥇 LÍDERES ABSOLUTOS'; scale = '1.02'; border = '#f1c40f'; bg = '#fffdf5'; }
+    else if (isSecond) { badge = '🥈 SEGUNDO PUESTO'; scale = '1.0'; border = '#bdc3c7'; bg = '#f8f9fa'; }
+    else if (isThird) { badge = '🥉 TERCER PUESTO'; scale = '0.98'; border = '#cd6133'; bg = '#fdfbf7'; }
+    else { badge = `${idx+1}º Puesto`; scale = '0.95'; border = 'var(--border)'; bg = 'var(--bg-card)'; }
+    
+    return `
+      <div class="card animate-fade-up delay-${idx+1}" style="display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4); background:${bg}; border:4px solid ${border}; transform:scale(${scale}); transform-origin:center; position:relative; overflow:hidden; box-shadow:6px 6px 0px rgba(0,0,0,${isFirst ? '0.2' : '0.1'}); margin-bottom:10px;">
+        ${isFirst ? `<div style="position:absolute; top:-10px; right:-10px; font-size:7rem; opacity:0.1; transform:rotate(-15deg);">${g.icon}</div>` : ''}
+        
+        <div style="width:80px; height:80px; border-radius:50%; background-color:${g.color}; display:flex; align-items:center; justify-content:center; border:4px solid var(--text-primary); box-shadow:4px 4px 0px rgba(0,0,0,1); flex-shrink:0;">
+          <img src="${g.image}" alt="" style="width:100%; height:100%; object-fit:contain; mix-blend-mode:multiply;">
+        </div>
+        
+        <div style="flex:1;">
+          <div style="font-size:0.8rem; font-weight:bold; color:${isFirst ? '#d35400' : 'var(--text-muted)'}; margin-bottom:2px; text-transform:uppercase; letter-spacing:2px;">${badge}</div>
+          <h3 style="margin:0; font-size:1.8rem; color:${g.color}; text-shadow:1px 1px 0px var(--text-primary); -webkit-text-stroke: 1px var(--text-primary); line-height: 1.1;">${escapeHtml(g.name)}</h3>
+          <div style="margin-top:5px; font-size:0.95rem; color:var(--text-primary); font-weight:bold;">
+            👥 ${g.members} valientes aportando experiencia
+          </div>
+          ${mvpHtml}
+        </div>
+        
+        <div style="text-align:right; z-index:2; background:rgba(255,255,255,0.7); padding:8px 15px; border-radius:10px; border:2px solid var(--text-primary); box-shadow:3px 3px 0px rgba(0,0,0,1); display:flex; flex-direction:column; align-items:flex-end;">
+          <div style="font-size:0.8rem; font-weight:bold; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:2px;">Puntos Totales</div>
+          <div style="font-size:2.5rem; font-weight:900; color:var(--warning); text-shadow:1px 1px 0px var(--text-primary), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; line-height:1;">
+            ⭐ ${g.points.toLocaleString()}
+          </div>
+          ${distanceHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+let unsubscribeExams = null;
+
+async function loadExamsTab() {
+  if (!members || members.length === 0) {
+    members = await getClassMembers(classData.id);
+  }
+
+  if (unsubscribeExams) unsubscribeExams();
+  const examsRef = collection(db, 'classes', classData.id, 'examenes_test');
+  unsubscribeExams = onSnapshot(examsRef, (snap) => {
+    const exams = [];
+    snap.forEach(d => exams.push({ id: d.id, ...d.data() }));
+    
+    const list = $('examenes-test-list');
+    if (!exams.length) {
+      list.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay exámenes generados.</td></tr>';
+    } else {
+      list.innerHTML = exams.map(ex => `
+        <tr>
+          <td><strong>${escapeHtml(ex.titulo)}</strong></td>
+          <td>${ex.numPreguntas} preg.</td>
+          <td>${ex.tiempoMinutos} min</td>
+          <td>
+            <span class="badge ${ex.activo ? 'badge--success' : 'badge--muted'}">
+              ${ex.activo ? 'Activo' : 'Cerrado'}
+            </span>
+          </td>
+          <td>${ex.creadoEn?.toDate ? ex.creadoEn.toDate().toLocaleDateString() : ''}</td>
+          <td>
+            ${ex.activo 
+              ? `<button class="btn btn-ghost btn--sm" onclick="window._cerrarExamenTest('${ex.id}')" title="Cerrar examen">🔒</button>`
+              : `<button class="btn btn-ghost btn--sm" onclick="window._activarExamenTest('${ex.id}')" title="Abrir examen">🔓</button>`}
+            <button class="btn btn-ghost btn--sm" onclick="window._deleteExamenTest('${ex.id}')" title="Eliminar" style="color:var(--error)">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  });
+
+  // Cargar resultados de los Tests de Teoría (Control de Lectura)
+  const teoriaList = $('teoria-test-list');
+  if (teoriaList) {
+    const studentIds = members.map(m => m.uid);
+    if (studentIds.length === 0) {
+      teoriaList.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay alumnos en esta clase.</td></tr>';
+      return;
+    }
+    
+    // Firebase 'in' max is 10, so we just fetch recent ones or we split chunks. For simplicity in CyR we can just get docs.
+    // Assuming class size < 30, we can fetch all or just chunk them.
+    // Instead of complex chunks, we can just get ALL from the collection and filter by class. (Since we are teacher).
+    getDocs(collection(db, 'test_teoria_respuestas')).then(snap => {
+      let results = [];
+      snap.forEach(d => {
+        let data = d.data();
+        if (studentIds.includes(data.uid)) {
+          results.push(data);
+        }
+      });
+      
+      // Filtrar para quedarse solo con el último intento de cada alumno en cada bloque
+      // Agrupamos por uid_topicId y nos quedamos con la fecha más reciente
+      let latestResults = {};
+      results.forEach(r => {
+        const key = `${r.uid}_${r.topicId}`;
+        const t = r.fecha?.toMillis ? r.fecha.toMillis() : 0;
+        if (!latestResults[key] || t > latestResults[key].t) {
+          latestResults[key] = { ...r, t };
+        }
+      });
+      
+      let finalResults = Object.values(latestResults);
+      finalResults.sort((a,b) => b.t - a.t);
+      
+      if (finalResults.length === 0) {
+        teoriaList.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Aún no hay resultados de teoría.</td></tr>';
+      } else {
+        teoriaList.innerHTML = finalResults.map(r => `
+          <tr>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${r.uid}" style="width:30px; border-radius:50%; background:#eee;">
+                <strong>${escapeHtml(r.alumnoNombre || 'Alumno')}</strong>
+              </div>
+            </td>
+            <td>${escapeHtml(r.topicName || r.topicId)}</td>
+            <td>
+              <span class="badge ${r.score >= 5 ? 'badge--success' : 'badge--error'}" style="font-size:1.1rem;">
+                ${r.score.toFixed(1)} / 10
+              </span>
+            </td>
+            <td class="text-muted">${r.fecha?.toDate ? r.fecha.toDate().toLocaleString() : 'Reciente'}</td>
+          </tr>
+        `).join('');
+      }
+    }).catch(e => {
+      console.error(e);
+      teoriaList.innerHTML = '<tr><td colspan="4" class="text-center text-error">Error al cargar resultados.</td></tr>';
+    });
+  }
+}
+
+window._activarExamenTest = async (id) => {
+  await updateDoc(doc(db, 'classes', classData.id, 'examenes_test', id), { activo: true });
+};
+window._cerrarExamenTest = async (id) => {
+  await updateDoc(doc(db, 'classes', classData.id, 'examenes_test', id), { activo: false });
+};
+window._deleteExamenTest = async (id) => {
+  if (confirm('¿Seguro que deseas eliminar este examen?')) {
+    await deleteDoc(doc(db, 'classes', classData.id, 'examenes_test', id));
+  }
+};
+
+function renderGamificationPodium() {
+  const container = $('gamification-podium');
+  if (!container) return;
+  const sorted = [...members].filter(m => !m.pending && (m.puntosTotal || 0) > 0).sort((a,b) => (b.puntosTotal||0) - (a.puntosTotal||0));
+  if (sorted.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  
+  const top3 = sorted.slice(0, 3);
+  let html = `<div style="display:flex; justify-content:center; gap:16px; margin-bottom:16px; align-items:flex-end;">`;
+  
+  const renderPos = (m, pos, height, color, emoji) => {
+    if (!m) return '';
+    const name = m.displayNameAnonymized || m.displayName || m.email || 'Alumno';
+    return `
+      <div style="display:flex; flex-direction:column; align-items:center; width:100px;">
+        <div style="font-size:1.5rem; margin-bottom:4px;">${emoji}</div>
+        <img src="${m.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.uid}`}" style="width:40px; height:40px; border-radius:50%; margin-bottom:8px; border:2px solid ${color};">
+        <div style="font-size:0.8rem; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">${escapeHtml(name)}</div>
+        <div style="font-weight:bold; color:${color}; font-size:0.9rem;">${m.puntosTotal || 0} XP</div>
+        <div style="width:100%; background:${color}; height:${height}px; border-radius:8px 8px 0 0; margin-top:8px; opacity:0.8; display:flex; justify-content:center; align-items:center; color:white; font-weight:bold; font-size:1.2rem;">${pos}</div>
+      </div>
+    `;
+  };
+  
+  html += renderPos(top3[1], 2, 60, '#C0C0C0', '🥈');
+  html += renderPos(top3[0], 1, 80, '#FFD700', '🥇');
+  html += renderPos(top3[2], 3, 40, '#CD7F32', '🥉');
+  
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
 function setupModals(user) {
+  // Modal Medallas
+  window._showMedallas = (uid) => {
+    const student = members.find(m => m.uid === uid);
+    if (!student) return;
+    const name = student.displayNameAnonymized || student.displayName || 'Alumno';
+    $('medallas-alumno-nombre').textContent = `Medallero de ${name}`;
+    
+    // NOTA: student.logros es un array de objetos {id}, no un array de strings en CyR
+    const logrosObtenidos = student.logros || [];
+    
+    $('medallas-alumno-list').innerHTML = MEDALS_CATALOG.map(m => {
+      const tiene = logrosObtenidos.some(l => l.id === m.id);
+      return `
+        <div style="border:1px solid ${tiene ? 'var(--warning)' : 'var(--border)'}; padding:16px; border-radius:8px; opacity:${tiene ? 1 : 0.5}; background:${tiene ? 'var(--warning-light, rgba(243,156,18,0.1))' : 'transparent'}">
+          <div style="font-size:2rem; margin-bottom:8px;">${m.icon}</div>
+          <strong style="display:block;">${m.name}</strong>
+          <small style="color:var(--text-muted)">${m.desc}</small>
+        </div>
+      `;
+    }).join('');
+    
+    $('modal-medallas').classList.add('modal-backdrop--visible');
+  };
+  $('btn-close-medallas')?.addEventListener('click', () => $('modal-medallas').classList.remove('modal-backdrop--visible'));
 
-
-
-  // Modal nueva tarea
+  // Modal Nuevo Examen
+  $('btn-new-exam')?.addEventListener('click', () => {
+    $('modal-new-exam').classList.add('modal-backdrop--visible');
+  });
+  $('btn-close-new-exam')?.addEventListener('click', () => $('modal-new-exam').classList.remove('modal-backdrop--visible'));
+  $('btn-cancel-new-exam')?.addEventListener('click', () => $('modal-new-exam').classList.remove('modal-backdrop--visible'));
+  
+  $('btn-save-examen')?.addEventListener('click', async () => {
+    const titulo = $('gen-titulo').value.trim();
+    const tiempo = parseInt($('gen-tiempo').value);
+    const num = parseInt($('gen-num').value);
+    const topic = $('gen-topic').value;
+    
+    if (!titulo || !tiempo || !num) {
+      showToast('Error', 'Completa los campos', 'error');
+      return;
+    }
+    
+    try {
+      showLoading('Generando...');
+      await addDoc(collection(db, 'classes', classData.id, 'examenes_test'), {
+        titulo,
+        tiempoMinutos: tiempo,
+        numPreguntas: num,
+        topicFilter: topic || null,
+        activo: false,
+        creadoEn: serverTimestamp()
+      });
+      $('modal-new-exam').classList.remove('modal-backdrop--visible');
+      showToast('Examen generado', 'Ya puedes activarlo', 'success');
+      $('gen-titulo').value = '';
+    } catch (e) {
+      showToast('Error', e.message, 'error');
+    } finally {
+      hideLoading();
+    }
+  });  // Modal nueva tarea
   const modalAssignment = $('modal-new-assignment');
   const formAssignment  = $('form-new-assignment');
   const btnNew          = $('btn-new-assignment');

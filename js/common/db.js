@@ -553,8 +553,27 @@ export async function saveGameResult(gameId, studentId, classId, score, metadata
       score: Number(score) || 0,
       timestamp: serverTimestamp()
     });
+    
+    // ==========================================
+    // GAMIFICACIÓN: Otorgar XP
+    // ==========================================
+    const { computeGameXP, addXPAndCheckLogros } = await import('./gamification.js');
+    const { getDocs, query, collection, where } = await import('./firebase-config.js');
+    
+    // 1. Contar partidas para el bonus
+    const q = query(collection(db, 'users', studentId, 'games'), where('gameId', '==', gameId));
+    const snap = await getDocs(q);
+    const nPartidas = snap.size || 1;
+
+    // 2. Calcular XP usando la fórmula de gamificación
+    const xp = computeGameXP(gameId, score, nPartidas);
+
+    // 3. Otorgar XP (comprueba medallas temporales y ligas por dentro)
+    if (xp > 0) {
+      await addXPAndCheckLogros(studentId, xp);
+    }
   } catch (subErr) {
-    console.warn('No se pudo guardar en users/{uid}/games (no crítico):', subErr);
+    console.warn('No se pudo guardar historial o calcular gamificación (no crítico):', subErr);
   }
 
   return ref.id;

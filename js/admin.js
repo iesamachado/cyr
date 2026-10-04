@@ -231,4 +231,103 @@ function setupEvents(user) {
       hideLoading();
     }
   });
+
+  // Gamification Migration
+  $('btn-migrate-xp')?.addEventListener('click', async () => {
+    try {
+      const btn = $('btn-migrate-xp');
+      const status = $('migrate-xp-status');
+      if (btn.disabled) return;
+      
+      btn.disabled = true;
+      status.textContent = 'Calculando... (puede tardar unos segundos)';
+      showLoading('Migrando gamificación...');
+      
+      const { collection, getDocs } = await import('./common/firebase-config.js');
+      const { db } = await import('./common/firebase-config.js');
+      const { computeGameXP, addXPAndCheckLogros, awardMedal } = await import('./common/gamification.js');
+      
+      const snap = await getDocs(collection(db, 'game_results'));
+      
+      // Agrupar partidas por usuario y juego
+      const userGames = {};
+      snap.forEach(doc => {
+        const data = doc.data();
+        const uid = data.studentId;
+        const gid = data.gameId;
+        if (!uid || !gid || !data.score) return;
+        
+        if (!userGames[uid]) userGames[uid] = {};
+        if (!userGames[uid][gid]) userGames[uid][gid] = [];
+        
+        userGames[uid][gid].push(data.score);
+      });
+      
+      let totalXPAwarded = 0;
+      let usersUpdated = 0;
+      
+      for (const [uid, games] of Object.entries(userGames)) {
+        let userXP = 0;
+        let playedAny = false;
+        
+        for (const [gid, scores] of Object.entries(games)) {
+          if (scores.length > 0) playedAny = true;
+          
+          scores.forEach((score, index) => {
+             const xp = computeGameXP(gid, score, index + 1);
+             userXP += xp;
+             
+             // Medallas por hitos retroactivos
+             if (gid === 'mecanoclass' && score >= 40) awardMedal(uid, 'mecanografo');
+             if (gid === 'mecanoclass' && score >= 70) awardMedal(uid, 'velocista');
+             
+             if (gid === 'netdefender') awardMedal(uid, 'defensor');
+             if (gid === 'netdefender' && score >= 500) awardMedal(uid, 'guardian_red');
+             
+             if (gid === 'rompecodigos') awardMedal(uid, 'descifrador');
+             if (gid === 'rompecodigos' && score >= 800) awardMedal(uid, 'criptologo');
+             
+             if (gid === 'helados') awardMedal(uid, 'heladero');
+             if (gid === 'helados' && score >= 200) awardMedal(uid, 'programador_bloques');
+             
+             if (gid === 'moon') awardMedal(uid, 'astronauta');
+             if (gid === 'moon' && score >= 250) awardMedal(uid, 'explorador_lunar');
+             
+             if (gid === 'arenabots') awardMedal(uid, 'robotizador');
+             if (gid === 'cybersmith') awardMedal(uid, 'smith');
+             if (gid === 'cybersmith' && score >= 400) awardMedal(uid, 'ingeniero');
+             
+             if (gid === 'asimov') awardMedal(uid, 'etico_ia');
+             if (gid === 'appflow') awardMedal(uid, 'dev_app');
+          });
+          
+          if (gid === 'arenabots' && scores.length >= 3) awardMedal(uid, 'arquitecto_bot');
+        }
+        
+        if (playedAny) {
+           await awardMedal(uid, 'primer_circuito');
+        }
+        
+        if (userXP > 0) {
+           const { doc, updateDoc } = await import('./common/firebase-config.js');
+           await updateDoc(doc(db, 'users', uid), { puntosTotal: 0 }); // resetear para evitar sumas duplicadas
+           await addXPAndCheckLogros(uid, userXP);
+           totalXPAwarded += userXP;
+           usersUpdated++;
+        }
+      }
+      
+      status.textContent = `¡Listo! Se otorgaron ${totalXPAwarded} XP a ${usersUpdated} alumnos.`;
+      status.style.color = 'var(--success)';
+      showToast('Migración completada', `XP y Medallas retroactivas aplicadas a ${usersUpdated} alumnos.`);
+    } catch(err) {
+      console.error(err);
+      $('migrate-xp-status').textContent = 'Error: ' + err.message;
+      $('migrate-xp-status').style.color = 'var(--error)';
+      showToast('Error', 'Fallo al migrar XP', 'error');
+    } finally {
+      hideLoading();
+      $('btn-migrate-xp').disabled = false;
+    }
+  });
 }

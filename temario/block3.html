@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="css/temario.css">
 </head>
 <body>
+  <div id="presentation-sticky-header" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px; background: var(--bg-card, #fff); border-bottom: 2px solid var(--border, #000); position: sticky; top: 0; z-index: 100; box-shadow: 4px 4px 0px rgba(0,0,0,1); margin-bottom: 20px;">
+    <a href="../index.html" class="btn btn-outline" style="text-decoration:none; font-weight:bold;">← Volver al Dashboard</a>
+    <button onclick="window.togglePresentation()" class="btn btn-primary" style="font-weight:bold;">📺 Modo Presentación</button>
+  </div>
   <div class="container">
     <h1>🤖 Bloque 3: Robótica y Arquitectura de Hardware</h1>
     <p>Un ordenador o un robot no es más que un montón de piezas de plástico y metal (Hardware) cobrando vida gracias a las instrucciones (Software). Aquí entenderemos cómo interactúan.</p>
@@ -169,23 +173,194 @@
       </div>
     </div>
 
-    <h3 style="margin-top: 30px;">¿Cómo funcionan juntos?</h3>
-    <p>La Micro:bit se pincha en la ranura superior del Cutebot. Programamos la Micro:bit para que lea la información de los sensores del Cutebot (como los ojos ultrasónicos) y envíe señales a los motores para esquivar paredes o seguir un circuito.</p>
-
-    <h3 style="margin-top: 30px;">📡 Comunicación por Radio (Walkie-Talkie)</h3>
-    <p>La placa Micro:bit tiene un sensor/antena de <strong>Radio</strong> incorporado. Esto permite que múltiples placas se comuniquen entre sí de forma inalámbrica, ¡exactamente igual que unos Walkie-Talkies!</p>
-    <ul>
-      <li><strong>Establecer el Grupo de Radio:</strong> Al igual que en un walkie-talkie tienes que sintonizar el mismo canal (ejemplo: Canal 4) para hablar con tu amigo, en Micro:bit debes establecer el "Grupo de radio". Solo las placas que estén en el mismo número de grupo (del 0 al 255) podrán enviarse y recibir mensajes entre sí.</li>
-      <li><strong>Enviar y Recibir:</strong> Una vez en el mismo grupo, puedes programar una placa para que actúe como mando a distancia. Al pulsar el Botón A, envía la palabra "AVANZAR". La otra placa (pinchada en el Cutebot) tiene un bloque <em>"Al recibir el mensaje de radio"</em> que activa los motores al recibir esa palabra.</li>
-    </ul>
-    <div class="alert alert-warning">
-      <strong>⚠️ Importante en clase:</strong> Cuando estemos en el aula, ¡cada pareja de alumnos debe elegir un <strong>Grupo de radio distinto</strong>! Si todos usamos el Grupo 1, las señales se cruzarán y tu mando moverá el robot de la otra punta de la clase (y el tuyo se volverá loco), causando un caos absoluto.
+    
+    <div class="info-box" style="background: var(--bg-card); border: 2px solid #00c0a3; border-radius: var(--radius); padding: 25px; margin-top: 40px; margin-bottom: 30px; box-shadow: 4px 4px 0 #00c0a3;">
+      <h4 style="margin-top: 0; color: #008773; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 2rem;">🏎️</span> 1. Conducir el Cutebot
+      </h4>
+      <p>El Cutebot usa un sistema llamado <strong>conducción diferencial</strong>. Como no tiene volante, para girar o moverse depende enteramente de la velocidad que le demos a sus dos ruedas traseras (velocidad de -100 a 100).</p>
+      
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+        <div style="flex: 1; min-width: 250px;">
+          <h5 style="color: #008773;">Avanzar Recto</h5>
+          <p style="font-size: 0.9rem;">Si ambas ruedas giran hacia adelante a la misma velocidad, el coche avanza en línea recta.</p>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top;">
+            <div class="scratch-block scratch-hat s-events" style="background: #D400D4; border-color: #A000A0;">al presionar el botón <span class="s-input">A ▼</span></div>
+            <div class="scratch-block s-motion" style="background: #00C0A3; border-color: #009982;">establecer motores <span class="s-input">izquierdo</span> a velocidad <span class="s-input">50</span> <span class="s-input">derecho</span> a velocidad <span class="s-input">50</span></div>
+          </div>
+        </div>
+        
+        <div style="flex: 1; min-width: 250px;">
+          <h5 style="color: #008773;">Girar a la Derecha</h5>
+          <p style="font-size: 0.9rem;">Si la rueda izquierda gira más rápido que la derecha (o la derecha se detiene a velocidad 0), el coche gira hacia la derecha.</p>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top;">
+            <div class="scratch-block scratch-hat s-events" style="background: #D400D4; border-color: #A000A0;">al presionar el botón <span class="s-input">B ▼</span></div>
+            <div class="scratch-block s-motion" style="background: #00C0A3; border-color: #009982;">establecer motores <span class="s-input">izquierdo</span> a velocidad <span class="s-input">50</span> <span class="s-input">derecho</span> a velocidad <span class="s-input">0</span></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="nav-buttons">
+    <div class="info-box" style="background: var(--bg-card); border: 2px solid #3b82f6; border-radius: var(--radius); padding: 25px; margin-bottom: 30px; box-shadow: 4px 4px 0 #3b82f6;">
+      <h4 style="margin-top: 0; color: #2563eb; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 2rem;">🛣️</span> 2. El Coche Siguelíneas
+      </h4>
+      <p>El Cutebot tiene sensores de luz infrarroja apuntando al suelo que detectan si pisan la línea negra de un circuito o el suelo blanco de la mesa.</p>
+      
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+        <div style="flex: 1; min-width: 250px; font-size: 0.95rem;">
+          <p>La lógica básica de un siguelíneas es usar un <strong>Bucle (por siempre)</strong> y <strong>Condicionales (si... entonces)</strong>:</p>
+          <ul>
+            <li><strong>Si</strong> los dos sensores ven blanco ➜ Avanzar.</li>
+            <li><strong>Si</strong> el sensor izquierdo pisa negro ➜ Significa que nos salimos por la derecha, hay que girar a la izquierda para volver al carril.</li>
+            <li><strong>Si</strong> el sensor derecho pisa negro ➜ Hay que girar a la derecha.</li>
+          </ul>
+        </div>
+        <div style="flex: 1; min-width: 250px;">
+          <div class="scratch-stack" style="transform: scale(0.8); transform-origin: left top;">
+            <div class="scratch-block scratch-c-block s-control" style="background: #1E90FF; border-color: #0073E6;">
+              por siempre
+              <div class="scratch-inner">
+                <div class="scratch-block scratch-c-block s-control" style="background: #00B3E6; border-color: #008CB3;">
+                  si &lt;<span class="s-hex" style="background: #00C0A3; color: white;">¿línea de rastreo <span class="s-input">izquierdo</span> y <span class="s-input">derecho</span> no encendido?</span>&gt; entonces
+                  <div class="scratch-inner">
+                    <div class="scratch-block s-motion" style="background: #00C0A3; border-color: #009982;">ir hacia <span class="s-input">adelante</span> a toda velocidad <span class="s-input">30</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="info-box" style="background: var(--bg-card); border: 2px solid #e3008c; border-radius: var(--radius); padding: 25px; margin-bottom: 30px; box-shadow: 4px 4px 0 #e3008c;">
+      <h4 style="margin-top: 0; color: #b3006e; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 2rem;">📡</span> 3. Comunicación por Radio (Walkie-Talkie)
+      </h4>
+      <p>La placa Micro:bit tiene un sensor/antena de <strong>Radio</strong> incorporado. Esto permite que múltiples placas se comuniquen entre sí de forma inalámbrica enviando textos o números, ¡exactamente igual que unos Walkie-Talkies!</p>
+      
+      <div class="alert alert-info" style="margin-bottom: 20px;">
+        <strong>El Grupo de Radio (El Canal)</strong>: Para hablar con otra placa, ambas deben estar sintonizadas en el mismo "Grupo" (del 0 al 255). Si tú estás en el grupo 10 y tu amigo en el 14, no os escucharéis. ¡En clase, cada pareja debe usar un grupo diferente para no cruzar señales!
+      </div>
+
+      <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-bottom: 10px;">
+        <div style="flex: 1; min-width: 250px;">
+          <h5 style="color: #b3006e; margin-top: 0;">1. Seleccionar Canal con Variable</h5>
+          <p style="font-size: 0.9rem;">Podemos crear una <strong>variable</strong> llamada "Canal", sumar 1 cada vez que pulsamos A, asignar esa variable al grupo de radio y mostrar el número en los LEDs.</p>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top;">
+            <div class="scratch-block scratch-hat s-events" style="background: #D400D4; border-color: #A000A0;">al presionar el botón <span class="s-input">A ▼</span></div>
+            <div class="scratch-block s-var" style="background: #ff8c00; border-color: #cc7000;">cambiar <span class="s-input">Canal ▼</span> por <span class="s-input">1</span></div>
+            <div class="scratch-block s-looks" style="background: #E3008C; border-color: #B3006E;">radio establecer grupo <span class="s-input">Canal</span></div>
+            <div class="scratch-block s-looks" style="background: #1E90FF; border-color: #0073E6;">mostrar número <span class="s-input">Canal</span></div>
+          </div>
+        </div>
+
+        <div style="flex: 1; min-width: 250px;">
+          <h5 style="color: #b3006e; margin-top: 0;">2. Enviar y Recibir Textos</h5>
+          <p style="font-size: 0.9rem;">Podemos enviar números o cadenas de texto. Quien recibe, debe usar un evento especial que se "despierta" al atrapar el mensaje en el aire.</p>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top; margin-bottom: 10px;">
+            <div class="scratch-block scratch-hat s-events" style="background: #D400D4; border-color: #A000A0;">al presionar el botón <span class="s-input">B ▼</span></div>
+            <div class="scratch-block s-looks" style="background: #E3008C; border-color: #B3006E;">radio enviar cadena <span class="s-input">"HOLA"</span></div>
+          </div>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top;">
+            <div class="scratch-block scratch-hat s-events" style="background: #E3008C; border-color: #B3006E;">al recibir radio receivedString</div>
+            <div class="scratch-block s-looks" style="background: #1E90FF; border-color: #0073E6;">mostrar cadena <span class="s-input">receivedString</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<div class="info-box" style="background: var(--bg-card); border: 2px solid #e3008c; border-radius: var(--radius); padding: 25px; margin-bottom: 30px; box-shadow: 4px 4px 0 #e3008c;">
+      <h4 style="margin-top: 0; color: #b3006e; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 2rem;">🎮</span> 4. Coche Teledirigido (Módulo Radio)
+      </h4>
+      <p>La placa Micro:bit tiene un módulo de <strong>Radio</strong> incorporado. Esto permite que múltiples placas se comuniquen entre sí de forma inalámbrica como si fueran Walkie-Talkies. ¡Podemos hacer un mando a distancia!</p>
+      
+      <div class="alert alert-warning" style="margin-bottom: 20px;">
+        <strong>⚠️ Regla de Oro:</strong> Ambas placas deben sintonizar el mismo "canal". En programación lo llamamos <strong>establecer el Grupo de radio</strong>. Cada pareja de clase debe usar un grupo diferente (ej: Grupo 14) o las señales se cruzarán con los robots de otros alumnos.
+      </div>
+
+      <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+        <!-- MANDO -->
+        <div style="flex: 1; min-width: 250px; background: #fff0f6; border: 1px dashed #e3008c; padding: 15px; border-radius: 8px;">
+          <h5 style="color: #b3006e; margin-top: 0;">Placa 1: El Mando (En tus manos)</h5>
+          <p style="font-size: 0.85rem;">Enviamos el texto "AVANZAR" por el aire cuando pulsamos un botón.</p>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top;">
+            <div class="scratch-block scratch-hat s-events" style="background: #1E90FF; border-color: #0073E6;">al iniciar</div>
+            <div class="scratch-block s-looks" style="background: #E3008C; border-color: #B3006E;">radio establecer grupo <span class="s-input">14</span></div>
+          </div>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top; margin-top: 10px;">
+            <div class="scratch-block scratch-hat s-events" style="background: #D400D4; border-color: #A000A0;">al presionar el botón <span class="s-input">A ▼</span></div>
+            <div class="scratch-block s-looks" style="background: #E3008C; border-color: #B3006E;">radio enviar cadena <span class="s-input">"AVANZAR"</span></div>
+          </div>
+        </div>
+
+        <!-- COCHE -->
+        <div style="flex: 1; min-width: 250px; background: #e6fffa; border: 1px dashed #00c0a3; padding: 15px; border-radius: 8px;">
+          <h5 style="color: #008773; margin-top: 0;">Placa 2: El Receptor (En el coche)</h5>
+          <p style="font-size: 0.85rem;">Escuchamos la radio y si el mensaje es "AVANZAR", encendemos los motores.</p>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top;">
+            <div class="scratch-block scratch-hat s-events" style="background: #1E90FF; border-color: #0073E6;">al iniciar</div>
+            <div class="scratch-block s-looks" style="background: #E3008C; border-color: #B3006E;">radio establecer grupo <span class="s-input">14</span></div>
+          </div>
+          <div class="scratch-stack" style="transform: scale(0.85); transform-origin: left top; margin-top: 10px;">
+            <div class="scratch-block scratch-hat s-events" style="background: #E3008C; border-color: #B3006E;">al recibir radio receivedString</div>
+            <div class="scratch-block scratch-c-block s-control" style="background: #00B3E6; border-color: #008CB3;">
+              si &lt;<span class="s-hex" style="background: #00B3E6; color: white;">receivedString = <span class="s-input">"AVANZAR"</span></span>&gt; entonces
+              <div class="scratch-inner">
+                <div class="scratch-block s-motion" style="background: #00C0A3; border-color: #009982;">ir hacia <span class="s-input">adelante</span> a velocidad <span class="s-input">50</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- EMULADOR Y DEPURACIÓN -->
+    <div class="info-box" style="background: var(--bg-card); border: 2px solid #8b5cf6; border-radius: var(--radius); padding: 25px; margin-bottom: 40px; box-shadow: 4px 4px 0 #8b5cf6;">
+      <h4 style="margin-top: 0; color: #7c3aed; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 2rem;">💻</span> 5. Simulador y Paso a la Realidad
+      </h4>
+      <p>¿Recuerdas a <strong>Grace Hopper y su polilla (el primer <em>Bug</em>)</strong> del Bloque 2? En robótica, atrapar errores de código es aún más importante, porque si fallas, ¡el coche físico podría descontrolarse y estrellarse contra la pared!</p>
+      
+      <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
+        <div style="flex: 1; min-width: 250px;">
+          <h5 style="color: #7c3aed; margin-top: 0; font-size: 1.1rem;">1. El Simulador (Nuestro "Cazabichos")</h5>
+          <p style="font-size: 0.95rem;">Para evitar accidentes, la web de MakeCode tiene un <strong>simulador interactivo</strong> en la parte izquierda. Es una Micro:bit virtual donde podemos probar y depurar nuestro código antes de pasarlo a la realidad.</p>
+          <ul style="font-size: 0.95rem; padding-left: 20px;">
+            <li style="margin-bottom: 5px;">Podemos hacer clic en sus botones A y B virtuales con el ratón.</li>
+            <li style="margin-bottom: 5px;">Podemos comprobar si los LEDs se encienden como esperábamos.</li>
+            <li>Si usamos el bloque de Radio, ¡aparecerán <strong>dos</strong> Micro:bits virtuales en la pantalla para poder probar que se comunican entre sí!</li>
+          </ul>
+        </div>
+        
+        <div style="flex: 1; min-width: 250px; background: #f3e8ff; border: 1px dashed #7c3aed; padding: 20px; border-radius: 8px;">
+          <h5 style="color: #7c3aed; margin-top: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;"><span style="font-size: 1.5rem;">⬇️</span> 2. Descargar a la Placa Física</h5>
+          <p style="font-size: 0.95rem;">Una vez hayamos <em>depurado</em> el programa en el simulador y estemos 100% seguros de que hace exactamente lo que queremos, ha llegado la hora de la verdad:</p>
+          <ol style="font-size: 0.95rem; padding-left: 20px; font-weight: 500;">
+            <li style="margin-bottom: 10px;">Conectamos la placa Micro:bit al ordenador por cable USB (aparecerá como un pendrive llamado "MICROBIT").</li>
+            <li style="margin-bottom: 10px;">Pulsamos el botón morado de <strong>Descargar</strong> en MakeCode.</li>
+            <li>Pasamos el archivo <code style="background: #e9d5ff; padding: 2px 6px; border-radius: 4px; color: #6b21a8;">.hex</code> que se descarga a la unidad MICROBIT. ¡La placa parpadeará y el código cobrará vida!</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-cta" style="margin-top: 40px; padding: 20px; background: var(--surface-2, #f5f5f5); border-radius: 8px; border-left: 5px solid var(--primary, #3498db); text-align: center;">
+      <h3 style="margin-top: 0;">🎯 ¿Has terminado de repasar?</h3>
+      <p>Es hora de poner a prueba tus conocimientos. Ve a tu panel de alumno y busca el test de este bloque (si tu profesor lo ha activado).</p>
+      <a href="test.html?topic=block3" class="btn btn-primary" style="margin-top: 10px; text-decoration: none; font-weight: bold;">📝 Realizar Test del Bloque</a>
+    </div>
+
+    <div class="nav-buttons" style="margin-top: 30px;">
       <a href="block2.html" class="btn btn-outline">← Anterior (Bloque 2)</a>
+      <a href="../dashboard_student.html" class="btn btn-outline">Volver al Dashboard</a>
       <a href="block4.html" class="btn btn-primary">Siguiente Bloque →</a>
     </div>
   </div>
+  <script src="../js/presentation.js"></script>
 </body>
 </html>

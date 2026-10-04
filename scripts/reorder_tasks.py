@@ -26,7 +26,7 @@ new_block4 = """  block4: {
     name: 'Bloque 4: IoT y Móvil',
     description: 'Sensores, Redes y Apps',
     icon: '📱',
-    htmlPath: 'temario/block_mobile.html',
+    htmlPath: 'temario/block4.html',
     color: '#00bcd4'
   },
 """

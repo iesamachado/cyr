@@ -39,12 +39,13 @@
         </div>
       </header>
 
-      <!-- Grid principal: tabs -->
       <div class="class-tabs animate-fade-up delay-1">
         <button class="tab-btn tab-btn--active" data-tab="games">📚 Temario y Juegos</button>
         <button class="tab-btn" data-tab="students">👨‍🎓 Alumnos</button>
         <button class="tab-btn" data-tab="assignments">📋 Tareas</button>
         <button class="tab-btn" data-tab="results">📊 Resultados</button>
+        <button class="tab-btn" data-tab="guilds">🛡️ Gremios</button>
+        <button class="tab-btn" data-tab="exams">📝 Exámenes</button>
       </div>
 
       <!-- TAB: CONTENIDOS (habilitación) -->
@@ -91,15 +92,24 @@
             </div>
           </div>
 
-          <div id="students-list">
-            <div class="skeleton" style="height:60px;margin-bottom:8px"></div>
-            <div class="skeleton" style="height:60px;margin-bottom:8px"></div>
-            <div class="skeleton" style="height:60px"></div>
-          </div>
+          <div id="gamification-podium" style="margin-bottom:var(--space-5)"></div>
 
-          <p class="empty-state" id="no-students" style="display:none">
-            No hay alumnos en esta clase todavía. Usa el botón "+ Añadir alumnos", comparte el PIN o sincroniza desde Classroom.
-          </p>
+          <details>
+            <summary style="cursor:pointer; font-weight:bold; font-size:1.1rem; padding: 10px 15px; background: var(--bg-body); border-radius: 8px; user-select: none;">
+              👀 Mostrar lista completa de alumnos
+            </summary>
+            <div style="margin-top: 15px;">
+              <div id="students-list">
+                <div class="skeleton" style="height:60px;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:60px;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:60px"></div>
+              </div>
+
+              <p class="empty-state" id="no-students" style="display:none">
+                No hay alumnos en esta clase todavía. Usa el botón "+ Añadir alumnos", comparte el PIN o sincroniza desde Classroom.
+              </p>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -137,9 +147,82 @@
             <div id="results-podium"></div>
           </div>
           <div class="card">
-            <h3 class="card-title">📋 Ranking completo</h3>
-            <div id="results-ranking"></div>
+            <details>
+              <summary style="cursor:pointer; outline:none; user-select:none;">
+                <h3 class="card-title" style="display:inline-block; margin:0;">📋 Ranking completo</h3>
+              </summary>
+              <div id="results-ranking" style="margin-top: 15px;"></div>
+            </details>
           </div>
+        </div>
+      </section>
+
+      <!-- TAB: GREMIOS -->
+      <section id="tab-guilds" class="tab-content" style="display:none;">
+        <div class="section-header">
+          <h2 class="section-title">Ranking de Gremios</h2>
+          <p class="section-desc">Puntuación acumulada de los miembros del gremio en esta clase.</p>
+        </div>
+        <div id="guilds-ranking-list" style="display:flex; flex-direction:column; gap:var(--space-4);">
+          <div class="text-center text-muted" style="padding:40px;">Calculando ranking...</div>
+        </div>
+      </section>
+
+      <!-- TAB: EXÁMENES -->
+      <section id="tab-exams" class="tab-content" style="display:none;">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Exámenes Test</h2>
+            <p class="section-desc">Genera exámenes aleatorios a partir del banco de preguntas.</p>
+          </div>
+          <div class="section-actions" style="display:flex; gap:10px;">
+            <a href="banco_preguntas.html" class="btn btn-ghost" id="btn-banco">📚 Banco de Preguntas</a>
+            <button class="btn btn-primary" id="btn-new-exam">➕ Generar Examen</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0; overflow:hidden;">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Preguntas</th>
+                <th>Tiempo</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="examenes-test-list">
+              <tr><td colspan="6" class="text-center text-muted">Cargando exámenes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="section-header" style="margin-top: 40px;">
+          <div>
+            <h2 class="section-title">Controles de Lectura (Tests de Teoría)</h2>
+            <p class="section-desc">Notas obtenidas por los alumnos en los tests autogenerados al final de cada bloque. Solo se guarda el último intento.</p>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0; overflow:hidden;">
+          <details>
+            <summary style="cursor:pointer; padding: 15px; font-weight:bold; background: var(--bg-card); user-select:none; border-bottom: 1px solid var(--border);">
+              👀 Mostrar notas de los controles de lectura
+            </summary>
+            <table class="ranking-table" style="border-top:none;">
+              <thead>
+                <tr>
+                  <th>Alumno</th>
+                  <th>Bloque</th>
+                  <th>Nota Final</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody id="teoria-test-list">
+                <tr><td colspan="4" class="text-center text-muted">Cargando resultados...</td></tr>
+              </tbody>
+            </table>
+          </details>
         </div>
       </section>
 
@@ -238,6 +321,61 @@
   </div>
 
 <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Modal Medallas -->
+  <div id="modal-medallas" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-box modal-box--large">
+      <div class="modal-header">
+        <h3 id="medallas-alumno-nombre">Medallero</h3>
+        <button class="modal-close" id="btn-close-medallas">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="medallas-alumno-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:var(--space-3);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Nuevo Examen -->
+  <div id="modal-new-exam" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Generar Examen Test</h3>
+        <button class="modal-close" id="btn-close-new-exam">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Título del Examen</label>
+          <input type="text" id="gen-titulo" class="form-input" placeholder="Ej: Control Tema 1" required>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
+          <div class="form-group">
+            <label class="form-label">Tiempo (minutos)</label>
+            <input type="number" id="gen-tiempo" class="form-input" value="30" min="5" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº de Preguntas</label>
+            <input type="number" id="gen-num" class="form-input" value="10" min="1" max="50" required>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label">Bloque Temático</label>
+          <select id="gen-topic" class="form-input">
+            <option value="">Cualquier bloque</option>
+            <option value="block1">Alfabetización Digital</option>
+            <option value="block2">Programación</option>
+            <option value="block3">Robótica</option>
+            <option value="block4">IoT y Móvil</option>
+            <option value="block5">Inteligencia Artificial</option>
+            <option value="block6">Ciberseguridad</option>
+          </select>
+        </div>
+        <div class="modal-footer" style="padding:0; margin-top:24px; border:none;">
+          <button class="btn btn-ghost" id="btn-cancel-new-exam">Cancelar</button>
+          <button class="btn btn-primary" id="btn-save-examen">Generar Examen</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="js/class_detail.js"></script>
 </body>

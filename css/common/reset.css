@@ -105,3 +105,9 @@ hr {
 
 /* Selección de texto */
 ::selection { background: var(--accent-subtle); color: var(--accent-light); }
+input[type="radio"], input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  cursor: pointer;
+  height: auto;
+}

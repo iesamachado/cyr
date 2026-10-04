@@ -30,6 +30,7 @@ import {
   getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, limit,
   arrayUnion, arrayRemove,
+  increment, deleteField,
   serverTimestamp,
   Timestamp,
   onSnapshot
@@ -68,6 +69,7 @@ export {
   getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   query, where, orderBy, limit,
   arrayUnion, arrayRemove,
+  increment, deleteField,
   serverTimestamp,
   Timestamp,
   onSnapshot

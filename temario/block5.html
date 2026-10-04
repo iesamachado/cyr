@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="css/temario.css">
 </head>
 <body>
+  <div id="presentation-sticky-header" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px; background: var(--bg-card, #fff); border-bottom: 2px solid var(--border, #000); position: sticky; top: 0; z-index: 100; box-shadow: 4px 4px 0px rgba(0,0,0,1); margin-bottom: 20px;">
+    <a href="../index.html" class="btn btn-outline" style="text-decoration:none; font-weight:bold;">← Volver al Dashboard</a>
+    <button onclick="window.togglePresentation()" class="btn btn-primary" style="font-weight:bold;">📺 Modo Presentación</button>
+  </div>
   <div class="container">
     <h1>🛡️ Bloque 5: Ciberseguridad y Privacidad</h1>
     <p>Nuestros ordenadores y móviles contienen nuestra vida entera: mensajes privados, cuentas bancarias, fotos íntimas... Por tanto, aprender a protegerlos es la habilidad digital más importante que debes dominar.</p>
@@ -53,5 +57,6 @@
       <a href="../index.html" class="btn btn-primary">Terminar Curso (Volver al Dashboard)</a>
     </div>
   </div>
+  <script src="../js/presentation.js"></script>
 </body>
 </html>

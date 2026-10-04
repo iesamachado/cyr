@@ -7,17 +7,29 @@
   <link rel="stylesheet" href="css/temario.css">
 </head>
 <body>
+  <div id="presentation-sticky-header" style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px; background: var(--bg-card, #fff); border-bottom: 2px solid var(--border, #000); position: sticky; top: 0; z-index: 100; box-shadow: 4px 4px 0px rgba(0,0,0,1); margin-bottom: 20px;">
+    <a href="../index.html" class="btn btn-outline" style="text-decoration:none; font-weight:bold;">← Volver al Dashboard</a>
+    <button onclick="window.togglePresentation()" class="btn btn-primary" style="font-weight:bold;">📺 Modo Presentación</button>
+  </div>
   <div class="container">
     <h1>💻 Bloque 1: Alfabetización Digital</h1>
     <p>Bienvenido al primer bloque de Computación y Robótica. En esta unidad aprenderemos a manejarnos de forma segura y eficiente en el entorno digital.</p>
     
+    
     <h2>1. El Sistema Operativo y la Gestión de Archivos</h2>
+
     <p>El <strong>Sistema Operativo (SO)</strong> es el programa principal de un ordenador. Se encarga de gestionar el hardware (pantalla, teclado, memoria) y permitir que los demás programas funcionen. Ejemplos comunes son Windows, macOS, Linux, Android e iOS.</p>
     
-    <h3>Carpetas y Archivos</h3>
-    <p>Para no perder nuestra información, los ordenadores organizan los datos en archivos (documentos, imágenes, música) que se guardan dentro de directorios o carpetas. Una buena organización se asemeja a un árbol genealógico:</p>
+    <h3>¿Fichero o Carpeta?</h3>
+    <p>Para no perder nuestra información, los ordenadores organizan los datos de forma lógica:</p>
+    <ul>
+      <li>📄 <strong>Fichero (o Archivo):</strong> Es el documento en sí. Puede ser una redacción, una foto de tus vacaciones o una canción. Contiene información real.</li>
+      <li>📂 <strong>Carpeta (o Directorio):</strong> Es un contenedor vacío. Sirve únicamente para guardar ficheros u otras carpetas dentro y tenerlo todo ordenado. ¡Una carpeta no contiene texto ni música, contiene ficheros!</li>
+    </ul>
+
+    <p>Una buena organización de carpetas se asemeja a un árbol genealógico:</p>
     <div class="diagram-box">
-      <div style="font-family: monospace; text-align: left; display: inline-block;">
+      <div style="font-family: monospace; text-align: left; display: inline-block; font-size: 1.1rem; line-height: 1.5;">
         📂 <b>Mi Unidad (Raíz)</b><br>
         ├── 📂 Asignaturas<br>
         │&nbsp;&nbsp; ├── 📂 Computación<br>
@@ -27,15 +39,86 @@
         &nbsp;&nbsp;&nbsp; └── 🖼️ excursion.jpg
       </div>
     </div>
-    
+
+    <h3>Crear y Renombrar</h3>
+    <p>Para mantener el orden, es vital saber organizar la información:</p>
+    <ul>
+      <li><strong>Crear:</strong> Normalmente se hace pulsando el <em>botón derecho</em> del ratón en un espacio en blanco y seleccionando <code>Nuevo > Carpeta</code> (o Archivo).</li>
+      <li><strong>Renombrar:</strong> Selecciona el archivo/carpeta, haz clic derecho y elige <code>Cambiar nombre</code> (o pulsa la tecla F2). Pon siempre nombres descriptivos; en vez de <em>"trabajo_final_final_ahorasi.docx"</em> usa <em>"Trabajo_Historia_Tema3.docx"</em>.</li>
+    </ul>
+
+    <h3>Tipos de Ficheros (Extensiones)</h3>
+    <p>El ordenador sabe qué programa usar para abrir un fichero gracias a su <strong>extensión</strong>, que son esas 3 o 4 letras que van después del punto al final del nombre:</p>
+    <div class="info-box">
+      <ul>
+        <li>🖼️ <strong>.jpg / .png / .gif :</strong> Imágenes y fotografías.</li>
+        <li>🎵 <strong>.mp3 / .wav :</strong> Audios y canciones.</li>
+        <li>🎬 <strong>.mp4 / .avi :</strong> Vídeos.</li>
+        <li>📝 <strong>.pdf :</strong> Documento portátil (no se descoloca al imprimirlo).</li>
+        <li>📄 <strong>.docx / .xlsx / .pptx :</strong> Documentos de Word, Excel y PowerPoint.</li>
+      </ul>
+    </div>
+
     <h2>2. La Nube (Cloud Computing)</h2>
+
     <p>Antiguamente, todos los archivos se guardaban en el disco duro físico del ordenador. Si el ordenador se rompía, perdías todo. Hoy en día usamos <strong>la nube</strong>.</p>
     <div class="alert alert-info">
       <strong>¿Qué es la nube?</strong> No es un lugar mágico en el cielo. "La nube" es simplemente el ordenador (servidor) de otra empresa, encendido las 24 horas del día, conectado a Internet.
     </div>
-    <p>Al guardar tus archivos en Google Drive o OneDrive, realmente los estás enviando a través de Internet a enormes granjas de servidores protegidas. Esto te permite acceder a tus datos desde tu móvil o desde el colegio con solo iniciar sesión.</p>
+    
+    <h3>Carpetas en el Ordenador vs Carpetas en la Nube</h3>
+    <p>Aunque funcionan igual (sirven para meter archivos), tienen diferencias clave:</p>
+    <ul>
+      <li>💻 <strong>En tu ordenador (Local):</strong> Los archivos están guardados físicamente en la memoria del PC. Si se rompe o lo pierdes, pierdes la información. No necesitas Internet para abrirlos.</li>
+      <li>☁️ <strong>En la nube (Google Drive, OneDrive):</strong> Los archivos están guardados en servidores de Google o Microsoft. Si tu PC se rompe, ¡no pasa nada! Puedes entrar desde tu móvil o desde otro ordenador poniendo tu usuario y contraseña. Necesitas Internet para abrirlos (aunque algunos permiten modo sin conexión).</li>
+    </ul>
 
-    <h2>3. Identidad Digital y Huella Digital</h2>
+    <h2>3. El Teclado y sus Secretos</h2>
+    <div style="text-align: center; margin: 30px 0;">
+      <img src="assets/teclado_esquema.png" alt="Esquema de las partes del teclado" style="width: 100%; max-width: 1000px; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    </div>
+    <p>Para escribir rápido y bien, necesitamos conocer las teclas especiales del teclado:</p>
+    <ul>
+      <li>⇧ <strong>Shift (Mayús):</strong> Sirve para escribir en mayúsculas si la mantienes pulsada, pero también sirve para <strong>sacar los símbolos de la parte SUPERIOR de las teclas</strong> (ej: para escribir % debes pulsar Shift + 5).</li>
+      <li>⇮ <strong>Alt Gr:</strong> Se usa exclusivamente para <strong>sacar los símbolos de la parte DERECHA de las teclas</strong>.</li>
+      <li>@ <strong>La Arroba:</strong> Sabiendo lo anterior, como la @ suele estar a la derecha del número 2, se saca pulsando <code>Alt Gr + 2</code>.</li>
+      <li>´ <strong>Las Tildes:</strong> Para acentuar una vocal (á, é, í...), <strong>primero se pulsa la tecla de la tilde (y no pasa nada en la pantalla), y después se pulsa la vocal</strong>. No intentes pulsar las dos a la vez.</li>
+      <li>📸 <strong>Capturas de Pantalla:</strong> Para guardar una "foto" de tu pantalla busca la tecla <code>Impr Pant</code>. Si usas Windows, el mejor truco es pulsar a la vez <code>Windows + Shift + S</code>: la pantalla se oscurecerá y podrás dibujar un rectángulo para recortar y copiar justo lo que necesitas.</li>
+    </ul>
+
+    <h2>4. Tu Cuenta de Google y Classroom</h2>
+    <p>En el instituto usarás intensivamente las herramientas de Google. Tu cuenta educativa te da acceso a todo.</p>
+    <ol>
+      <li><strong>Entrar a la cuenta:</strong> Ve a <em>google.es</em>, pulsa en "Iniciar Sesión" (arriba a la derecha), introduce tu email del colegio y luego tu contraseña.</li>
+      <li><strong>Cambiar la contraseña:</strong> Es muy recomendable cambiar la contraseña inicial. Una vez dentro, haz clic en tu foto (arriba a la derecha), elige <em>"Gestionar tu cuenta de Google"</em>, ve a la pestaña <strong>Seguridad</strong> y baja hasta <em>"Contraseña"</em>. Usa una contraseña robusta.</li>
+      <li><strong>Entrar a Classroom:</strong> Pulsa en el "waffle" (el icono de los 9 puntitos arriba a la derecha en Google) y busca el icono verde de la pizarra (Classroom).</li>
+      <li><strong>Ver Tareas Pendientes:</strong> Dentro de Classroom, en el menú lateral izquierdo, pulsa en <strong>"Tareas pendientes"</strong>. Es la mejor forma de ver todo lo que tienes que entregar esta semana sin volverte loco mirando clase por clase.</li>
+      <li><strong>Entregar un trabajo:</strong> Cuando entres a una tarea, busca a la derecha el panel <em>"Tu trabajo"</em>. Haz clic en <strong>"+ Añadir o crear"</strong> para adjuntar tu archivo o buscarlo en Drive. Por último, ¡asegúrate de darle al botón de <strong>Entregar</strong>!
+        <div style="text-align: center; margin: 20px 0;">
+          <img src="assets/classroom_trabajo.png" alt="Botón Añadir o Crear en Classroom" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        </div>
+      </li>
+    </ol>
+
+    <h2>5. El Correo Electrónico (Email)</h2>
+    <p>Saber enviar un email correctamente es una habilidad profesional básica. Olvídate de escribir como si fuera un WhatsApp.</p>
+    <div class="info-box">
+      <ul>
+        <li>👤 <strong>Para:</strong> El email principal de la persona a la que le escribes.</li>
+        <li>👥 <strong>CC (Con Copia):</strong> Pones los emails de las personas que quieres que estén informadas de lo que estás enviando, aunque el correo no vaya directamente para ellos. Todos ven quién está en copia.</li>
+        <li>🕵️ <strong>CCO (Con Copia Oculta):</strong> Igual que el CC, pero <strong>nadie sabrá que se lo has enviado a esa persona</strong>. Muy útil para envíos masivos protegiendo la privacidad de los contactos.</li>
+        <li>🏷️ <strong>Asunto:</strong> Es el <strong>título</strong> del correo. Debe ser corto y claro (ej: <em>"Entrega Trabajo de Historia - Carlos García"</em>). ¡Nunca escribas todo el mensaje en el asunto!</li>
+        <li>📝 <strong>Cuerpo:</strong> El texto del mensaje. Siempre debe llevar un saludo (<em>"Buenos días,"</em>), el desarrollo del mensaje, y una despedida formal (<em>"Un saludo."</em>).</li>
+        <li>📎 <strong>Adjunto (Clip):</strong> Sirve para enviar ficheros (fotos, PDFs, Words) junto con el texto. Si le das a enviar sin adjuntarlo... ¡te tocará mandar otro email pidiendo perdón!</li>
+      </ul>
+    </div>
+    <div style="text-align: center; margin: 30px 0;">
+      <img src="assets/email_esquema.png" alt="Partes de un correo electrónico" style="width: 100%; max-width: 1000px; height: auto; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    </div>
+
+    <h2>6. Identidad Digital y Huella Digital</h2>
+
+
     <p>Cada vez que buscas en Google, subes una foto a Instagram o das un "Me gusta" en TikTok, estás dejando un rastro. A ese rastro se le llama <strong>Huella Digital</strong>.</p>
     <ul>
       <li><strong>Identidad Digital:</strong> Es cómo te ven los demás en Internet basándose en lo que publicas o dicen de ti.</li>
@@ -46,7 +129,8 @@
       <strong>Regla de Oro:</strong> Antes de enviar o publicar algo (una foto, un comentario), pregúntate: ¿Me importaría que lo viera mi profesor o mi abuela? Si la respuesta es sí, ¡no lo publiques!
     </div>
 
-    <h2>4. Ergonomía</h2>
+    <h2>7. Ergonomía</h2>
+
     <p>Pasar muchas horas frente al ordenador puede causar dolores de espalda, cuello y muñecas. La ergonomía es la ciencia que estudia cómo adaptar el entorno de trabajo para evitar lesiones.</p>
     <ul>
       <li><strong>Pantalla:</strong> A la altura de los ojos y a una distancia de un brazo.</li>
@@ -55,10 +139,17 @@
       <li><strong>Regla 20-20-20:</strong> Cada 20 minutos, mira un objeto a 20 pies (6 metros) de distancia durante 20 segundos para descansar la vista.</li>
     </ul>
 
-    <div class="nav-buttons">
-      <a href="../index.html" class="btn btn-outline">← Volver al Dashboard</a>
+    <div class="test-cta" style="margin-top: 40px; padding: 20px; background: var(--surface-2, #f5f5f5); border-radius: 8px; border-left: 5px solid var(--primary, #3498db); text-align: center;">
+      <h3 style="margin-top: 0;">🎯 ¿Has terminado de repasar?</h3>
+      <p>Es hora de poner a prueba tus conocimientos. Ve a tu panel de alumno y busca el test de este bloque (si tu profesor lo ha activado).</p>
+      <a href="test.html?topic=block1" class="btn btn-primary" style="margin-top: 10px; text-decoration: none; font-weight: bold;">📝 Realizar Test del Bloque</a>
+    </div>
+
+    <div class="nav-buttons" style="margin-top: 30px;">
+      <a href="../dashboard_student.html" class="btn btn-outline">← Volver al Dashboard</a>
       <a href="block2.html" class="btn btn-primary">Siguiente Bloque →</a>
     </div>
   </div>
+  <script src="../js/presentation.js"></script>
 </body>
 </html>

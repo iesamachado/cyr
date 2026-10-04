@@ -364,3 +364,6 @@ export const CYR_EVALUATION_DATA = {
     { crit: '6.4', text: 'Estrategias de ciberseguridad que garantizan protección a usuarios.', block: 'I. Ciberseguridad', current: 'RompeCódigos', prop: 'NetDefender' }
   ]
 };
+
+// Re-exportar config de XP por juego (definida en gamification.js)
+export { GAME_XP_CONFIG } from './gamification.js';

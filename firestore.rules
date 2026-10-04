@@ -113,6 +113,36 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
+    // ── Banco de Preguntas Test ──
+    match /preguntas/{preguntaId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+
+    // ── Exámenes Test ──
+    match /examenes_test/{examenId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isTeacher();
+      allow delete: if isTeacher();
+    }
+
+    // ── Respuestas de Exámenes ──
+    match /test_teoria_respuestas/{docId} {
+      allow read: if isTeacher();
+      allow create: if isAuthenticated();
+      allow update, delete: if isTeacher();
+    }
+
+    match /respuestas_test/{respuestaId} {
+      allow read: if isTeacher() || 
+        (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && 
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isTeacher() || 
+        (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow delete: if isTeacher();
+    }
+
     // ── Configuración global del sitio ──
     match /settings/{settingId} {
       allow read: if isAuthenticated();
