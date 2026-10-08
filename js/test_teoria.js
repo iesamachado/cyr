@@ -243,10 +243,41 @@ async function processSubmission(forcedFail = false) {
   if (currentProfile.role === 'student' && !forcedFail) {
     try {
       // 1. XP (Experiencia)
-      let xpEarned = 20; // 20 XP base por completarlo
-      if (finalScore >= 5) xpEarned += 30; // +30 XP por aprobar
-      if (finalScore >= 9) xpEarned += 50; // +50 XP por sobresaliente
+      let xpEarned = 0;
       
+      const attemptsQuery = query(
+        collection(db, 'test_teoria_respuestas'),
+        where('uid', '==', currentUser.uid),
+        where('topicId', '==', currentTopicId)
+      );
+      const attemptsSnapshot = await getDocs(attemptsQuery);
+      
+      if (finalScore < 3) {
+        xpEarned = 0;
+      } else {
+        if (attemptsSnapshot.empty) {
+          xpEarned = 5;
+          if (finalScore >= 5) xpEarned += 5;
+          if (finalScore > 9) xpEarned += 5;
+        } else {
+          xpEarned = 2; // repetición
+          let hasPassed = false;
+          let hasOutstanding = false;
+          attemptsSnapshot.forEach(docSnap => {
+             let data = docSnap.data();
+             if (data.score >= 5) hasPassed = true;
+             if (data.score > 9) hasOutstanding = true;
+          });
+
+          if (finalScore >= 5) {
+            xpEarned += hasPassed ? 1 : 5;
+          }
+          if (finalScore > 9) {
+            xpEarned += hasOutstanding ? 1 : 5;
+          }
+        }
+      }
+
       await addXPAndCheckLogros(currentUser.uid, xpEarned);
 
       // 2. Medallas

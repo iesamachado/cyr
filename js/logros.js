@@ -1,7 +1,7 @@
 import { requireAuth } from './common/auth.js';
 import { renderHeader, showToast } from './common/ui.js';
 import { $, escapeHtml } from './common/utils.js';
-import { getLeague, MEDALS_CATALOG, LEAGUES, GUILDS_CATALOG } from './common/gamification.js';
+import { getLeague, MEDALS_CATALOG, MEDAL_XP, LEAGUES, GUILDS_CATALOG } from './common/gamification.js';
 import { getStudentClasses, getClassMembers } from './common/db.js';
 import { db, doc, updateDoc, deleteField } from './common/firebase-config.js';
 
@@ -35,6 +35,220 @@ requireAuth({
 
   // Render medallas
   renderMedals(userLogros);
+
+  // Modal de Detalle de XP
+  const btnXpDetail = $('btn-xp-detail');
+  const modalXpDetail = $('modal-xp-detail');
+  if (btnXpDetail && modalXpDetail) {
+    $('close-xp-modal').addEventListener('click', () => modalXpDetail.classList.remove('modal-backdrop--visible'));
+    modalXpDetail.addEventListener('click', e => { if (e.target === modalXpDetail) modalXpDetail.classList.remove('modal-backdrop--visible'); });
+    
+    btnXpDetail.addEventListener('click', async () => {
+      modalXpDetail.classList.add('modal-backdrop--visible');
+      const body = $('xp-modal-body');
+      body.innerHTML = '<div style="padding:32px; text-align:center;"><div class="spinner"></div> Calculando tu XP y cargando historial...</div>';
+      
+      try {
+        const { computeGameXP } = await import('./common/gamification.js');
+        const { getDocs, getDoc, doc, query, collection, where } = await import('./common/firebase-config.js');
+        const { CLASSROOM_TASKS } = await import('./common/tasks.js');
+        const { GAMES } = await import('./common/utils.js');
+        const GAME_NAMES = Object.fromEntries(Object.values(GAMES).map(g => [g.id, `${g.icon} ${g.name}`]));
+        
+        const studentId = user.uid;
+        let timeline = [];
+        
+        // 1. Juegos
+        const snapGames = await getDocs(query(collection(db, 'game_results'), where('studentId', '==', studentId)));
+        const games = snapGames.docs.map(d => ({ id: d.id, ...d.data() }));
+        games.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+        
+        const userGamesCount = {};
+        const userMaxScores = {};
+        const userTotalXP = {};
+        games.forEach(r => {
+          const gid = r.gameId;
+          if (!userGamesCount[gid]) {
+            userGamesCount[gid] = 0;
+            userMaxScores[gid] = 0;
+            userTotalXP[gid] = 0;
+          }
+          userGamesCount[gid]++;
+          const nPartidas = userGamesCount[gid];
+          
+          const previousMaxScore = nPartidas > 1 ? userMaxScores[gid] : 0;
+          
+          let xp = computeGameXP(gid, r.score, nPartidas, previousMaxScore);
+          
+          if (userTotalXP[gid] + xp > 750) {
+             xp = Math.max(0, 750 - userTotalXP[gid]);
+          }
+          userTotalXP[gid] += xp;
+          
+          if (r.score > userMaxScores[gid]) {
+            userMaxScores[gid] = r.score;
+          }
+          
+          timeline.push({
+            type: 'game',
+            title: GAME_NAMES[gid] || gid,
+            scoreInfo: `Puntos: ${r.score}`,
+            metadata: r.metadata,
+            xp: xp,
+            timestamp: r.timestamp?.toDate ? r.timestamp.toDate() : new Date(0)
+          });
+        });
+        
+        // 2. Tests de Repaso
+        const snapTests = await getDocs(query(collection(db, 'test_teoria_respuestas'), where('uid', '==', studentId)));
+        const tests = snapTests.docs.map(d => d.data());
+        tests.sort((a, b) => (a.fecha?.seconds || 0) - (b.fecha?.seconds || 0));
+        
+        const userTestsState = {};
+        tests.forEach(r => {
+          const topicId = r.topicId;
+          const score = r.score;
+          if (!userTestsState[topicId]) userTestsState[topicId] = { passed: false, outstanding: false, count: 0 };
+          const state = userTestsState[topicId];
+          let xp = 0;
+          if (score < 3) {
+             xp = 0;
+          } else {
+            if (state.count === 0) {
+               xp = 5 + (score >= 5 ? 5 : 0) + (score > 9 ? 5 : 0);
+            } else {
+               xp = 2 + (score >= 5 ? (state.passed ? 1 : 5) : 0) + (score > 9 ? (state.outstanding ? 1 : 5) : 0);
+            }
+          }
+          if (score >= 5) state.passed = true;
+          if (score > 9) state.outstanding = true;
+          state.count++;
+          
+          timeline.push({
+            type: 'test',
+            title: `📝 Test Repaso (${topicId})`,
+            scoreInfo: `Nota: ${score}/10`,
+            metadata: null,
+            xp: xp,
+            timestamp: r.fecha?.toDate ? r.fecha.toDate() : new Date(0)
+          });
+        });
+        
+        // 3. Exámenes
+        const snapExams = await getDocs(query(collection(db, 'respuestas_test'), where('uid', '==', studentId)));
+        snapExams.forEach(d => {
+          const r = d.data();
+          if (!r.calculado || r.calculado.nota === undefined) return;
+          const nota = r.calculado.nota;
+          let xp = 5 + (nota >= 5 ? 5 : 0) + (nota > 9 ? 5 : 0);
+          
+          timeline.push({
+            type: 'exam',
+            title: `📄 Examen Final`,
+            scoreInfo: `Nota: ${nota.toFixed(2)}/10`,
+            metadata: null,
+            xp: xp,
+            timestamp: r.fecha?.toDate ? r.fecha.toDate() : new Date(0)
+          });
+        });
+        
+        // 4. Tareas Offline
+        const snapOffline = await getDocs(query(collection(db, 'offline_grades'), where('studentId', '==', studentId)));
+        snapOffline.forEach(d => {
+          const r = d.data();
+          if (r.finalGrade === undefined) return;
+          let xp = Math.round(r.finalGrade * 15);
+          const taskObj = CLASSROOM_TASKS.find(t => t.id === r.taskId);
+          const taskName = taskObj ? taskObj.title : r.taskId;
+          
+          timeline.push({
+            type: 'offline',
+            title: `📁 Tarea: ${taskName}`,
+            scoreInfo: `Nota: ${r.finalGrade}/10`,
+            metadata: null,
+            xp: xp,
+            timestamp: r.updatedAt?.toDate ? r.updatedAt.toDate() : new Date(0)
+          });
+        });
+        
+
+        // 5. Medallas Obtenidas
+        const userSnap = await getDoc(doc(db, 'users', studentId));
+        const userLogros = userSnap.data()?.logros || [];
+        
+        // Mapeo de XP para las medallas conocidas
+        const MEDAL_XP = {
+            netdefender_300: 50, guardian_red: 100, netdefender_700: 150, netdefender_1000: 200,
+            mecanoclass_20: 20, mecanografo: 50, mecanoclass_60: 100, velocista: 120, mecanoclass_100: 250,
+            rompecodigos_200: 50, rompecodigos_500: 100, criptologo: 150, rompecodigos_1200: 200,
+            helados_1000: 100, helados_1500: 150, helados_2000: 200, helados_2500: 250, helados_3000: 300, helados_35000: 1000,
+            moon_3: 50, explorador_lunar: 100, moon_10: 150, moon_15: 200,
+            arenabots_50: 50, arenabots_100: 100, arenabots_150: 150, arquitecto_bot: 250,
+            cybersmith_100: 50, cybersmith_250: 100, ingeniero: 150, cybersmith_600: 200,
+            asimov_20: 30, asimov_50: 60, leyes_robotica: 100, asimov_100: 150,
+            appflow_50: 50, appflow_100: 100, unicornio: 150, appflow_300: 200,
+            trivial_30: 30, trivial_60: 60, sabiondo: 100,
+            madrugador: 10, finde: 10, constancia: 10 // Assuming 10 XP for global time medals if any, usually 0 in code but just in case
+        };
+        
+        userLogros.forEach(medal => {
+            const extraXP = MEDAL_XP[medal.id] || 0;
+            timeline.push({
+                type: 'medal',
+                title: `🏅 Medalla: ${medal.icon} ${medal.name}`,
+                scoreInfo: medal.desc,
+                metadata: null,
+                xp: extraXP,
+                timestamp: medal.fecha ? new Date(medal.fecha) : new Date(0)
+            });
+        });
+        timeline.sort((a, b) => b.timestamp - a.timestamp);
+        
+        const rows = timeline.length === 0
+          ? '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:16px;">Sin actividad registrada.</td></tr>'
+          : timeline.map(r => {
+              const dateStr = r.timestamp.getTime() > 0 ? r.timestamp.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+              let detail = r.scoreInfo;
+              if (r.type === 'game' && r.metadata) {
+                const wpm = r.metadata.wpm ?? '—';
+                const acc = r.metadata.accuracy != null ? r.metadata.accuracy + '%' : '—';
+                if (wpm !== '—') detail += ` <small style="color:var(--text-muted)">(${wpm} PPM / ${acc})</small>`;
+              }
+
+              let xpBadge = '';
+              if (r.type === 'medal') {
+                  xpBadge = `<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.8rem; font-weight:bold; background:var(--warning-light); color:var(--warning); border: 1px solid var(--warning);">+${r.xp} XP</span>`;
+              } else {
+                  xpBadge = `<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.8rem; font-weight:bold; background:var(--primary-light); color:var(--primary);">+${r.xp} XP</span>`;
+              }
+              if (r.xp === 0) xpBadge = `<span style="color:var(--text-muted); font-size:0.85rem;">0 XP</span>`;
+              
+              return `<tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:10px 12px; font-weight:500;">${escapeHtml(r.title)}</td>
+                <td style="padding:10px 12px;">${detail}</td>
+                <td style="padding:10px 12px; text-align:center;">${xpBadge}</td>
+                <td style="padding:10px 12px; color:var(--text-muted); font-size:0.85rem;">${dateStr}</td>
+              </tr>`;
+            }).join('');
+            
+        body.innerHTML = `
+          <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border); background:var(--surface-2); position:sticky; top:0; z-index:10;">
+                <th style="padding:10px 12px; text-align:left;">Actividad</th>
+                <th style="padding:10px 12px; text-align:left;">Resultado</th>
+                <th style="padding:10px 12px; text-align:center;">XP Ganada</th>
+                <th style="padding:10px 12px; text-align:left;">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      } catch(e) {
+        console.error(e);
+        body.innerHTML = `<div style="padding:24px; text-align:center; color:var(--error);">⚠️ Error al cargar el detalle: ${escapeHtml(e.message)}</div>`;
+      }
+    });
+  }
   }
 });
 
@@ -342,7 +556,7 @@ function renderMedals(userLogros) {
       <div class="card ${isUnlocked ? 'unlocked' : ''}" style="padding:var(--space-3); display:flex; gap:var(--space-3); align-items:center; opacity: ${isUnlocked ? 1 : 0.6}; filter: ${isUnlocked ? 'none' : 'grayscale(100%)'}; transition:all 0.3s; background:${isUnlocked ? 'var(--warning-subtle)' : 'var(--bg-surface)'}; border:2px solid ${isUnlocked ? 'var(--warning)' : 'var(--border)'};">
         <div style="font-size:2.5rem; flex-shrink:0;">${icon}</div>
         <div>
-          <h4 style="margin:0 0 5px 0; font-size:1rem; color:${isUnlocked ? 'var(--text-primary)' : 'var(--text-muted)'};">${escapeHtml(name)}</h4>
+          <h4 style="margin:0 0 5px 0; font-size:1rem; color:${isUnlocked ? 'var(--text-primary)' : 'var(--text-muted)'};">${escapeHtml(name)}</h4>\n          ${MEDAL_XP[m.id] ? `<div style="font-weight:bold; color:var(--warning); margin:4px 0; font-size:0.85rem; background:rgba(243,156,18,0.1); border-radius:4px; padding:2px 4px; display:inline-block;">+${MEDAL_XP[m.id]} XP</div>` : ``}
           <p style="margin:0; font-size:0.85rem; color:var(--text-muted); line-height:1.3;">${escapeHtml(desc)}</p>
           ${isUnlocked ? `<div style="margin-top:5px; font-size:0.75rem; color:var(--success); font-weight:bold;">✓ Desbloqueado</div>` : ''}
         </div>

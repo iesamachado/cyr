@@ -42,7 +42,8 @@
       <div class="class-tabs animate-fade-up delay-1">
         <button class="tab-btn tab-btn--active" data-tab="games">📚 Temario y Juegos</button>
         <button class="tab-btn" data-tab="students">👨‍🎓 Alumnos</button>
-        <button class="tab-btn" data-tab="assignments">📋 Tareas</button>
+        <button class="tab-btn" data-tab="assignments">☁️ Classroom</button>
+        <button class="tab-btn" data-tab="offline_tasks">📝 Tareas Offline</button>
         <button class="tab-btn" data-tab="results">📊 Resultados</button>
         <button class="tab-btn" data-tab="guilds">🛡️ Gremios</button>
         <button class="tab-btn" data-tab="exams">📝 Exámenes</button>
@@ -131,6 +132,26 @@
         </div>
       </section>
 
+      <!-- TAB: TAREAS OFFLINE -->
+      <section id="tab-offline_tasks" class="tab-content" style="display:none">
+        <div class="card">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-3);">
+            <div>
+              <h2 class="card-title">Tareas y Rúbricas Offline</h2>
+              <p class="section-desc">Gestiona las tareas offline de clase, evalúa con rúbricas y exporta las notas.</p>
+            </div>
+            <button class="btn btn-outline btn--sm" id="btn-export-seneca" style="display:flex; align-items:center; gap:5px;">
+              <span>⬇️</span> Exportar a Séneca (CSV)
+            </button>
+          </div>
+          
+          <div id="offline-tasks-container" style="margin-top:var(--space-4);">
+            <div class="skeleton" style="height:100px; margin-bottom:10px;"></div>
+            <div class="skeleton" style="height:100px;"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- TAB: RESULTADOS -->
       <section id="tab-results" class="tab-content" style="display:none">
         <div class="results-filter" id="results-filter">
@@ -159,9 +180,12 @@
 
       <!-- TAB: GREMIOS -->
       <section id="tab-guilds" class="tab-content" style="display:none;">
-        <div class="section-header">
-          <h2 class="section-title">Ranking de Gremios</h2>
-          <p class="section-desc">Puntuación acumulada de los miembros del gremio en esta clase.</p>
+        <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 class="section-title">Ranking de Gremios</h2>
+            <p class="section-desc">Puntuación acumulada de los miembros del gremio en esta clase.</p>
+          </div>
+          <a href="ayuda_gamificacion.html" class="btn btn-outline btn--sm" target="_blank">ℹ️ Info Gamificación</a>
         </div>
         <div id="guilds-ranking-list" style="display:flex; flex-direction:column; gap:var(--space-4);">
           <div class="text-center text-muted" style="padding:40px;">Calculando ranking...</div>
@@ -398,5 +422,53 @@
     </div>
   </div>
 
+  <!-- Modal Evaluación Rúbrica -->
+  <div id="modal-rubric" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal-box" style="max-width: 800px; width: 95%;">
+      <div class="modal-header">
+        <h3>Evaluando: <span id="rubric-student-name"></span></h3>
+        <button class="modal-close" id="btn-close-rubric">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4 id="rubric-task-title" style="margin-bottom:15px; color:var(--primary);"></h4>
+        <div id="rubric-criteria-container"></div>
+        <div style="margin-top:20px;">
+          <label class="form-label">Comentarios (Feedback para el alumno):</label>
+          <textarea id="rubric-feedback" class="form-input" rows="3" style="width:100%; resize:vertical;"></textarea>
+        </div>
+        <div style="margin-top:20px; text-align:right;">
+          <span style="font-size:1.2rem; font-weight:bold; margin-right:15px;">Nota: <span id="rubric-final-grade">0.00</span> / 10</span>
+          <button class="btn btn-primary" id="btn-save-rubric">Guardar Calificación</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Task -->
+  <div id="modal-edit-task" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal-box" style="max-width: 600px; width: 95%;">
+      <div class="modal-header">
+        <h3>Personalizar Tarea</h3>
+        <button class="modal-close" id="btn-close-edit-task">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-edit-task">
+          <input type="hidden" id="edit-task-id">
+          <div class="form-group">
+            <label class="form-label">Título de la Tarea</label>
+            <input type="text" id="edit-task-title" class="form-input" required>
+          </div>
+          <div class="form-group" style="margin-top:15px;">
+            <label class="form-label">Descripción</label>
+            <textarea id="edit-task-desc" class="form-input" rows="8" style="width:100%; resize:vertical;" required></textarea>
+          </div>
+          <div class="modal-footer" style="padding:0; margin-top:20px; border:none;">
+            <button type="button" class="btn btn-ghost" id="btn-cancel-edit-task">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

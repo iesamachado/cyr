@@ -55,6 +55,21 @@ export const LEAGUES = [
 ];
 
 // --- MEDALLAS ---
+
+export const MEDAL_XP = {
+    netdefender_300: 50, guardian_red: 100, netdefender_700: 150, netdefender_1000: 200,
+    mecanoclass_20: 20, mecanografo: 50, mecanoclass_60: 100, velocista: 120, mecanoclass_100: 250,
+    rompecodigos_200: 50, rompecodigos_500: 100, criptologo: 150, rompecodigos_1200: 200,
+    helados_1000: 100, helados_1500: 150, helados_2000: 200, helados_2500: 250, helados_3000: 300, helados_35000: 1000,
+    moon_3: 50, explorador_lunar: 100, moon_10: 150, moon_15: 200,
+    arenabots_50: 50, arenabots_100: 100, arenabots_150: 150, arquitecto_bot: 250,
+    cybersmith_100: 50, cybersmith_250: 100, ingeniero: 150, cybersmith_600: 200,
+    asimov_20: 30, asimov_50: 60, leyes_robotica: 100, asimov_100: 150,
+    appflow_50: 50, appflow_100: 100, unicornio: 150, appflow_300: 200,
+    trivial_30: 30, trivial_60: 60, sabiondo: 100,
+    madrugador: 10, finde: 10, constancia: 10
+};
+
 export const MEDALS_CATALOG = [
   // Progresión
   { id: 'primer_circuito',     name: 'Primer Circuito',        desc: 'Completa tu primera partida a cualquier juego.',                   icon: '🔌', public: true },
@@ -65,30 +80,68 @@ export const MEDALS_CATALOG = [
   { id: 'cibernauta',         name: 'Cibernauta',              desc: 'Alcanza los 30.000 Puntos de Experiencia.',                        icon: '🚀', public: true },
   // NetDefender
   { id: 'defensor',           name: 'Defensor',                desc: 'Consigue tu primera puntuación en NetDefender.',                   icon: '🛡️', public: true },
+  { id: 'netdefender_300',    name: 'Cortafuegos Activo',      desc: 'Supera los 300 pts en NetDefender.',                               icon: '🔥', public: true },
   { id: 'guardian_red',       name: 'Guardián de la Red',      desc: 'Supera los 500 pts en NetDefender.',                               icon: '🌐', public: true },
-  { id: 'parachoques',        name: 'Parachoques',             desc: 'Llega al nivel 5 en NetDefender.',                                 icon: '💪', public: true },
+  { id: 'netdefender_700',    name: 'SysAdmin',                desc: 'Supera los 700 pts en NetDefender.',                               icon: '🖥️', public: true },
+  { id: 'netdefender_1000',   name: 'Dios de la Red',          desc: 'Supera los 1000 pts en NetDefender.',                              icon: '⚡', public: true },
   // MecanoClass
-  { id: 'mecanografo',        name: 'Mecanógrafo',             desc: 'Supera las 40 PPM en MecanoClass.',                                icon: '⌨️', public: true },
+  { id: 'tecleador',          name: 'Tecleador',               desc: 'Juega tu primera partida de MecanoClass.',                         icon: '📝', public: true },
+  { id: 'mecanoclass_20',     name: 'Pulsador',                desc: 'Supera las 20 PPM en MecanoClass.',                                icon: '⌨️', public: true },
+  { id: 'mecanografo',        name: 'Mecanógrafo',             desc: 'Supera las 40 PPM en MecanoClass.',                                icon: '📝', public: true },
+  { id: 'mecanoclass_60',     name: 'Dedos Ágiles',            desc: 'Supera las 60 PPM en MecanoClass.',                                icon: '🏃', public: true },
   { id: 'velocista',          name: 'Velocista',               desc: 'Supera las 70 PPM en MecanoClass.',                                icon: '⚡', public: true },
+  { id: 'mecanoclass_100',    name: 'Piano Hacker',            desc: 'Supera las 100 PPM en MecanoClass.',                               icon: '🎹', public: true },
   // RompeCódigos
   { id: 'descifrador',        name: 'Descifrador',             desc: 'Completa RompeCódigos por primera vez.',                           icon: '🔐', public: true },
+  { id: 'rompecodigos_200',   name: 'Espía Novato',            desc: 'Supera los 200 pts en RompeCódigos.',                              icon: '🕵️', public: true },
+  { id: 'rompecodigos_500',   name: 'Analista de Datos',       desc: 'Supera los 500 pts en RompeCódigos.',                              icon: '📊', public: true },
   { id: 'criptologo',         name: 'Criptólogo',              desc: 'Supera los 800 pts en RompeCódigos.',                              icon: '🔑', public: true },
+  { id: 'rompecodigos_1200',  name: 'Enigma Master',           desc: 'Supera los 1200 pts en RompeCódigos.',                             icon: '🧠', public: true },
   // H3L4D0S
   { id: 'heladero',           name: 'Heladero',                desc: 'Completa el primer nivel de H3L4D0S.',                             icon: '🍦', public: true },
   { id: 'programador_bloques',name: 'Programador en Bloques',  desc: 'Supera los 200 pts en H3L4D0S.',                                   icon: '🧩', public: true },
+  { id: 'helados_500',        name: 'Heladero Bronce',         desc: 'Consigue más de 500 pts en H3L4D0S.',                              icon: '🥉', public: true },
+  { id: 'helados_1000',       name: 'Heladero Plata',          desc: 'Consigue más de 1000 pts en H3L4D0S.',                             icon: '🥈', public: true },
+  { id: 'helados_1500',       name: 'Heladero Oro',            desc: 'Consigue más de 1500 pts en H3L4D0S.',                             icon: '🥇', public: true },
+  { id: 'helados_2000',       name: 'Heladero Platino',        desc: 'Consigue más de 2000 pts en H3L4D0S.',                             icon: '⭐', public: true },
+  { id: 'helados_2500',       name: 'Heladero Diamante',       desc: 'Consigue más de 2500 pts en H3L4D0S.',                             icon: '💎', public: true },
+  { id: 'helados_3000',       name: 'Leyenda Heladera',        desc: 'Consigue más de 3000 pts en H3L4D0S.',                             icon: '👑', public: true },
+  { id: 'helados_35000',      name: 'Dios de los Helados',     desc: 'Consigue más de 35000 pts en H3L4D0S.',                            icon: '🌟', public: true },
   // MOON
-  { id: 'astronauta',         name: 'Astronauta',              desc: 'Completa MOON.',                                                    icon: '🌙', public: true },
-  { id: 'explorador_lunar',   name: 'Explorador Lunar',        desc: 'Llega al nivel 5 en MOON.',                                         icon: '🌑', public: true },
+  { id: 'astronauta',         name: 'Astronauta',              desc: 'Completa MOON.',                                                   icon: '🌙', public: true },
+  { id: 'moon_3',             name: 'Cadete Espacial',         desc: 'Llega al nivel 3 en MOON.',                                        icon: '🚀', public: true },
+  { id: 'explorador_lunar',   name: 'Explorador Lunar',        desc: 'Llega al nivel 5 en MOON.',                                        icon: '🌑', public: true },
+  { id: 'moon_10',            name: 'Comandante',              desc: 'Llega al nivel 10 en MOON.',                                       icon: '👨‍🚀', public: true },
+  { id: 'moon_15',            name: 'Conquistador Galáctico',  desc: 'Llega al nivel 15 en MOON.',                                       icon: '🌌', public: true },
   // ArenaBots
-  { id: 'robotizador',        name: 'Robotizador',             desc: 'Completa tu primera partida en ArenaBots.',                         icon: '🤖', public: true },
-  { id: 'arquitecto_bot',     name: 'Arquitecto de Robots',    desc: 'Gana 3 partidas en ArenaBots.',                                     icon: '🏆', public: true },
+  { id: 'robotizador',        name: 'Robotizador',             desc: 'Completa tu primera partida en ArenaBots.',                        icon: '🤖', public: true },
+  { id: 'arenabots_50',       name: 'Tuerca Floja',            desc: 'Consigue 50 pts en ArenaBots.',                                    icon: '🔧', public: true },
+  { id: 'arenabots_100',      name: 'Soldador',                desc: 'Consigue 100 pts en ArenaBots.',                                   icon: '🔥', public: true },
+  { id: 'arenabots_150',      name: 'Ingeniero de Combate',    desc: 'Consigue 150 pts en ArenaBots.',                                   icon: '⚔️', public: true },
+  { id: 'arquitecto_bot',     name: 'Arquitecto de Robots',    desc: 'Consigue 250 pts en ArenaBots.',                                   icon: '🏆', public: true },
   // CyberSmith
-  { id: 'smith',              name: 'CyberSmith',              desc: 'Monta tu primer PC en CyberSmith.',                                 icon: '🛠️', public: true },
-  { id: 'ingeniero',          name: 'Ingeniero',               desc: 'Completa CyberSmith con puntuación alta.',                          icon: '⚙️', public: true },
+  { id: 'smith',              name: 'CyberSmith',              desc: 'Monta tu primer PC en CyberSmith.',                                icon: '🛠️', public: true },
+  { id: 'cybersmith_100',     name: 'Ensamblador',             desc: 'Consigue 100 pts en CyberSmith.',                                  icon: '🪛', public: true },
+  { id: 'cybersmith_250',     name: 'Técnico de Hardware',     desc: 'Consigue 250 pts en CyberSmith.',                                  icon: '💻', public: true },
+  { id: 'ingeniero',          name: 'Ingeniero',               desc: 'Consigue 400 pts en CyberSmith.',                                  icon: '⚙️', public: true },
+  { id: 'cybersmith_600',     name: 'Overclocker',             desc: 'Consigue 600 pts en CyberSmith.',                                  icon: '🚀', public: true },
   // Asimov.IO
-  { id: 'etico_ia',           name: 'Ético de la IA',          desc: 'Completa Asimov.IO.',                                               icon: '⚖️', public: true },
+  { id: 'etico_ia',           name: 'Ético de la IA',          desc: 'Completa Asimov.IO por primera vez.',                              icon: '⚖️', public: true },
+  { id: 'asimov_20',          name: 'Aprendiz de Asimov',      desc: 'Consigue 20 pts en Asimov.IO.',                                    icon: '📖', public: true },
+  { id: 'asimov_50',          name: 'Filósofo Sintético',      desc: 'Consigue 50 pts en Asimov.IO.',                                    icon: '🧠', public: true },
+  { id: 'leyes_robotica',     name: 'Leyes de la Robótica',    desc: 'Consigue 80 pts en Asimov.IO.',                                    icon: '📜', public: true },
+  { id: 'asimov_100',         name: 'Cerebro Positrónico',     desc: 'Consigue 100 pts en Asimov.IO.',                                   icon: '🤖', public: true },
   // AppFlow
-  { id: 'dev_app',            name: 'Dev de Apps',             desc: 'Completa AppFlow.',                                                 icon: '📱', public: true },
+  { id: 'dev_app',            name: 'Dev de Apps',             desc: 'Completa AppFlow por primera vez.',                                icon: '📱', public: true },
+  { id: 'appflow_50',         name: 'Programador Junior',      desc: 'Consigue 50 pts en AppFlow.',                                      icon: '💻', public: true },
+  { id: 'appflow_100',        name: 'Desarrollador Senior',    desc: 'Consigue 100 pts en AppFlow.',                                     icon: '🚀', public: true },
+  { id: 'unicornio',          name: 'Unicornio',               desc: 'Consigue 200 pts en AppFlow.',                                     icon: '🦄', public: true },
+  { id: 'appflow_300',        name: 'Tech Lead',               desc: 'Consigue 300 pts en AppFlow.',                                     icon: '👑', public: true },
+  // Trivial
+  { id: 'preguntador',        name: 'Curioso',                 desc: 'Juega tu primera partida de Trivial.',                             icon: '❓', public: true },
+  { id: 'trivial_30',         name: 'Estudiante Aplicado',     desc: 'Consigue 30 pts en Trivial.',                                      icon: '📚', public: true },
+  { id: 'trivial_60',         name: 'Rata de Biblioteca',      desc: 'Consigue 60 pts en Trivial.',                                      icon: '🐀', public: true },
+  { id: 'sabiondo',           name: 'Sabiondo',                desc: 'Consigue 100 pts en Trivial.',                                     icon: '🧠', public: true },
   // Exámenes
   { id: 'primer_examen',      name: 'Primer Examen',           desc: 'Entrega tu primer examen tipo test.',                               icon: '📝', public: true },
   { id: 'maestro_teoria',     name: 'Maestro de la Teoría',    desc: 'Saca un 10 absoluto en un examen.',                                 icon: '💯', public: true },
@@ -138,24 +191,37 @@ export function getLeague(points) {
 }
 
 /**
- * Calcula los XP a otorgar por una partida usando fórmula no lineal:
- * xp = base × √(score / maxRef) × bonusPartidas
- * bonusPartidas = 1 + 0.15 × log2(1 + nPartidas)
- * Mínimo garantizado: 10 XP si score > 0
+ * Calcula los XP a otorgar por una partida.
+ * No lineal: base por jugar, logarítmico para puntuación, reduce logarítmicamente por repetición
  */
-export function computeGameXP(gameId, score, nPartidas = 1) {
-  if (!score || score <= 0) return 0;
+export function computeGameXP(gameId, score, nPartidas = 1, previousMaxScore = 0) {
+  if (!score || score <= 0) return 5; // Mínimo 5 por jugar
   const cfg = GAME_XP_CONFIG[gameId];
   if (!cfg) return Math.min(10, Math.round(score * 0.1));
 
-  const ratio = Math.min(1, score / cfg.maxRef);
-  const base = cfg.base * Math.sqrt(ratio);
-  
-  // Rendimientos decrecientes: cada intento consecutivo da menos XP (100%, 75%, 56%, 42%, etc.)
-  // Evita que los alumnos grindee infinitamente el mismo juego para inflar puntos.
-  const bonus = Math.pow(0.75, nPartidas - 1);
-  
-  return Math.max(5, Math.round(base * bonus));
+  // Base XP por jugar simplemente
+  const basePlay = 5;
+
+  const getScoreXP = (s) => {
+    const ratio = s / cfg.maxRef;
+    const scoreFactor = Math.pow(ratio, 0.65); // Curva progresiva
+    return cfg.base * scoreFactor;
+  };
+
+  if (nPartidas === 1) {
+    // Primera partida: toda la XP de golpe
+    return Math.max(1, Math.round(basePlay + getScoreXP(score)));
+  } else {
+    // Repetición
+    if (score > previousMaxScore) {
+      // Superó su récord: damos la diferencia de XP
+      const delta = getScoreXP(score) - getScoreXP(previousMaxScore);
+      return Math.max(1, Math.round(basePlay + delta));
+    } else {
+      // No superó su récord: solo XP base de repetición muy baja
+      return basePlay;
+    }
+  }
 }
 
 /**

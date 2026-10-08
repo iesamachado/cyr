@@ -86,9 +86,17 @@
       <!-- Mis Tareas -->
       <section class="animate-fade-up delay-3" aria-labelledby="assignments-title" id="section-assignments" style="display:none">
         <div class="section-header">
-          <h2 class="section-title" id="assignments-title">📋 Mis tareas</h2>
+          <h2 class="section-title" id="assignments-title">☁️ Mis tareas (Classroom)</h2>
         </div>
         <div id="student-assignments-list"></div>
+      </section>
+
+      <!-- Tareas Offline -->
+      <section class="animate-fade-up delay-3" aria-labelledby="offline-tasks-title" id="section-offline-tasks" style="display:none; margin-top:var(--space-6);">
+        <div class="section-header">
+          <h2 class="section-title" id="offline-tasks-title">📝 Tareas y Rúbricas</h2>
+        </div>
+        <div id="student-offline-tasks-list"></div>
       </section>
 
       <!-- Historial reciente -->
@@ -170,6 +178,18 @@
     </div>
   </div>
 
+  <!-- Modal: Rúbrica Alumno -->
+  <div id="modal-student-rubric" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal-box" style="max-width: 800px; width: 95%;">
+      <div class="modal-header">
+        <h3 id="student-rubric-title">Rúbrica de la Tarea</h3>
+        <button class="modal-close" id="btn-close-student-rubric">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="student-rubric-container"></div>
+      </div>
+    </div>
+  </div>
   <div id="toast-container" aria-live="polite"></div>
 
   <script type="module" src="js/dashboard_student.js"></script>

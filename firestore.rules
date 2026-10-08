@@ -143,6 +143,18 @@ service cloud.firestore {
       allow delete: if isTeacher();
     }
 
+    // ── Tareas Offline (Rúbricas y Notas) ──
+    match /offline_tasks_config/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+
+    match /offline_grades/{docId} {
+      allow read: if isTeacher() || (isAuthenticated() && resource.data.studentId == request.auth.uid);
+      allow create: if isTeacher();
+      allow update, delete: if isTeacher();
+    }
+
     // ── Configuración global del sitio ──
     match /settings/{settingId} {
       allow read: if isAuthenticated();

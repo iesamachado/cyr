@@ -238,7 +238,7 @@ async function toggleResultados() {
     for (let entrega of entregas) {
       if (entrega.puntosOtorgados) continue;
       const nota = entrega.calculado.nota;
-      let xp = 100 + (nota >= 5 ? 100 : 0) + (nota >= 9 ? 200 : 0);
+      let xp = 5 + (nota >= 5 ? 5 : 0) + (nota > 9 ? 5 : 0);
       
       await addXPAndCheckLogros(entrega.uid, xp);
       await awardMedal(entrega.uid, 'primer_examen');

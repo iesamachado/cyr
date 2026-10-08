@@ -555,23 +555,121 @@ export async function saveGameResult(gameId, studentId, classId, score, metadata
     });
     
     // ==========================================
-    // GAMIFICACIÓN: Otorgar XP
+    // GAMIFICACIÓN: Otorgar XP y Medallas
     // ==========================================
-    const { computeGameXP, addXPAndCheckLogros } = await import('./gamification.js');
+    const { computeGameXP, addXPAndCheckLogros, awardMedal } = await import('./gamification.js');
     const { getDocs, query, collection, where } = await import('./firebase-config.js');
     
     // 1. Contar partidas para el bonus
     const q = query(collection(db, 'users', studentId, 'games'), where('gameId', '==', gameId));
     const snap = await getDocs(q);
     const nPartidas = snap.size || 1;
+    
+    let previousMaxScore = 0;
+    let totalXPEarnedSoFar = 0;
+    
+    if (nPartidas > 1) {
+      const prevGames = snap.docs.filter(d => d.id !== userGameRef.id).map(d => d.data());
+      prevGames.sort((a,b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
+      
+      let runMax = 0;
+      prevGames.forEach((g, idx) => {
+          const n = idx + 1;
+          const pMax = n > 1 ? runMax : 0;
+          totalXPEarnedSoFar += computeGameXP(gameId, g.score, n, pMax);
+          if (g.score > runMax) runMax = g.score;
+      });
+      previousMaxScore = runMax;
+    }
 
     // 2. Calcular XP usando la fórmula de gamificación
-    const xp = computeGameXP(gameId, score, nPartidas);
+    let xp = computeGameXP(gameId, score, nPartidas, previousMaxScore);
+    
+    // 2.5 Tope de 750 XP base acumulada por juego
+    if (totalXPEarnedSoFar + xp > 750) {
+        xp = Math.max(0, 750 - totalXPEarnedSoFar);
+    }
 
     // 3. Otorgar XP (comprueba medallas temporales y ligas por dentro)
     if (xp > 0) {
       await addXPAndCheckLogros(studentId, xp);
     }
+    
+    // 4. Medallas por juego
+    if (nPartidas === 1) await awardMedal(studentId, 'primer_circuito');
+
+    const tryMedal = async (medalId, extraXP) => {
+       if (await awardMedal(studentId, medalId) && extraXP) {
+           await addXPAndCheckLogros(studentId, extraXP);
+       }
+    };
+
+    if (gameId === 'netdefender') {
+      if (nPartidas === 1) await tryMedal('defensor', 0);
+      if (score >= 300) await tryMedal('netdefender_300', 50);
+      if (score >= 500) await tryMedal('guardian_red', 100);
+      if (score >= 700) await tryMedal('netdefender_700', 150);
+      if (score >= 1000) await tryMedal('netdefender_1000', 200);
+    } else if (gameId === 'mecanoclass') {
+      if (nPartidas === 1) await tryMedal('tecleador', 0);
+      if (score >= 20) await tryMedal('mecanoclass_20', 20);
+      if (score >= 40) await tryMedal('mecanografo', 50);
+      if (score >= 60) await tryMedal('mecanoclass_60', 100);
+      if (score >= 70) await tryMedal('velocista', 120);
+      if (score >= 100) await tryMedal('mecanoclass_100', 250);
+    } else if (gameId === 'rompecodigos') {
+      if (nPartidas === 1) await tryMedal('descifrador', 0);
+      if (score >= 200) await tryMedal('rompecodigos_200', 50);
+      if (score >= 500) await tryMedal('rompecodigos_500', 100);
+      if (score >= 800) await tryMedal('criptologo', 150);
+      if (score >= 1200) await tryMedal('rompecodigos_1200', 200);
+    } else if (gameId === 'helados') {
+      if (metadata.level >= 1) await tryMedal('heladero', 0);
+      if (score >= 200) await tryMedal('programador_bloques', 0);
+      if (score >= 500) await tryMedal('helados_500', 0);
+      if (score >= 1000) await tryMedal('helados_1000', 100);
+      if (score >= 1500) await tryMedal('helados_1500', 150);
+      if (score >= 2000) await tryMedal('helados_2000', 200);
+      if (score >= 2500) await tryMedal('helados_2500', 250);
+      if (score >= 3000) await tryMedal('helados_3000', 300);
+      if (score >= 35000) await tryMedal('helados_35000', 1000);
+    } else if (gameId === 'moon') {
+      if (nPartidas === 1) await tryMedal('astronauta', 0);
+      if (metadata.level >= 3) await tryMedal('moon_3', 50);
+      if (metadata.level >= 5) await tryMedal('explorador_lunar', 100);
+      if (metadata.level >= 10) await tryMedal('moon_10', 150);
+      if (metadata.level >= 15) await tryMedal('moon_15', 200);
+    } else if (gameId === 'arenabots') {
+      if (nPartidas === 1) await tryMedal('robotizador', 0);
+      if (score >= 50) await tryMedal('arenabots_50', 50);
+      if (score >= 100) await tryMedal('arenabots_100', 100);
+      if (score >= 150) await tryMedal('arenabots_150', 150);
+      if (score >= 250) await tryMedal('arquitecto_bot', 250);
+    } else if (gameId === 'cybersmith') {
+      if (nPartidas === 1) await tryMedal('smith', 0);
+      if (score >= 100) await tryMedal('cybersmith_100', 50);
+      if (score >= 250) await tryMedal('cybersmith_250', 100);
+      if (score >= 400) await tryMedal('ingeniero', 150);
+      if (score >= 600) await tryMedal('cybersmith_600', 200);
+    } else if (gameId === 'asimov') {
+      if (nPartidas === 1) await tryMedal('etico_ia', 0);
+      if (score >= 20) await tryMedal('asimov_20', 30);
+      if (score >= 50) await tryMedal('asimov_50', 60);
+      if (score >= 80) await tryMedal('leyes_robotica', 100);
+      if (score >= 100) await tryMedal('asimov_100', 150);
+    } else if (gameId === 'appflow') {
+      if (nPartidas === 1) await tryMedal('dev_app', 0);
+      if (score >= 50) await tryMedal('appflow_50', 50);
+      if (score >= 100) await tryMedal('appflow_100', 100);
+      if (score >= 200) await tryMedal('unicornio', 150);
+      if (score >= 300) await tryMedal('appflow_300', 200);
+    } else if (gameId === 'trivial') {
+      if (nPartidas === 1) await tryMedal('preguntador', 0);
+      if (score >= 30) await tryMedal('trivial_30', 30);
+      if (score >= 60) await tryMedal('trivial_60', 60);
+      if (score >= 100) await tryMedal('sabiondo', 100);
+    }
+
   } catch (subErr) {
     console.warn('No se pudo guardar historial o calcular gamificación (no crítico):', subErr);
   }

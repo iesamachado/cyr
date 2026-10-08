@@ -57,7 +57,10 @@
 
       <!-- Hero del alumno -->
       <header class="dashboard-header animate-fade-up">
-        <a href="dashboard_student.html" class="back-link">← Volver a mis clases</a>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <a href="dashboard_student.html" class="back-link">← Volver a mis clases</a>
+          <a href="ayuda_gamificacion.html" class="btn btn-outline btn--sm">ℹ️ Cómo ganar XP y Medallas</a>
+        </div>
         
         <div class="card" style="margin-top:var(--space-4,16px); display:flex; align-items:center; gap:var(--space-4); padding:var(--space-4); flex-wrap:wrap; justify-content:space-between; background:var(--bg-card); border:4px solid var(--border); box-shadow:4px 4px 0px var(--border);">
           
@@ -72,7 +75,7 @@
 
           <!-- Derecha: Contadores y Liga -->
           <div class="logros-stats" style="display:flex; gap:var(--space-3); flex-wrap:wrap;">
-            <div class="logro-stat" style="border:2px solid var(--primary); box-shadow:2px 2px 0px var(--primary);">
+            <div class="logro-stat" style="border:2px solid var(--primary); box-shadow:2px 2px 0px var(--primary);; cursor:pointer; transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" id="btn-xp-detail" title="Ver detalle de XP">
               <div class="logro-stat-val" id="stat-xp">0</div>
               <div class="logro-stat-lbl" style="font-weight:bold;">XP Total</div>
             </div>
@@ -131,5 +134,20 @@
   </main>
   <div id="toast-container" aria-live="polite"></div>
   <script type="module" src="js/logros.js"></script>
+
+  <!-- Modal XP Detail -->
+  <div id="modal-xp-detail" class="modal-backdrop" aria-hidden="true" role="dialog">
+    <div class="modal-box" style="max-width:850px; width:95%;">
+      <div class="modal-header">
+        <h3 id="xp-modal-title">📊 Mi Actividad y XP</h3>
+        <button class="modal-close" id="close-xp-modal" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0; max-height: 70vh; overflow-y: auto;">
+        <div id="xp-modal-body" style="overflow-x:auto;">
+           <div style="padding:32px; text-align:center;"><div class="spinner"></div> Cargando detalle de XP...</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
