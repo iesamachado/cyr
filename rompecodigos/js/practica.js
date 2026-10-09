@@ -117,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   requireAuth({
     allowedRoles: ['teacher', 'student', 'admin'],
-    onAuthorized: (user, profile) => {
+    onAuthorized: async (user, profile) => {
+
       state.user = user;
       state.profile = profile;
       renderHeader(user, profile);

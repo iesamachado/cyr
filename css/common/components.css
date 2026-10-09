@@ -371,6 +371,7 @@
 
 .modal-box {
   background: var(--bg-card);
+  color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   width: 100%;

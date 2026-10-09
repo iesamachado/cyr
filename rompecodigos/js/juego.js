@@ -28,7 +28,8 @@ const state = {
 document.addEventListener('DOMContentLoaded', () => {
   requireAuth({
     allowedRoles: ['teacher', 'student'],
-    onAuthorized: (user, profile) => {
+    onAuthorized: async (user, profile) => {
+
       renderHeader(user, profile);
       initJuego(user);
     }

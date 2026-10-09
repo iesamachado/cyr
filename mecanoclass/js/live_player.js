@@ -14,7 +14,8 @@ const UPDATE_INTERVAL = 2000;
 document.addEventListener('DOMContentLoaded', () => {
     requireAuth({
         allowedRoles: ['student', 'teacher'],
-        onAuthorized: (user, profile) => {
+        onAuthorized: async (user, profile) => {
+
             currentUser = user;
             currentProfile = profile;
             

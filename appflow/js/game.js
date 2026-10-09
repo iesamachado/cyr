@@ -405,7 +405,8 @@ async function saveAndRedirect() {
 
 requireAuth({
   allowedRoles: ['student', 'teacher'],
-  onAuthorized: (user, profile) => {
+  onAuthorized: async (user, profile) => {
+
     currentUserInfo = { user, profile };
     initGame();
   }

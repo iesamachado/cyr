@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     requireGameAccess('mecanoclass', {
         onGranted: async (user, profile, classId) => {
+
             renderHeader(user, profile);
 
             if (profile && profile.photoURL) {

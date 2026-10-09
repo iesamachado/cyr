@@ -546,13 +546,18 @@ export async function saveGameResult(gameId, studentId, classId, score, metadata
   const ref = await addDoc(collection(db, 'game_results'), resultData);
 
   // También guardar en users/{uid}/games/ para historial rápido del perfil (con manejo seguro de fallos)
+  let userGameRef;
   try {
-    await addDoc(collection(db, 'users', studentId, 'games'), {
+    userGameRef = await addDoc(collection(db, 'users', studentId, 'games'), {
       gameId,
       classId: classId || null,
       score: Number(score) || 0,
       timestamp: serverTimestamp()
     });
+
+    const { incrementDigitalWellbeing } = await import('./auth.js');
+    await incrementDigitalWellbeing(studentId, 'game', gameId);
+
     
     // ==========================================
     // GAMIFICACIÓN: Otorgar XP y Medallas

@@ -22,6 +22,10 @@ if (!tData) {
 requireAuth({
   allowedRoles: ['student', 'teacher', 'admin'],
   onAuthorized: async (user, profile) => {
+    const { enforceDigitalWellbeing } = await import('./common/auth.js');
+    const allowed = await enforceDigitalWellbeing(user, profile, 'test', currentTopicId);
+    if (!allowed) return;
+
     currentUser = user;
     currentProfile = profile;
     renderHeader(user, profile);
@@ -279,6 +283,9 @@ async function processSubmission(forcedFail = false) {
       }
 
       await addXPAndCheckLogros(currentUser.uid, xpEarned);
+
+      const { incrementDigitalWellbeing } = await import('./common/auth.js');
+      await incrementDigitalWellbeing(currentUser.uid, 'test', currentTopicId);
 
       // 2. Medallas
       await awardMedal(currentUser.uid, 'primer_examen');

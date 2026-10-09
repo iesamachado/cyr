@@ -111,15 +111,14 @@ function _showFatalError(message) {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     requireGameAccess('arenabots', {
-      onGranted: (user, profile, classId) => {
-        // user and profile can be passed to UIManager if needed or handled inside UIManager
+      onGranted: async (user, profile, classId) => {
         initApp();
       }
     });
   });
 } else {
   requireGameAccess('arenabots', {
-    onGranted: (user, profile, classId) => {
+    onGranted: async (user, profile, classId) => {
       initApp();
     }
   });

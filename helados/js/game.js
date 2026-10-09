@@ -41,6 +41,7 @@ const nextLevelBtn = document.getElementById('next-level-btn');
 
 requireGameAccess('helados', {
     onGranted: async (user, profile, classId) => {
+
         currentUser = user;
         currentClassId = classId;
         renderHeader(user, profile);

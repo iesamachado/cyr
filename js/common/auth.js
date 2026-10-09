@@ -13,7 +13,8 @@
 import { auth, db, googleProvider, GoogleAuthProvider,
   signInWithPopup, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut, onAuthStateChanged,
-  sendPasswordResetEmail, updateProfile, doc, getDoc, setDoc, updateDoc, serverTimestamp
+  sendPasswordResetEmail, updateProfile, doc, getDoc, setDoc, updateDoc, serverTimestamp,
+  getDocs, collection, query, where, Timestamp
 } from './firebase-config.js';
 import { generateAvatar, generateTeacherAvatar, anonymizeName, getUrlParams, getAppUrl } from './utils.js';
 import { isStudentInAnyClass, isTeacherAuthorized, SUPERADMIN_EMAIL, resolvePendingStudent } from './db.js';
@@ -321,6 +322,9 @@ export function requireGameAccess(gameId, { onGranted } = {}) {
   return requireAuth({
     allowedRoles: ['teacher', 'student', 'admin'],
     onAuthorized: async (user, profile) => {
+      const allowed = await enforceDigitalWellbeing(user, profile, 'game', gameId);
+      if (!allowed) return;
+
       const { classId } = getUrlParams();
 
       // Los profesores y administradores siempre tienen acceso
@@ -354,4 +358,111 @@ export function requireGameAccess(gameId, { onGranted } = {}) {
       if (onGranted) onGranted(user, profile, resolvedClassId);
     }
   });
+}
+
+// ──────────────────────────────────────────────────────────────────────
+//  BIENESTAR DIGITAL (Límites diarios)
+// ──────────────────────────────────────────────────────────────────────
+async function getTodayPlaysCount(uid, type, specificId = null) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  
+  if (type === 'game') {
+    // Buscar en game_results (garantizado de coincidir con "Mis ultimas partidas")
+    const q = query(collection(db, 'game_results'), where('studentId', '==', uid));
+    const snap = await getDocs(q);
+    return snap.docs.filter(d => {
+      const data = d.data();
+      if (specificId && data.gameId !== specificId) return false;
+      const ts = data.timestamp;
+      return ts && ts.toDate() >= now;
+    }).length;
+  } else {
+    // Buscar en test_teoria_respuestas (filtramos por js para evitar pedir índices compuestos en firestore)
+    const q = query(collection(db, 'test_teoria_respuestas'), where('uid', '==', uid));
+    const snap = await getDocs(q);
+    return snap.docs.filter(d => {
+      const data = d.data();
+      if (specificId && data.topicId !== specificId) return false;
+      const ts = data.timestamp || data.fecha;
+      return ts && ts.toDate() >= now;
+    }).length;
+  }
+}
+
+export async function enforceDigitalWellbeing(user, profile, type, specificId = null) {
+  if (profile.role === 'teacher' || profile.role === 'admin') return true;
+
+  const count = await getTodayPlaysCount(user.uid, type, specificId);
+
+  if (count >= 5) {
+    const { getAppUrl } = await import('./utils.js');
+    
+    // Mostramos un modal bloqueante que redirige al cerrar
+    // Importamos dinámicamente ui.js para no crear dependencias circulares complejas
+    const { showModal } = await import('./ui.js');
+    
+    showModal({
+      title: 'Descanso Digital Recomendado 🧘', 
+      body: `<style>
+        #classhub-modal .modal-box { background: #ffffff !important; color: #000000 !important; }
+        #classhub-modal .modal-header { border-bottom: 1px solid #eeeeee !important; }
+        #classhub-modal .modal-header h3 { color: #000000 !important; }
+        #classhub-modal .btn-primary { background: #000000 !important; color: #ffffff !important; border:none; }
+      </style>
+      <div style="text-align:center;">
+        <p style="font-size: 3rem; margin-bottom: 10px;">🌿</p>
+        <p style="font-size: 1.2rem;">Has alcanzado el límite diario de <strong>5 ${type === 'game' ? 'partidas en este juego' : 'intentos en este test'}</strong>.</p>
+        <p style="opacity: 0.8; margin-top: 15px;">El bienestar digital es fundamental para tu salud. Pasar demasiado tiempo frente a las pantallas puede causar fatiga visual, alterar el sueño y afectar tu descanso.</p>
+        <p style="opacity: 0.8; margin-top: 10px;">¡Aprovecha para desconectar, dar un paseo, leer un libro o hacer alguna actividad al aire libre!</p>
+       </div>`, 
+       confirmText: 'Entendido',
+       cancelText: '',
+       unclosable: true,
+       onConfirm: () => {
+         window.location.href = getAppUrl('dashboard_student.html');
+       }
+    });
+       
+    return false; // Bloquear
+  }
+  return true; // Permitir
+}
+
+export async function incrementDigitalWellbeing(uid, type, specificId = null) {
+  const ref = doc(db, 'users', uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const profile = snap.data();
+  if (profile.role === 'teacher' || profile.role === 'admin') return;
+
+  // Ya no incrementamos un contador manual, calculamos directamente desde el historial real.
+  const count = await getTodayPlaysCount(uid, type, specificId);
+  
+  if (count >= 5) {
+    // Si acaba de llegar a 5, forzamos la salida
+    const { getAppUrl } = await import('./utils.js');
+    const { showModal } = await import('./ui.js');
+    showModal({
+      title: 'Descanso Digital Recomendado 🧘', 
+      body: `<style>
+        #classhub-modal .modal-box { background: #ffffff !important; color: #000000 !important; }
+        #classhub-modal .modal-header { border-bottom: 1px solid #eeeeee !important; }
+        #classhub-modal .modal-header h3 { color: #000000 !important; }
+        #classhub-modal .btn-primary { background: #000000 !important; color: #ffffff !important; border:none; }
+      </style>
+      <div style="text-align:center;">
+        <p style="font-size: 3rem; margin-bottom: 10px;">🌿</p>
+        <p style="font-size: 1.2rem;">Has alcanzado el límite diario de <strong>5 ${type === 'game' ? 'partidas en este juego' : 'intentos en este test'}</strong>.</p>
+        <p style="opacity: 0.8; margin-top: 15px;">El bienestar digital es fundamental para tu salud. Pasar demasiado tiempo frente a las pantallas puede causar fatiga visual, alterar el sueño y afectar tu descanso.</p>
+        <p style="opacity: 0.8; margin-top: 10px;">¡Aprovecha para desconectar, dar un paseo, leer un libro o hacer alguna actividad al aire libre!</p>
+       </div>`, 
+       confirmText: 'Entendido',
+       cancelText: '',
+       unclosable: true,
+       onConfirm: () => {
+         window.location.href = getAppUrl('dashboard_student.html');
+       }
+    });
+  }
 }

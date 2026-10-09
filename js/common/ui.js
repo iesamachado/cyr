@@ -158,7 +158,7 @@ export function showToast(title, message = '', type = 'info', duration = 3500) {
 //  MODAL GENÉRICO
 // ══════════════════════════════════════════════════════════════════
 
-export function showModal({ title, body, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, dangerous = false }) {
+export function showModal({ title, body, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, dangerous = false, unclosable = false }) {
   // Eliminar modal previo si existe
   document.getElementById('classhub-modal')?.remove();
 
@@ -169,11 +169,11 @@ export function showModal({ title, body, confirmText = 'Confirmar', cancelText =
     <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-header">
         <h3 id="modal-title">${escapeHtml(title)}</h3>
-        <button class="modal-close" id="modal-btn-cancel" aria-label="Cerrar">✕</button>
+        ${!unclosable ? `<button class="modal-close" id="modal-btn-cancel" aria-label="Cerrar">✕</button>` : ''}
       </div>
       <div class="modal-body">${body}</div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" id="modal-btn-cancel2">${escapeHtml(cancelText)}</button>
+        ${!unclosable && cancelText ? `<button class="btn btn-ghost" id="modal-btn-cancel2">${escapeHtml(cancelText)}</button>` : ''}
         ${confirmText ? `<button class="btn ${dangerous ? 'btn-danger' : 'btn-primary'}" id="modal-btn-confirm">${escapeHtml(confirmText)}</button>` : ''}
       </div>
     </div>`;
@@ -186,13 +186,16 @@ export function showModal({ title, body, confirmText = 'Confirmar', cancelText =
     modal.addEventListener('transitionend', () => modal.remove(), { once: true });
   };
 
-  modal.querySelector('#modal-btn-cancel')?.addEventListener('click', close);
-  modal.querySelector('#modal-btn-cancel2')?.addEventListener('click', close);
+  if (!unclosable) {
+    modal.querySelector('#modal-btn-cancel')?.addEventListener('click', close);
+    modal.querySelector('#modal-btn-cancel2')?.addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  }
+  
   modal.querySelector('#modal-btn-confirm')?.addEventListener('click', () => {
     if (onConfirm) onConfirm();
     close();
   });
-  modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
   return { close };
 }

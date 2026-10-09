@@ -47,7 +47,8 @@ const hex  = n  => "0x" + (n & mask()).toString(16).toUpperCase();
 const rnd  = () => Math.floor(Math.random() * (1 << state.numBits));
 
 requireGameAccess('moon', {
-  onGranted: (user, profile, classId) => {
+  onGranted: async (user, profile, classId) => {
+
     currentUser = user;
     currentProfile = profile;
     currentClassId = classId;
